@@ -32,7 +32,7 @@ if ! dmsetup table ${base}_origin | dmsetup load ${base}; then
 fi
 echo "Resuming device"
 if ! dmsetup resume ${base}; then
-	echo "You're probably fucked... sorry bro"
+	echo "Failed to resume writes to hard disk please contact support"
 	exit 1
 fi
 
