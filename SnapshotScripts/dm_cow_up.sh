@@ -55,7 +55,7 @@ if [ ! -d /backup_cow/chroot/dev/mapper ]; then
 	ldd `which bash` | awk '{print $3;}' | grep ^/ | xargs cp -Lvt $libdir/
 	ldd `which sleep` | awk '{print $3;}' | grep ^/ | xargs cp -Lvt $libdir/
 	ldd `which dmsetup` | egrep '^\s*/' | awk '{print $1;}' | xargs cp -Lvt $libdir/
-	cp /var/datto/dm_cow_{up,down}_chroot.sh /backup_cow/chroot/
+	cp "$(dirname ${BASH_SOURCE[0]})"/dm_cow_{up,down}_chroot.sh /backup_cow/chroot/
 fi
 
 exec chroot /backup_cow/chroot /bin/bash /dm_cow_up_chroot.sh "${base}" "${loopdev}"
