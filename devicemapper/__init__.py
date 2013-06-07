@@ -104,6 +104,7 @@ def duplicate_table(source_name, destination_name):
     # Execute CREATE task
     _libdevmapper.dm_task_run(dm_create_task)
 
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         sys.stderr.write("usage: " + sys.argv[0] + " dm_source dm_destination\n")
