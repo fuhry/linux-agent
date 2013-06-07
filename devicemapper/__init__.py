@@ -2,21 +2,21 @@
 
 __author__ = 'ngarvey'
 
-from ctypes import *
-from ctypes.util import *
+import ctypes
+import ctypes.util
 import dmconstants
 import sys
 
 # libdevmapper setup
-_libdevmapper_path = find_library('devmapper')
-_libdevmapper = CDLL(_libdevmapper_path, use_errno=True)
+_libdevmapper_path = ctypes.util.find_library('devmapper')
+_libdevmapper = ctypes.CDLL(_libdevmapper_path, use_errno=True)
 
 _libdevmapper.dm_log_init_verbose.restype = None
 _libdevmapper.dm_log_init_verbose(10)
 
 
 # Dummy class to help with type checking
-class _DmTask(Structure):
+class _DmTask(ctypes.Structure):
     pass
 
 
@@ -38,41 +38,43 @@ class DmTarget(object):
 ## conversion.
 
 # dm_task_create
-_libdevmapper.dm_task_create.restype = POINTER(_DmTask)
+_libdevmapper.dm_task_create.restype = ctypes.POINTER(_DmTask)
 
 # dm_task_set_uuid
-_libdevmapper.dm_task_set_uuid.argtypes = [POINTER(_DmTask), c_char_p]
+_libdevmapper.dm_task_set_uuid.argtypes = [ctypes.POINTER(_DmTask), ctypes.c_char_p]
 
 # dm_task_run
-_libdevmapper.dm_task_run.argtypes = [POINTER(_DmTask)]
+_libdevmapper.dm_task_run.argtypes = [ctypes.POINTER(_DmTask)]
 
 # dm_get_next_target
-_libdevmapper.dm_get_next_target.argtypes = [POINTER(_DmTask), c_void_p, POINTER(c_uint64),
-                                            POINTER(c_uint64), POINTER(c_char_p), POINTER(c_char_p)]
-_libdevmapper.dm_get_next_target.restype = c_void_p
+_libdevmapper.dm_get_next_target.argtypes = [ctypes.POINTER(_DmTask), ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint64),
+                                             ctypes.POINTER(ctypes.c_uint64), ctypes.POINTER(ctypes.c_char_p),
+                                             ctypes.POINTER(ctypes.c_char_p)]
+_libdevmapper.dm_get_next_target.restype = ctypes.c_void_p
 
 # dm_task_add_target
-_libdevmapper.dm_task_add_target.argtypes = [POINTER(_DmTask), c_uint64, c_uint64, c_char_p, c_char_p]
+_libdevmapper.dm_task_add_target.argtypes = [ctypes.POINTER(_DmTask), ctypes.c_uint64, ctypes.c_uint64, ctypes.c_char_p,
+                                             ctypes.c_char_p]
 
 # dm_task_set_name
-_libdevmapper.dm_task_set_name.argtypes = [POINTER(_DmTask), c_char_p]
+_libdevmapper.dm_task_set_name.argtypes = [ctypes.POINTER(_DmTask), ctypes.c_char_p]
 
 
 def _get_targets(dm_table_task):
     targets = []
 
     next = None
-    start = c_uint64(-1)
-    size = c_uint64(-1)
-    target_type = c_char_p()
-    params = c_char_p()
-    next = _libdevmapper.dm_get_next_target(dm_table_task, c_void_p(next), byref(start), byref(size),
-                                           byref(target_type), byref(params))
+    start = ctypes.c_uint64(-1)
+    size = ctypes.c_uint64(-1)
+    target_type = ctypes.c_char_p()
+    params = ctypes.c_char_p()
+    next = _libdevmapper.dm_get_next_target(dm_table_task, ctypes.c_void_p(next), ctypes.byref(start),
+                                            ctypes.byref(size), ctypes.byref(target_type), ctypes.byref(params))
 
     targets.append(DmTarget(start.value, size.value, target_type.value, params.value))
     while next:
-        next = _libdevmapper.dm_get_next_target(dm_table_task, c_void_p(next), byref(start), byref(size),
-                                               byref(target_type), byref(params))
+        next = _libdevmapper.dm_get_next_target(dm_table_task, ctypes.c_void_p(next), ctypes.ctypes.byref(start),
+                                                ctypes.byref(size), ctypes.byref(target_type), ctypes.byref(params))
         targets.append(DmTarget(start.value, size.value, target_type.value, params.value))
 
     return targets
