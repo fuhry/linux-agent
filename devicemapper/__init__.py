@@ -247,12 +247,13 @@ def create_snapshot_origin(source_name, snapshot_origin_name=None, udev_cookie=N
     dm_create_task = _libdevmapper.dm_task_create(dmconstants.DM_DEVICE_CREATE)
     _libdevmapper.dm_task_set_name(dm_create_task, snapshot_origin_name)
 
-    # Set up snapshot parameters
+    # Set up snapshot-origin parameters
+    source_info = get_info(source_name)
+    params = "{:d}:{:d}".format(source_info.major, source_info.minor)
+
     source_num_sectors = get_num_sectors(source_name)
 
-    source_info = get_info(source_name)
-
-    params = "{:d}:{:d}".format(source_info.major, source_info.minor)
+    # Add snapshot-origin target
     _libdevmapper.dm_task_add_target(dm_create_task, 0, source_num_sectors, "snapshot-origin", params)
 
     if udev_cookie:
