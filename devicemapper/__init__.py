@@ -305,7 +305,7 @@ if __name__ == "__main__":
     loop_dev = sys.argv[2]
 
     with UDevCookie() as cookie:
-        dup_name = duplicate_table(source_name,  udev_cookie=cookie)
+        dup_name = duplicate_table(source_name, udev_cookie=cookie)
 
         suspend(source_name)
         try:
