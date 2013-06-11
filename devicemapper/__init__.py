@@ -63,7 +63,7 @@ class UDevCookie:
         _libdevmapper.dm_udev_wait(self._udev_cookie)
 
 
-class DmTarget(object):
+class _DmTarget(object):
     start = None
     size = None
     target_type = None
@@ -154,11 +154,11 @@ def _get_targets(dm_table_task):
     next = _libdevmapper.dm_get_next_target(dm_table_task, ctypes.c_void_p(next), ctypes.byref(start),
                                             ctypes.byref(size), ctypes.byref(target_type), ctypes.byref(params))
 
-    targets.append(DmTarget(start.value, size.value, target_type.value, params.value))
+    targets.append(_DmTarget(start.value, size.value, target_type.value, params.value))
     while next:
         next = _libdevmapper.dm_get_next_target(dm_table_task, ctypes.c_void_p(next), ctypes.ctypes.byref(start),
                                                 ctypes.byref(size), ctypes.byref(target_type), ctypes.byref(params))
-        targets.append(DmTarget(start.value, size.value, target_type.value, params.value))
+        targets.append(_DmTarget(start.value, size.value, target_type.value, params.value))
 
     return targets
 
