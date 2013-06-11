@@ -6,12 +6,22 @@ import ctypes
 import ctypes.util
 import dmconstants
 import sys
+import subprocess
 import os
 
 
 # libdevmapper setup
 _libdevmapper_path = ctypes.util.find_library('devmapper')
 _libdevmapper = ctypes.CDLL(_libdevmapper_path, use_errno=True)
+
+
+# We need to be sure all kernel modules we might use are loaded
+# While shelling out is something we are trying to avoid, there
+# don't appear to be better options
+for module_name in ["dm_snapshot"]:
+    ret_val = subprocess.call(['modprobe', module_name])
+    if ret_val:
+        raise Exception('modprobe returned ' + str(ret_val))
 
 
 # Dummy class to help with type checking
