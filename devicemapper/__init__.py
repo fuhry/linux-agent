@@ -9,6 +9,11 @@ import sys
 import os
 
 
+# libdevmapper setup
+_libdevmapper_path = ctypes.util.find_library('devmapper')
+_libdevmapper = ctypes.CDLL(_libdevmapper_path, use_errno=True)
+
+
 # Dummy class to help with type checking
 class _DmTask(ctypes.Structure):
     pass
@@ -25,6 +30,29 @@ class _DmInfo(ctypes.Structure):
                 ("minor", ctypes.c_uint32),
                 ("read_only", ctypes.c_int),
                 ("target_count", ctypes.c_int32)]
+
+
+# According to lvm2-2.02.66/libdm/ioctl/libdm-iface.c:L1759, only
+# DM_DEVICE_RESUME, DM_DEVICE_REMOVE, and DM_DEVICE_RENAME should run with a cookie
+#
+# However, CREATE calls RESUME (or, does a CREATE trigger a RESUME?), so all CREATES need a cookie too
+class UDevCookie:
+    # This is used by ctypes when this object is passed to a function
+    _as_parameter_ = None
+
+    _udev_cookie = None
+
+    def __init__(self):
+        self._udev_cookie = ctypes.c_uint32()
+        _libdevmapper.dm_udev_create_cookie(ctypes.byref(self._udev_cookie))
+        self._as_parameter_ = ctypes.byref(self._udev_cookie)
+
+    # http://docs.python.org/2/whatsnew/2.6.html#pep-343-the-with-statement
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        _libdevmapper.dm_udev_wait(self._udev_cookie)
 
 
 class DmTarget(object):
@@ -47,18 +75,11 @@ def _handle_err(result, func, args):
         raise Exception("{:s} ({:s}) - ERR{:d} {:s}".format(func.__name__, str(result), errno, strerr))
     return args
 
-# libudev setup
-_libudev_path = ctypes.util.find_library('udev')
-_libudev = ctypes.CDLL(_libudev_path, use_errno=True)
 
 
 ## This section initializes the parameters and return values for all of the
 ## _libdevmapper functions. This is used by ctypes to do type checking and
 ## conversion.
-
-# libdevmapper setup
-_libdevmapper_path = ctypes.util.find_library('devmapper')
-_libdevmapper = ctypes.CDLL(_libdevmapper_path, use_errno=True)
 
 # Enable logging
 _libdevmapper.dm_log_init_verbose.restype = None
@@ -114,22 +135,6 @@ _libdevmapper.dm_task_set_name.argtypes = [ctypes.POINTER(_DmTask), ctypes.c_cha
 _libdevmapper.dm_task_set_name.errcheck = _handle_err
 
 
-udev_cookie = ctypes.c_uint32(0)
-_libdevmapper.dm_udev_create_cookie(ctypes.byref(udev_cookie))
-
-
-# According to lvm2-2.02.66/libdm/ioctl/libdm-iface.c:L1759, only
-# DM_DEVICE_RESUME, DM_DEVICE_REMOVE, and DM_DEVICE_RENAME should run with a cookie
-#
-# However, CREATE calls RESUME, so all CREATES need a cookie too
-def _run_with_cookie(dm_task):
-    global udev_cookie
-    sys.stderr.write("Setting cookie\n")
-    _libdevmapper.dm_task_set_cookie(dm_task, ctypes.byref(udev_cookie), 0)
-    sys.stderr.write("Running task\n")
-    _libdevmapper.dm_task_run(dm_task)
-
-
 def _get_targets(dm_table_task):
     targets = []
 
@@ -165,7 +170,7 @@ def get_num_sectors(source_name):
     return device_size_sectors
 
 
-def duplicate_table(source_name, destination_name=None):
+def duplicate_table(source_name, destination_name=None, udev_cookie=None):
     if not destination_name:
         destination_name = source_name + "_dup"
 
@@ -181,13 +186,16 @@ def duplicate_table(source_name, destination_name=None):
     for target in targets:
         _libdevmapper.dm_task_add_target(dm_create_task, target.start, target.size, target.target_type, target.params)
 
+    if udev_cookie:
+        _libdevmapper.dm_task_set_cookie(dm_create_task, udev_cookie, 0)
+
     # Execute CREATE
-    _run_with_cookie(dm_create_task)
+    _libdevmapper.dm_task_run(dm_create_task)
 
     return destination_name
 
 
-def create_snapshot(source_name, cow_file_path, snapshot_name=None, chuck_size=32):
+def create_snapshot(source_name, cow_file_path, snapshot_name=None, chuck_size=32, udev_cookie=None):
     if not snapshot_name:
         snapshot_name = source_name + "_cow"
 
@@ -202,8 +210,11 @@ def create_snapshot(source_name, cow_file_path, snapshot_name=None, chuck_size=3
     params = "{:d}:{:d} {:s} {:s} {:d}".format(source_info.major, source_info.minor, cow_file_path, 'p', chuck_size)
     _libdevmapper.dm_task_add_target(dm_create_task, 0, source_num_sectors, "snapshot", params)
 
+    if udev_cookie:
+        _libdevmapper.dm_task_set_cookie(dm_create_task, udev_cookie, 0)
+
     # Execute CREATE
-    _run_with_cookie(dm_create_task)
+    _libdevmapper.dm_task_run(dm_create_task)
 
     return snapshot_name
 
@@ -220,7 +231,7 @@ def get_info(source_name):
     return dm_info
 
 
-def create_snapshot_origin(source_name, snapshot_origin_name=None):
+def create_snapshot_origin(source_name, snapshot_origin_name=None, udev_cookie=None):
     if not snapshot_origin_name:
         snapshot_origin_name = source_name + "_orig"
 
@@ -236,8 +247,11 @@ def create_snapshot_origin(source_name, snapshot_origin_name=None):
     params = "{:d}:{:d}".format(source_info.major, source_info.minor)
     _libdevmapper.dm_task_add_target(dm_create_task, 0, source_num_sectors, "snapshot-origin", params)
 
+    if udev_cookie:
+        _libdevmapper.dm_task_set_cookie(dm_create_task, udev_cookie, 0)
+
     # Execute CREATE
-    _run_with_cookie(dm_create_task)
+    _libdevmapper.dm_task_run(dm_create_task)
 
     return snapshot_origin_name
 
@@ -265,27 +279,28 @@ def suspend(source_name):
     _libdevmapper.dm_task_run(dm_suspend_task)
 
 
-def resume(source_name):
+def resume(source_name, udev_cookie=None):
     dm_resume_task = _libdevmapper.dm_task_create(dmconstants.DM_DEVICE_RESUME)
     _libdevmapper.dm_task_set_name(dm_resume_task, source_name)
 
     # Execute RESUME
-    _run_with_cookie(dm_resume_task)
+    if udev_cookie:
+        _libdevmapper.dm_task_set_cookie(dm_resume_task, udev_cookie, 0)
+
+    _libdevmapper.dm_task_run(dm_resume_task)
+
 
 if __name__ == "__main__":
     source_name = sys.argv[1]
     loop_dev = sys.argv[2]
 
-    dup_name = duplicate_table(source_name)
-    suspend(source_name)
+    with UDevCookie() as cookie:
+        dup_name = duplicate_table(source_name)
 
-    try:
-        create_snapshot(dup_name, loop_dev)
-        snapshot_origin_name = create_snapshot_origin(dup_name)
-        load_from_dm_device(snapshot_origin_name, source_name)
-    finally:
-        resume(source_name)
-
-    sys.stderr.write("Waiting on cookie\n")
-
-    _libdevmapper.dm_udev_wait(udev_cookie)
+        suspend(source_name)
+        try:
+            create_snapshot(dup_name, loop_dev, udev_cookie=cookie)
+            snapshot_origin_name = create_snapshot_origin(dup_name, udev_cookie=cookie)
+            load_from_dm_device(snapshot_origin_name, source_name)
+        finally:
+            resume(source_name, udev_cookie=cookie)
