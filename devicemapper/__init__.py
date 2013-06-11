@@ -15,9 +15,10 @@ _libdevmapper_path = ctypes.util.find_library('devmapper')
 _libdevmapper = ctypes.CDLL(_libdevmapper_path, use_errno=True)
 
 
-# We need to be sure all kernel modules we might use are loaded
+# We need to be sure all kernel modules we might use are loaded.
 # While shelling out is something we are trying to avoid, there
-# don't appear to be better options
+# don't appear to be better options (python-kmod appears to have
+# too many dependencies)
 for module_name in ["dm_snapshot"]:
     subprocess.check_call(['modprobe', module_name])
 
@@ -43,8 +44,22 @@ class _DmInfo(ctypes.Structure):
 # According to lvm2-2.02.66/libdm/ioctl/libdm-iface.c:L1759, only
 # DM_DEVICE_RESUME, DM_DEVICE_REMOVE, and DM_DEVICE_RENAME should run with a cookie
 #
-# However, CREATE calls RESUME (or, does a CREATE trigger a RESUME?), so all CREATES need a cookie too
+# However, CREATE calls RESUME (or, does a CREATE trigger a RESUME?),
+# so all CREATES need a cookie too
 class UDevCookie:
+    """Synchronize libdevmapper udev operations
+
+    UDevCookie should be instantiated and passed to certain devicemapper functions.
+    It acts as a way for libdevmapper to synchronize with udev triggers so it doesn't attempt to
+    create paths that udev has already created. In general, one cookie should be used per group of operations.
+
+    UDevCookie is designed to be used with the Python "with" statement. For example:
+    with devicemapper.UDevCookie() as cookie:
+        devicemapper.do_some_operation(udev_cookie=cookie)
+        devicemapper.do_some_other_operation(param1, param2, udev_cookie=cookie)
+
+    At the end of the with block, the cookie will be cleaned up.
+    """
     # This is used by ctypes when this object is passed to a function
     _as_parameter_ = None
 
@@ -171,6 +186,7 @@ def _get_complete_table_task(source_name):
 
 
 def get_num_sectors(source_name):
+    """ Return the number of sectors of the devicemapper device source_name"""
     dm_table_task = _get_complete_table_task(source_name)
     targets = _get_targets(dm_table_task)
 
@@ -179,6 +195,11 @@ def get_num_sectors(source_name):
 
 
 def duplicate_table(source_name, destination_name=None, udev_cookie=None):
+    """ Duplicate a devicemapper table
+
+    The devicemapper table referred to by source_name will be copied to destination_name. A UDevCookie class should be
+    given as the udev_cookie argument.
+    """
     if not destination_name:
         destination_name = source_name + "_dup"
 
@@ -204,6 +225,18 @@ def duplicate_table(source_name, destination_name=None, udev_cookie=None):
 
 
 def create_snapshot(source_name, cow_file_path, snapshot_name=None, chuck_size=32, udev_cookie=None):
+    """ Create a devicemapper snapshot of a devicemapper block device
+
+    A snapshot of source_name will be created. The cow_file_path should be the name of the block device that
+    will contain the copy-on-write data used by the devicemapper snapshot.
+
+    See https://www.kernel.org/doc/Documentation/device-mapper/snapshot.txt for devicemapper snapshot information.
+
+     Keyword arguments:
+     snapshot_name -- The name given to the devicemapper block device. Defaults to source_name + '_cow'
+     chuck_size -- The COW file tracks changes in 'chunks'. chunk_size is the number of sectors for that chunk.
+     udev_cookie -- The UDevCookie instance that should be used for this operation
+     """
     if not snapshot_name:
         snapshot_name = source_name + "_cow"
 
@@ -228,6 +261,10 @@ def create_snapshot(source_name, cow_file_path, snapshot_name=None, chuck_size=3
 
 
 def get_info(source_name):
+    """ Returns a devicemapper info object for a given source_name.
+
+    This is similiar to the shell cmd: 'dmsetup info source_name'
+    """
     dm_info_task = _libdevmapper.dm_task_create(dmconstants.DM_DEVICE_INFO)
     _libdevmapper.dm_task_set_name(dm_info_task, source_name)
 
@@ -240,6 +277,18 @@ def get_info(source_name):
 
 
 def create_snapshot_origin(source_name, snapshot_origin_name=None, udev_cookie=None):
+    """ Create a devicemapper snapshot-origin of a devicemapper block device
+
+    A snapshot-origin of source_name will be created. source_name should be a devicemapper device that has
+    COW file backed snapshots. This means writes to the snapshot-origin will update the COW file with
+    the original blocks the device contained - meaning the snapshot will be kept consistent.
+
+    See https://www.kernel.org/doc/Documentation/device-mapper/snapshot.txt for devicemapper snapshot information.
+
+     Keyword arguments:
+     snapshot_origin_name -- The name given to the devicemapper block device. Defaults to source_name + '_orig'
+     udev_cookie -- The UDevCookie instance that should be used for this operation
+     """
     if not snapshot_origin_name:
         snapshot_origin_name = source_name + "_orig"
 
@@ -266,6 +315,11 @@ def create_snapshot_origin(source_name, snapshot_origin_name=None, udev_cookie=N
 
 
 def load_from_dm_device(source_name, dest_name):
+    """ Loads a devicemapper table stored at source_name into dest_name.
+
+     Note that this does not refresh the dest_name, so a resume will need to be done after this command for the new
+     table to take effect.
+    """
     dm_table_task = _get_complete_table_task(source_name)
 
     dm_load_task = _libdevmapper.dm_task_create(dmconstants.DM_DEVICE_RELOAD)
@@ -281,6 +335,7 @@ def load_from_dm_device(source_name, dest_name):
 
 
 def suspend(source_name):
+    """ Suspend the devicemapper device source_name. I/O will blocked until the device is resumed (!!) """
     dm_suspend_task = _libdevmapper.dm_task_create(dmconstants.DM_DEVICE_SUSPEND)
     _libdevmapper.dm_task_set_name(dm_suspend_task, source_name)
 
@@ -289,6 +344,13 @@ def suspend(source_name):
 
 
 def resume(source_name, udev_cookie=None):
+    """ Resume the suspended devicemapper device source_name.
+
+    This will re-enable all I/O to a device and make the table in the 'INACTIVE' slot 'LIVE'. See man 8 dmsetup.
+
+    Keyword arguments:
+     udev_cookie -- The UDevCookie instance that should be used for this operation
+    """
     dm_resume_task = _libdevmapper.dm_task_create(dmconstants.DM_DEVICE_RESUME)
     _libdevmapper.dm_task_set_name(dm_resume_task, source_name)
 
