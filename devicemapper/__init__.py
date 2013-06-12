@@ -167,16 +167,14 @@ def _get_targets(dm_table_task):
     size = ctypes.c_uint64(-1)
     target_type = ctypes.c_char_p()
     params = ctypes.c_char_p()
-    next_target = _libdevmapper.dm_get_next_target(dm_table_task, ctypes.c_void_p(next_target),
-                                                   ctypes.byref(start), ctypes.byref(size),
-                                                   ctypes.byref(target_type), ctypes.byref(params))
 
-    targets.append(_DmTarget(start.value, size.value, target_type.value, params.value))
-    while next_target:
+    has_next = True
+    while has_next:
         next_target = _libdevmapper.dm_get_next_target(dm_table_task, ctypes.c_void_p(next_target),
                                                        ctypes.byref(start), ctypes.byref(size),
                                                        ctypes.byref(target_type), ctypes.byref(params))
         targets.append(_DmTarget(start.value, size.value, target_type.value, params.value))
+        has_next = bool(next_target)
 
     return targets
 
