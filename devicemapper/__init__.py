@@ -102,7 +102,8 @@ def _handle_err(result, func, args):
 # Enable logging
 _libdevmapper.dm_log_init_verbose.restype = None
 _libdevmapper.dm_log_init_verbose.errcheck = _handle_err
-if os.environ['DEBUG']:
+# To turn on logging do something like DEBUG=1 python <script>
+if 'DEBUG' in os.environ:
     _libdevmapper.dm_log_init_verbose(1)
 
 ## This section initializes the parameters and return values for all of the
