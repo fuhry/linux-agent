@@ -74,7 +74,7 @@ class UDevCookie:
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, *unused):
         _libdevmapper.dm_udev_wait(self._udev_cookie)
 
 
@@ -162,18 +162,20 @@ _libdevmapper.dm_task_set_name.errcheck = _handle_err
 def _get_targets(dm_table_task):
     targets = []
 
-    next = None
+    next_target = None
     start = ctypes.c_uint64(-1)
     size = ctypes.c_uint64(-1)
     target_type = ctypes.c_char_p()
     params = ctypes.c_char_p()
-    next = _libdevmapper.dm_get_next_target(dm_table_task, ctypes.c_void_p(next), ctypes.byref(start),
-                                            ctypes.byref(size), ctypes.byref(target_type), ctypes.byref(params))
+    next_target = _libdevmapper.dm_get_next_target(dm_table_task, ctypes.c_void_p(next_target),
+                                                   ctypes.byref(start), ctypes.byref(size),
+                                                   ctypes.byref(target_type), ctypes.byref(params))
 
     targets.append(_DmTarget(start.value, size.value, target_type.value, params.value))
-    while next:
-        next = _libdevmapper.dm_get_next_target(dm_table_task, ctypes.c_void_p(next), ctypes.ctypes.byref(start),
-                                                ctypes.byref(size), ctypes.byref(target_type), ctypes.byref(params))
+    while next_target:
+        next_target = _libdevmapper.dm_get_next_target(dm_table_task, ctypes.c_void_p(next_target),
+                                                       ctypes.byref(start), ctypes.byref(size),
+                                                       ctypes.byref(target_type), ctypes.byref(params))
         targets.append(_DmTarget(start.value, size.value, target_type.value, params.value))
 
     return targets
