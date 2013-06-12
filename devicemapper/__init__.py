@@ -232,11 +232,11 @@ def create_snapshot(source_name, cow_file_path, snapshot_name=None, chuck_size=3
 
     See https://www.kernel.org/doc/Documentation/device-mapper/snapshot.txt for devicemapper snapshot information.
 
-     Keyword arguments:
-     snapshot_name -- The name given to the devicemapper block device. Defaults to source_name + '_cow'
-     chuck_size -- The COW file tracks changes in 'chunks'. chunk_size is the number of sectors for that chunk.
-     udev_cookie -- The UDevCookie instance that should be used for this operation
-     """
+    Keyword arguments:
+    snapshot_name -- The name given to the devicemapper block device. Defaults to source_name + '_cow'
+    chuck_size -- The COW file tracks changes in 'chunks'. chunk_size is the number of sectors for that chunk.
+    udev_cookie -- The UDevCookie instance that should be used for this operation
+    """
     if not snapshot_name:
         snapshot_name = source_name + "_cow"
 
@@ -285,10 +285,10 @@ def create_snapshot_origin(source_name, snapshot_origin_name=None, udev_cookie=N
 
     See https://www.kernel.org/doc/Documentation/device-mapper/snapshot.txt for devicemapper snapshot information.
 
-     Keyword arguments:
-     snapshot_origin_name -- The name given to the devicemapper block device. Defaults to source_name + '_orig'
-     udev_cookie -- The UDevCookie instance that should be used for this operation
-     """
+    Keyword arguments:
+    snapshot_origin_name -- The name given to the devicemapper block device. Defaults to source_name + '_orig'
+    udev_cookie -- The UDevCookie instance that should be used for this operation
+    """
     if not snapshot_origin_name:
         snapshot_origin_name = source_name + "_orig"
 
@@ -317,8 +317,8 @@ def create_snapshot_origin(source_name, snapshot_origin_name=None, udev_cookie=N
 def load_from_dm_device(source_name, dest_name):
     """ Loads a devicemapper table stored at source_name into dest_name.
 
-     Note that this does not refresh the dest_name, so a resume will need to be done after this command for the new
-     table to take effect.
+    Note that this does not refresh the dest_name, so a resume will need to be done after this command for the new
+    table to take effect.
     """
     dm_table_task = _get_complete_table_task(source_name)
 
@@ -349,7 +349,7 @@ def resume(source_name, udev_cookie=None):
     This will re-enable all I/O to a device and make the table in the 'INACTIVE' slot 'LIVE'. See man 8 dmsetup.
 
     Keyword arguments:
-     udev_cookie -- The UDevCookie instance that should be used for this operation
+    udev_cookie -- The UDevCookie instance that should be used for this operation
     """
     dm_resume_task = _libdevmapper.dm_task_create(dmconstants.DM_DEVICE_RESUME)
     _libdevmapper.dm_task_set_name(dm_resume_task, source_name)
