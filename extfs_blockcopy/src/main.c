@@ -5,14 +5,7 @@
 #include <ext2fs/ext2fs.h>
 #include <ext2fs/ext2_io.h>
 
-const int BITMAP_BUFFER_SIZE = 4 * 1024;
-
 int extfs_copy(const char *source, const char *dest);
-void block_copy(const FILE *source_fd, const FILE *dest_fd, int block_num);
-static inline int round_nearest_mult(int num, unsigned int mult) {
-    return mult * (((num - 1) / mult) + 1);
-}
-
 int blkcp_err = 0;
 
 int main(int argc, char **argv) {
@@ -35,6 +28,10 @@ int main(int argc, char **argv) {
     }
 
     return 0;
+}
+
+static inline int round_nearest_mult(int num, unsigned int mult) {
+    return mult * (((num - 1) / mult) + 1);
 }
 
 int extfs_copy(const char *source, const char *dest) {
@@ -81,7 +78,6 @@ int extfs_copy(const char *source, const char *dest) {
     block_bitmap = malloc(round_nearest_mult(fs->super->s_blocks_per_group, 8) / 8);
 
 
-    int used_blocks = 0;
     for (i = 0; i < fs->group_desc_count; i++) {
         cur_group_block_offset = i * fs->super->s_blocks_per_group;
         ext2fs_get_block_bitmap_range(fs->block_map, cur_group_block_offset,
