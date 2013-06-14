@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-static inline int round_nearest_mult(int num, unsigned int mult) {
+static inline int round_up(int num, unsigned int mult) {
     return mult * (((num - 1) / mult) + 1);
 }
 
@@ -80,7 +80,7 @@ int extfs_copy(const char *source, const char *dest) {
     }
 
     // one bit per block
-    block_bitmap = malloc(round_nearest_mult(fs->super->s_blocks_per_group, 8) / 8);
+    block_bitmap = malloc(round_up(fs->super->s_blocks_per_group, 8) / 8);
     if (block_bitmap == NULL) {
         blkcp_err = errno;
         fprintf(stderr, "Error allocating memory: %s", strerror(blkcp_err));
