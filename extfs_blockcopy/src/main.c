@@ -21,10 +21,10 @@ int main(int argc, char **argv) {
         return EINVAL;
     }
 
-	char *source = argv[1];
-	char *dest = argv[2];
-	
-	int blks_copied = extfs_copy(source, dest);
+    char *source = argv[1];
+    char *dest = argv[2];
+
+    int blks_copied = extfs_copy(source, dest);
 
     if (blkcp_err) {
         fprintf(stderr, "Error code: %d\n", blkcp_err);
@@ -38,11 +38,11 @@ int main(int argc, char **argv) {
 }
 
 int extfs_copy(const char *source, const char *dest) {
-	int blocks_copied = 0;
-	int block_size_bytes;
+    int blocks_copied = 0;
+    int block_size_bytes;
     int i;
     int j;
-	ext2_filsys fs;
+    ext2_filsys fs;
     FILE *source_fd = NULL;
     FILE *dest_fd = NULL;
     void *block_bitmap = NULL;
@@ -137,5 +137,5 @@ out:
     if (blkcp_err) {
         return -1;
     }
-	return blocks_copied;
+    return blocks_copied;
 }
