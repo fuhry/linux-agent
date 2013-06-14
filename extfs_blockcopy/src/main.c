@@ -73,10 +73,19 @@ int extfs_copy(const char *source, const char *dest) {
 
     block_size_bytes = 1024 << fs->super->s_log_block_size;
     block_buf = malloc(block_size_bytes);
+    if (block_buf == NULL) {
+        blkcp_err = errno;
+        fprintf(stderr, "Error allocating memory: %s", strerror(blkcp_err));
+        goto out;
+    }
 
     // one bit per block
     block_bitmap = malloc(round_nearest_mult(fs->super->s_blocks_per_group, 8) / 8);
-
+    if (block_bitmap == NULL) {
+        blkcp_err = errno;
+        fprintf(stderr, "Error allocating memory: %s", strerror(blkcp_err));
+        goto out;
+    }
 
     for (i = 0; i < fs->group_desc_count; i++) {
         cur_group_block_offset = i * fs->super->s_blocks_per_group;
