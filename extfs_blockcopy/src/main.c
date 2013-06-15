@@ -10,7 +10,7 @@ int blkcp_err = 0;
 
 int main(int argc, char **argv) {
     if (argc != 3) {
-        printf("usage: %s ext_block_dev dest_block_dev\n", argv[0]);
+        fprintf(stderr, "usage: %s ext_block_dev dest_block_dev\n", argv[0]);
         return EINVAL;
     }
 
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
         return blkcp_err;
     }
     else {
-        printf("Copied %d blocks.\n", blks_copied);
+        fprintf(stderr, "Copied %d blocks.\n", blks_copied);
     }
 
     return 0;
@@ -51,13 +51,13 @@ int extfs_copy(const char *source, const char *dest) {
 
     if ((source_fd = fopen(source, "r")) == NULL) {
         blkcp_err = errno;
-        printf("Error opening %s: %s\n", source, strerror(blkcp_err));
+        fprintf(stderr, "Error opening %s: %s\n", source, strerror(blkcp_err));
         goto out;
     }
 
     if ((dest_fd = fopen(dest, "w")) == NULL) {
         blkcp_err = errno;
-        printf("Error opening %s: %s\n", dest, strerror(blkcp_err));
+        fprintf(stderr, "Error opening %s: %s\n", dest, strerror(blkcp_err));
         goto out;
     }
 
@@ -96,23 +96,23 @@ int extfs_copy(const char *source, const char *dest) {
                 cur_block_offset = cur_group_block_offset + j;
                 if (fseeko(source_fd, block_size_bytes * cur_block_offset, SEEK_SET) == (off_t)(-1)) {
                     blkcp_err = errno;
-                    printf("Error seeking %s: %s. (Block: %d)\n", source, strerror(blkcp_err), (int)cur_block_offset);
+                    fprintf(stderr, "Error seeking %s: %s. (Block: %d)\n", source, strerror(blkcp_err), (int)cur_block_offset);
                     goto out;
                 }
                 if (fseeko(dest_fd, block_size_bytes * cur_block_offset, SEEK_SET) == (off_t)(-1)) {
                     blkcp_err = errno;
-                    printf("Error seeking %s: %s. (Block: %d)\n", dest, strerror(blkcp_err), (int)cur_block_offset);
+                    fprintf(stderr, "Error seeking %s: %s. (Block: %d)\n", dest, strerror(blkcp_err), (int)cur_block_offset);
                     goto out;
                 }
                 if (fread(block_buf, block_size_bytes, 1, source_fd) != 1) {
                     blkcp_err = errno;
-                    printf("Error reading %s: %s\n", source, strerror(blkcp_err));
+                    fprintf(stderr, "Error reading %s: %s\n", source, strerror(blkcp_err));
                     goto out;
                 }
 
                 if (fwrite(block_buf, block_size_bytes, 1, dest_fd) != 1) {
                     blkcp_err = errno;
-                    printf("Error writing %s: %s\n", dest, strerror(blkcp_err));
+                    fprintf(stderr, "Error writing %s: %s\n", dest, strerror(blkcp_err));
                     goto out;
                 }
                 blocks_copied++;
