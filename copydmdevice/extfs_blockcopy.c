@@ -32,7 +32,7 @@ int extfs_copy(const char *source, const char *dest, int *blocks_copied) {
     off_t cur_block_offset;
     off_t seek_amt;
 
-    initialize_ext2_error_table();
+	add_error_table(&et_ext2_error_table);
 
     if ((source_fd = fopen(source, "r")) == NULL) {
         error(0, errno, "Error opening %s", source);
@@ -131,6 +131,7 @@ out:
 	free(block_buf);
 
     ext2fs_close(fs);
+	remove_error_table(&et_ext2_error_table);
 
 	return r;
 }
