@@ -22,7 +22,6 @@ int extfs_copy(const char *source, const char *dest, int *blocks_copied) {
 
     ext2_filsys fs;
     int b_size_bytes;
-    int seek_amt;
 
     FILE *source_fd = NULL;
     FILE *dest_fd = NULL;
@@ -31,6 +30,7 @@ int extfs_copy(const char *source, const char *dest, int *blocks_copied) {
 
     off_t cur_group_block_offset;
     off_t cur_block_offset;
+    off_t seek_amt;
 
     initialize_ext2_error_table();
 

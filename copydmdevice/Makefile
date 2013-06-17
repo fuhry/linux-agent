@@ -2,7 +2,7 @@ CC=gcc
 EXE=copydmdevice
 LIBS=-ldevmapper -lext2fs
 DEBUG=-g
-CFLAGS=-D_FILE_OFFSET_BITS=64
+CFLAGS=-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 
 main: cow.o extfs_blockcopy.o main.c
 	$(CC) $(CFLAGS) $(DEBUG) -Wall -o $(EXE) extfs_blockcopy.o cow.o main.c $(LIBS)
