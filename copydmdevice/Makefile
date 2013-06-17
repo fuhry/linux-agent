@@ -1,11 +1,10 @@
 CC=cc
-EXE=linux-agent
+EXE=copydmdevice
 LIBS=-ldevmapper
 DEBUG=-g
 
 main: cow.o main.c
-	mkdir -p bin
-	$(CC) $(DEBUG) -Wall -o bin/$(EXE) cow.o main.c $(LIBS)
+	$(CC) $(DEBUG) -Wall -o $(EXE) cow.o main.c $(LIBS)
 
 cow.o: cow.c
 	$(CC) $(DEBUG) -Wall -c cow.c
