@@ -22,9 +22,6 @@
  *
  * - style of this code is directly influenced from the dm_setup source
  *
- * - Call dm_udev_create_cookie at the beginning of a function, and if it
- *   fails return on the spot so we don't end up waiting on a bad semaphore.
- *
  */
 
 static int _duplicate_table(const char *, const char *);
@@ -225,9 +222,6 @@ static int _duplicate_table(const char *dm_source, const char *dm_dest)
 
 	struct dm_task *dm_create_task = NULL;
 
-	if (!dm_udev_create_cookie(&udev_cookie))
-		return 0;
-
 	if (!(dm_create_task = dm_task_create(DM_DEVICE_CREATE)))
 		goto out;
 
@@ -303,10 +297,6 @@ static int _create_snapshot(const char *dm_device_name,
 	char *params = NULL;
 	struct dm_task *dm_create_task = NULL;
 
-	if (!dm_udev_create_cookie(&udev_cookie))
-		goto out;
-
-
 	if (!(dm_create_task = dm_task_create(DM_DEVICE_CREATE)))
 		goto out;
 
@@ -371,15 +361,12 @@ int _create_snapshot_origin(const char *dm_device_name,
 
 	uint64_t num_sectors;
 
-	uint32_t udev_cookie;
+	uint32_t udev_cookie = 0;
 
 	char *params = NULL;
 	const char *dm_dev_dir = NULL;
 
 	struct dm_task *dm_create_task = NULL;
-
-	if (!dm_udev_create_cookie(&udev_cookie))
-		goto out;
 
 	if (!(dm_create_task = dm_task_create(DM_DEVICE_CREATE)))
 		goto out;
@@ -538,9 +525,6 @@ static int _resume(const char *dm_device_name)
 	int r = 0;
 	struct dm_task *dm_resume_task;
 	uint32_t udev_cookie = 0;
-
-	if (!dm_udev_create_cookie(&udev_cookie))
-		goto out;
 
 	if (!(dm_resume_task = dm_task_create(DM_DEVICE_RESUME)))
 		return 0;
