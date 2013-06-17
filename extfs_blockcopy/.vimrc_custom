@@ -1,1 +1,0 @@
-nmap <F8> :w<CR>:make clean<CR>:make<CR>:! if [ -x "./bin/extfs_blockcopy" ]; then ./bin/extfs_blockcopy /dev/loop0 /dev/null; fi<CR>

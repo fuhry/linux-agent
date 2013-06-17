@@ -1,27 +1,42 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <limits.h>
+#include <error.h>
+#include <errno.h>
 
-int setup_cow_device(char *dm_block_dev, char *mem_dev);
+int setup_cow_device(const char *, const char *, char *);
+int extfs_copy(const char *, const char *, int *);
 
 int main(int argc, char **argv) {
-	char *dm_device_path;
-	// char *dest_block_dev;
-	char *mem_dev;
+	const char *dm_device_path;
+	const char *dest_path;
+	const char *mem_dev;
+
+	char cow_path[PATH_MAX];
+
+	int blocks_copied = 0;
 
 	if (argc != 4) {
-		fprintf(stderr, "usage: %s dm_block_dev dest_block_dev mem_dev\n",
+		fprintf(stderr, "usage: %s dm_block_dev dest_path mem_dev\n",
 				argv[0]);
 		return 1;
 	}
 
 	dm_device_path = argv[1];
-	// dest_block_dev = argv[2];
+	dest_path = argv[2];
 	mem_dev = argv[3];
 
-	if (!setup_cow_device(dm_device_path, mem_dev)) {
-		fprintf(stderr, "Error setting up COW device for %s\n", argv[1]);
+	if (!setup_cow_device(dm_device_path, mem_dev, cow_path)) {
+		error(0, errno, "Error setting up COW device for %s", argv[1]);
 		return 1;
 	}
+
+	if (!extfs_copy(cow_path, dest_path, &blocks_copied)) {
+		error(0, errno, "Error copying blocks from COW device");
+		return 1;
+	}
+
+	printf("Copied %d blocks to %s\n", blocks_copied, dest_path);
 
 	return 0;
 }

@@ -37,7 +37,8 @@ static int _load_from_device(const char *, const char *);
 static int _copy_targets_from_device(const char *, struct dm_task *);
 static int _get_num_sectors(const char *, uint64_t *);
 
-int setup_cow_device(const char *dm_device_path, const char *mem_dev)
+int setup_cow_device(const char *dm_device_path, const char *mem_dev,
+		char *cow_path)
 {
 	int r = 0;
 
@@ -47,6 +48,7 @@ int setup_cow_device(const char *dm_device_path, const char *mem_dev)
 	char *snap_name = NULL;
 	char *orig_name = NULL;
 	const char *dm_device_name = NULL;
+	const char *dm_dev_dir = NULL;
 
 	dm_device_name = basename(dm_device_path);
 
@@ -105,6 +107,11 @@ int setup_cow_device(const char *dm_device_path, const char *mem_dev)
 		goto out;
 	}
 
+	dm_dev_dir = dm_dir();
+	strcpy(cow_path, dm_dev_dir);
+	strcat(cow_path, "/");
+	strcat(cow_path, snap_name);
+
 	r = 1;
 
 out:
@@ -158,7 +165,8 @@ out:
 	return r;
 }
 
-static int _copy_targets_from_device(const char *dm_source, struct dm_task *dm_dest_task)
+static int _copy_targets_from_device(const char *dm_source,
+		struct dm_task *dm_dest_task)
 {
 	int r = 0;
 
@@ -238,8 +246,6 @@ static int _create_snapshot(const char *dm_device_name,
 	strcat(params, NON_PERSISTENT);
 	strcat(params, " ");
 	strcat(params, CHUNK_SIZE);
-
-	printf("%s\n", params);
 
 	if (!_get_num_sectors(dm_device_name, &num_sectors))
 		goto out;
@@ -369,7 +375,8 @@ out:
 	return r;
 }
 
-static int _load_from_device(const char *dm_source_name, const char *dm_dest_name)
+static int _load_from_device(const char *dm_source_name,
+		const char *dm_dest_name)
 {
 	int r = 0;
 	struct dm_task *dm_load_task = NULL;
