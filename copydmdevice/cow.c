@@ -30,40 +30,55 @@
 static int _duplicate_table(const char *, const char *);
 static int _create_snapshot(const char *, const char *, const char*);
 static int _create_snapshot_origin(const char *, const char *);
+static int _suspend(const char *);
+static int _resume(const char *);
+static int _load_from_device(const char *, const char *);
 
+static int _copy_targets_from_device(const char *, struct dm_task *);
 static int _get_num_sectors(const char *, uint64_t *);
 
 int setup_cow_device(const char *dm_device_path, const char *mem_dev)
 {
 	int r = 0;
+
+	int suspended = 0;
+
 	char *dup_name = NULL;
 	char *snap_name = NULL;
 	char *orig_name = NULL;
-	const char *dm_source = NULL;
+	const char *dm_device_name = NULL;
 
-	dm_source = basename(dm_device_path);
+	dm_device_name = basename(dm_device_path);
 
-	dup_name = malloc(strlen(dm_source) + strlen(DUP_POSTFIX) + 1);
+	dup_name = malloc(strlen(dm_device_name) + strlen(DUP_POSTFIX) + 1);
 	if (dup_name == NULL) {
 		perror("malloc");
 		goto out;
 	}
 
-	strcpy(dup_name, dm_source);
+	strcpy(dup_name, dm_device_name);
 	strcat(dup_name, DUP_POSTFIX);
 
-	if (!_duplicate_table(dm_source, dup_name)) {
+	if (!_duplicate_table(dm_device_name, dup_name)) {
 		error(0, 0, "Error creating duplicate table");
 		goto out;
 	}
 
-	snap_name = malloc(strlen(dm_source) + strlen(SNAP_POSTFIX) + 1);
+	if (!_suspend(dm_device_name)) {
+		error(0, 0, "Error suspend device");
+		goto out;
+	}
+
+	/* Set this flag so we know to resume */
+	suspended = 1;
+
+	snap_name = malloc(strlen(dm_device_name) + strlen(SNAP_POSTFIX) + 1);
 	if (snap_name == NULL) {
 		perror("malloc");
 		goto out;
 	}
 
-	strcpy(snap_name, dm_source);
+	strcpy(snap_name, dm_device_name);
 	strcat(snap_name, SNAP_POSTFIX);
 
 	if (!_create_snapshot(dup_name, snap_name, mem_dev)) {
@@ -71,13 +86,13 @@ int setup_cow_device(const char *dm_device_path, const char *mem_dev)
 		goto out;
 	}
 
-	orig_name = malloc(strlen(dm_source) + strlen(ORIGIN_POSTFIX) + 1);
+	orig_name = malloc(strlen(dm_device_name) + strlen(ORIGIN_POSTFIX) + 1);
 	if (orig_name == NULL) {
 		perror("malloc");
 		goto out;
 	}
 
-	strcpy(orig_name, dm_source);
+	strcpy(orig_name, dm_device_name);
 	strcat(orig_name, ORIGIN_POSTFIX);
 
 	if (!_create_snapshot_origin(dup_name, orig_name)) {
@@ -85,9 +100,21 @@ int setup_cow_device(const char *dm_device_path, const char *mem_dev)
 		goto out;
 	}
 
+	if (!_load_from_device(orig_name, dm_device_name)) {
+		error(0, 0, "Error loading snapshot-origin into original device");
+		goto out;
+	}
+
 	r = 1;
 
 out:
+	if (suspended) {
+		if (!_resume(dm_device_name)) {
+			/* TODO: Make this much, much louder */
+			error(0, 0, "Error resuming device");
+		}
+	}
+
 	free(dup_name);
 	free(snap_name);
 	free(orig_name);
@@ -101,39 +128,18 @@ static int _duplicate_table(const char *dm_source, const char *dm_dest)
 
 	uint32_t udev_cookie = 0;
 
-	void *next = NULL;
-	uint64_t start;
-	uint64_t length;
-	char *target_type = NULL;
-	char *params = NULL;
-
 	struct dm_task *dm_create_task = NULL;
-	struct dm_task *dm_table_task = NULL;
 
 	if (!dm_udev_create_cookie(&udev_cookie))
 		return 0;
 
-	if (!(dm_table_task = dm_task_create(DM_DEVICE_TABLE)))
-		goto out;
-
-	if (!dm_task_set_name(dm_table_task, dm_source))
-		goto out;
-
-	if (!dm_task_run(dm_table_task))
-		goto out;
-
 	if (!(dm_create_task = dm_task_create(DM_DEVICE_CREATE)))
 		goto out;
 
-	/* Copy targets from table task to create task */
-	do {
-		next = dm_get_next_target(dm_table_task, next, &start, &length,
-				&target_type, &params);
-		dm_task_add_target(dm_create_task, start, length, target_type,
-				params);
-	} while(next);
-
 	if (!dm_task_set_name(dm_create_task, dm_dest))
+		goto out;
+
+	if (!_copy_targets_from_device(dm_source, dm_create_task))
 		goto out;
 
 	if (!dm_task_set_cookie(dm_create_task, &udev_cookie, 0))
@@ -145,10 +151,45 @@ static int _duplicate_table(const char *dm_source, const char *dm_dest)
 	r = 1;
 
 out:
-	dm_task_destroy(dm_table_task);
 	dm_task_destroy(dm_create_task);
 
 	dm_udev_wait(udev_cookie);
+
+	return r;
+}
+
+static int _copy_targets_from_device(const char *dm_source, struct dm_task *dm_dest_task)
+{
+	int r = 0;
+
+	void *next = NULL;
+	uint64_t start;
+	uint64_t length;
+	char *target_type = NULL;
+	char *params = NULL;
+
+	struct dm_task *dm_table_task = NULL;
+
+	if (!(dm_table_task = dm_task_create(DM_DEVICE_TABLE)))
+		goto out;
+
+	if (!dm_task_set_name(dm_table_task, dm_source))
+		goto out;
+
+	if (!dm_task_run(dm_table_task))
+		goto out;
+
+	do {
+		next = dm_get_next_target(dm_table_task, next, &start, &length,
+				&target_type, &params);
+		dm_task_add_target(dm_dest_task, start, length, target_type,
+				params);
+	} while(next);
+
+	r = 1;
+
+out:
+	dm_task_destroy(dm_table_task);
 
 	return r;
 }
@@ -328,28 +369,72 @@ out:
 	return r;
 }
 
-
-int _get_info(const char *dm_device, struct dm_info *dm_info)
+static int _load_from_device(const char *dm_source_name, const char *dm_dest_name)
 {
 	int r = 0;
-	struct dm_task *dm_info_task;
+	struct dm_task *dm_load_task = NULL;
 
-	if (!(dm_info_task = dm_task_create(DM_DEVICE_INFO)))
+	if (!(dm_load_task = dm_task_create(DM_DEVICE_RELOAD)))
 		return 0;
 
-	if (!dm_task_set_name(dm_info_task, dm_device))
+	if (!dm_task_set_name(dm_load_task, dm_dest_name))
 		goto out;
 
-	if (!dm_task_run(dm_info_task))
+	if (!_copy_targets_from_device(dm_source_name, dm_load_task))
 		goto out;
 
-	if (!dm_task_get_info(dm_info_task, dm_info))
+	if (!dm_task_run(dm_load_task))
 		goto out;
 
 	r = 1;
 
 out:
-	dm_task_destroy(dm_info_task);
+	dm_task_destroy(dm_load_task);
 
 	return r;
 }
+
+int _suspend(const char *dm_device_name)
+{
+	int r = 0;
+	struct dm_task *dm_suspend_task = NULL;
+
+	if (!(dm_suspend_task = dm_task_create(DM_DEVICE_SUSPEND)))
+		return 0;
+
+	if (!dm_task_set_name(dm_suspend_task, dm_device_name))
+		goto out;
+
+	if (!dm_task_run(dm_suspend_task))
+		goto out;
+
+	r = 1;
+
+out:
+	dm_task_destroy(dm_suspend_task);
+
+	return r;
+}
+
+static int _resume(const char *dm_device_name)
+{
+	int r = 0;
+	struct dm_task *dm_resume_task;
+
+	if (!(dm_resume_task = dm_task_create(DM_DEVICE_RESUME)))
+		return 0;
+
+	if (!dm_task_set_name(dm_resume_task, dm_device_name))
+		goto out;
+
+	if (!dm_task_run(dm_resume_task))
+		goto out;
+
+	r = 1;
+
+out:
+	dm_task_destroy(dm_resume_task);
+
+	return r;
+}
+
