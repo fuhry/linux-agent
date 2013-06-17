@@ -32,10 +32,76 @@ static int _create_snapshot(const char *, const char *, const char*);
 static int _create_snapshot_origin(const char *, const char *);
 static int _suspend(const char *);
 static int _resume(const char *);
+static int _remove(const char *);
 static int _load_from_device(const char *, const char *);
 
 static int _copy_targets_from_device(const char *, struct dm_task *);
 static int _get_num_sectors(const char *, uint64_t *);
+
+/* All of these functions malloc memory, caller must free */
+static int _create_dup_name(const char *, char **);
+static int _create_snap_name(const char *, char **);
+static int _create_orig_name(const char *, char **);
+
+int takedown_cow_device(const char *dm_device_path)
+{
+	int r = 0;
+
+	int suspended = 0;
+
+	char *dup_name = NULL;
+	char *snap_name = NULL;
+	char *orig_name = NULL;
+	const char *dm_device_name = NULL;
+
+	dm_device_name = basename(dm_device_path);
+
+	if (!_create_dup_name(dm_device_name, &dup_name))
+		goto out;
+
+	if (!_suspend(dm_device_name))
+		goto out;
+
+	suspended = 1;
+
+	if (!_load_from_device(dup_name, dm_device_name))
+		goto out;
+
+	if (!_resume(dm_device_name))
+		goto out;
+
+	suspended = 0;
+
+	if (!_create_orig_name(dm_device_name, &orig_name))
+		goto out;
+
+	if (!_remove(orig_name))
+		goto out;
+
+	if (!_create_snap_name(dm_device_name, &snap_name))
+		goto out;
+
+	if (!_remove(snap_name))
+		goto out;
+
+	if (!_remove(dup_name))
+		goto out;
+
+	r = 1;
+
+out:
+	if (suspended) {
+		if (!_resume(dm_device_name))
+			/* TODO: Make this much, much louder */
+			error(0, 0, "Error resuming device");
+	}
+
+	free(dup_name);
+	free(snap_name);
+	free(orig_name);
+
+	return r;
+}
 
 int setup_cow_device(const char *dm_device_path, const char *mem_dev,
 		char *cow_path)
@@ -52,14 +118,8 @@ int setup_cow_device(const char *dm_device_path, const char *mem_dev,
 
 	dm_device_name = basename(dm_device_path);
 
-	dup_name = malloc(strlen(dm_device_name) + strlen(DUP_POSTFIX) + 1);
-	if (dup_name == NULL) {
-		perror("malloc");
+	if (!_create_dup_name(dm_device_name, &dup_name))
 		goto out;
-	}
-
-	strcpy(dup_name, dm_device_name);
-	strcat(dup_name, DUP_POSTFIX);
 
 	if (!_duplicate_table(dm_device_name, dup_name)) {
 		error(0, 0, "Error creating duplicate table");
@@ -74,28 +134,16 @@ int setup_cow_device(const char *dm_device_path, const char *mem_dev,
 	/* Set this flag so we know to resume */
 	suspended = 1;
 
-	snap_name = malloc(strlen(dm_device_name) + strlen(SNAP_POSTFIX) + 1);
-	if (snap_name == NULL) {
-		perror("malloc");
+	if (!_create_snap_name(dm_device_name, &snap_name))
 		goto out;
-	}
-
-	strcpy(snap_name, dm_device_name);
-	strcat(snap_name, SNAP_POSTFIX);
 
 	if (!_create_snapshot(dup_name, snap_name, mem_dev)) {
 		error(0, 0, "Error creating snapshot");
 		goto out;
 	}
 
-	orig_name = malloc(strlen(dm_device_name) + strlen(ORIGIN_POSTFIX) + 1);
-	if (orig_name == NULL) {
-		perror("malloc");
+	if (!_create_orig_name(dm_device_name, &orig_name))
 		goto out;
-	}
-
-	strcpy(orig_name, dm_device_name);
-	strcat(orig_name, ORIGIN_POSTFIX);
 
 	if (!_create_snapshot_origin(dup_name, orig_name)) {
 		error(0, 0, "Error creating snapshot-origin");
@@ -127,6 +175,46 @@ out:
 	free(orig_name);
 
 	return r;
+}
+
+static int _create_dup_name(const char *dm_device_name, char **dup_name)
+{
+	*dup_name = malloc(strlen(dm_device_name) + strlen(DUP_POSTFIX) + 1);
+	if (dup_name == NULL) {
+		perror("malloc");
+		return 0;
+	}
+
+	strcpy(*dup_name, dm_device_name);
+	strcat(*dup_name, DUP_POSTFIX);
+
+	return 1;
+}
+static int _create_snap_name(const char *dm_device_name, char **snap_name)
+{
+	*snap_name = malloc(strlen(dm_device_name) + strlen(SNAP_POSTFIX) + 1);
+	if (*snap_name == NULL) {
+		perror("malloc");
+		return 0;
+	}
+
+	strcpy(*snap_name, dm_device_name);
+	strcat(*snap_name, SNAP_POSTFIX);
+
+	return 1;
+}
+
+static int _create_orig_name(const char *dm_device_name, char **orig_name)
+{
+	*orig_name = malloc(strlen(dm_device_name) + strlen(ORIGIN_POSTFIX) + 1);
+	if (*orig_name == NULL) {
+		perror("malloc");
+		return 0;
+	}
+
+	strcpy(*orig_name, dm_device_name);
+	strcat(*orig_name, ORIGIN_POSTFIX);
+	return 1;
 }
 
 static int _duplicate_table(const char *dm_source, const char *dm_dest)
@@ -401,6 +489,28 @@ out:
 	return r;
 }
 
+int _remove(const char *dm_device_name)
+{
+	int r = 0;
+	struct dm_task *dm_remove_task = NULL;
+
+	if (!(dm_remove_task = dm_task_create(DM_DEVICE_REMOVE)))
+		return 0;
+
+	if (!dm_task_set_name(dm_remove_task, dm_device_name))
+		goto out;
+
+	if (!dm_task_run(dm_remove_task))
+		goto out;
+
+	r = 1;
+
+out:
+	dm_task_destroy(dm_remove_task);
+
+	return r;
+}
+
 int _suspend(const char *dm_device_name)
 {
 	int r = 0;
@@ -427,11 +537,18 @@ static int _resume(const char *dm_device_name)
 {
 	int r = 0;
 	struct dm_task *dm_resume_task;
+	uint32_t udev_cookie = 0;
+
+	if (!dm_udev_create_cookie(&udev_cookie))
+		goto out;
 
 	if (!(dm_resume_task = dm_task_create(DM_DEVICE_RESUME)))
 		return 0;
 
 	if (!dm_task_set_name(dm_resume_task, dm_device_name))
+		goto out;
+
+	if (!dm_task_set_cookie(dm_resume_task, &udev_cookie, 0))
 		goto out;
 
 	if (!dm_task_run(dm_resume_task))
@@ -441,6 +558,8 @@ static int _resume(const char *dm_device_name)
 
 out:
 	dm_task_destroy(dm_resume_task);
+
+	dm_udev_wait(udev_cookie);
 
 	return r;
 }

@@ -5,6 +5,7 @@
 #include <errno.h>
 
 int setup_cow_device(const char *, const char *, char *);
+int takedown_cow_device(const char *);
 int extfs_copy(const char *, const char *, int *);
 
 int main(int argc, char **argv) {
@@ -33,10 +34,15 @@ int main(int argc, char **argv) {
 
 	if (!extfs_copy(cow_path, dest_path, &blocks_copied)) {
 		error(0, errno, "Error copying blocks from COW device");
-		return 1;
+		/* Don't return on error as we still need to clean up */
 	}
 
 	printf("Copied %d blocks to %s\n", blocks_copied, dest_path);
+
+	if (!takedown_cow_device(dm_device_path)) {
+		error(0, errno, "Error taking down COW device for %s", argv[1]);
+		return 1;
+	}
 
 	return 0;
 }
