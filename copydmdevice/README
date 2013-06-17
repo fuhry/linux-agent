@@ -1,0 +1,8 @@
+Libraries:
+    You will need libdevmapper and libext2fs to run
+    You will need the development versions of the above to build
+
+Keep in mind before running (a.k.a. things to be fixed in later versions):
+    The target must be a device mapper device.
+    If you don't have the kernel modules you need loaded, your entire computer
+        will hang until you hard reboot it.
