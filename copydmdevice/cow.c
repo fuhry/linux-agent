@@ -1,4 +1,3 @@
-#define _GNU_SOURCE /* for basename, see man 3 basename */
 #include <string.h>
 #include <error.h>
 #include <libdevmapper.h>
