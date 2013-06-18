@@ -17,8 +17,8 @@ int extfs_copy(const char *source, const char *dest, int *blocks_copied) {
 
 	int extfs_err = 0;
 
-	int i;
-	int j;
+	unsigned int i;
+	unsigned int j;
 
 	ext2_filsys fs;
 	int b_size_bytes;
