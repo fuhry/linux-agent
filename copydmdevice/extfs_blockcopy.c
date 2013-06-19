@@ -6,13 +6,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int extfs_copy(const char *, const char *, int *);
+int extfs_copy(const char *, const char *, unsigned long *);
 
 static inline int round_up(int num, unsigned int mult) {
 	return mult * (((num - 1) / mult) + 1);
 }
 
-int extfs_copy(const char *source, const char *dest, int *blocks_copied) {
+int extfs_copy(const char *source, const char *dest,
+		unsigned long *blocks_copied) {
 	int r = 0;
 
 	int extfs_err = 0;
