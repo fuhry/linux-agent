@@ -63,7 +63,7 @@ int extfs_copy(const char *source, const char *dest, int *blocks_copied) {
 		goto out;
 	}
 
-	// one bit per block
+	/* one bit per block */
 	block_bitmap = malloc(round_up(fs->super->s_blocks_per_group, 8) / 8);
 	if (block_bitmap == NULL) {
 		perror("malloc");
@@ -81,6 +81,8 @@ int extfs_copy(const char *source, const char *dest, int *blocks_copied) {
 				fs->super->s_blocks_per_group,
 				block_bitmap);
 
+		/* Break if we have reached the end of this group (s_blocks_per_group)
+		 * or the end of the file system (s_blocks_count) */
 		for (j = 0; j < fs->super->s_blocks_per_group &&
 				j + cur_group_block_offset < fs->super->s_blocks_count; j++) {
 
