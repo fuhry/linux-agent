@@ -1,8 +1,13 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <limits.h>
-#include <error.h>
 #include <errno.h>
+#include <error.h>
+#include <getopt.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+enum {
+	NON_DM = 0
+};
 
 int setup_cow_device(const char *, const char *, char *);
 int takedown_cow_device(const char *);
@@ -10,39 +15,76 @@ int extfs_copy(const char *, const char *, unsigned long *);
 
 int main(int argc, char **argv)
 {
-	const char *dm_device_path;
+	const char *source_path;
 	const char *dest_path;
 	const char *mem_dev;
+	const char *copy_from;
 
 	char cow_path[PATH_MAX];
 
 	unsigned long blocks_copied = 0;
 
-	if (argc != 4) {
-		fprintf(stderr, "usage: %s dm_block_dev dest_path mem_dev\n",
-				argv[0]);
+	int c;
+	int is_dm_dev = 1;
+	const char *prog_name;
+
+	prog_name = argv[0];
+
+	static struct option long_options[] =
+	{
+		{"nondm",	no_argument,	0,	NON_DM}
+	};
+
+	while ((c = getopt_long(argc, argv, "", long_options, NULL)) != -1) {
+		switch (c) {
+		case NON_DM:
+			is_dm_dev = 0;
+			break;
+		case '?':
+			break;
+		default:
+			printf("How did we get here this isn't good\n");
+		}
+	}
+	/* argc is now the number of non-option arguments and does not include the
+	 * program name */
+	argc -= optind;
+	argv += optind;
+
+	if ((is_dm_dev && argc != 3) || (!is_dm_dev && argc != 2)) {
+		fprintf(stderr,
+				"usage: %s [--nondm] dm_block_dev dest_path [mem_dev]\n",
+				prog_name);
 		return 1;
 	}
 
-	dm_device_path = argv[1];
-	dest_path = argv[2];
-	mem_dev = argv[3];
+	source_path = argv[0];
+	dest_path = argv[1];
+	if (is_dm_dev)
+		mem_dev = argv[2];
 
-	if (!setup_cow_device(dm_device_path, mem_dev, cow_path)) {
-		error(0, errno, "Error setting up COW device for %s", argv[1]);
-		return 1;
+	if (is_dm_dev) {
+		if (!setup_cow_device(source_path, mem_dev, cow_path)) {
+			error(0, errno, "Error setting up COW device for %s", argv[1]);
+			return 1;
+		}
+		copy_from = cow_path;
+	} else {
+		copy_from = source_path;
 	}
 
-	if (!extfs_copy(cow_path, dest_path, &blocks_copied)) {
+	if (!extfs_copy(copy_from, dest_path, &blocks_copied)) {
 		error(0, errno, "Error copying blocks from COW device");
 		/* Don't return on error as we still need to clean up */
 	}
 
 	printf("Copied %ld blocks to %s\n", blocks_copied, dest_path);
 
-	if (!takedown_cow_device(dm_device_path)) {
-		error(0, errno, "Error taking down COW device for %s", argv[1]);
-		return 1;
+	if (is_dm_dev) {
+		if (!takedown_cow_device(source_path)) {
+			error(0, errno, "Error taking down COW device for %s", argv[1]);
+			return 1;
+		}
 	}
 
 	return 0;
