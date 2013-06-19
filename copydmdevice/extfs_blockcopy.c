@@ -78,7 +78,8 @@ int extfs_copy(const char *source, const char *dest,
 	}
 
 	for (i = 0; i < fs->group_desc_count; i++) {
-		cur_group_block_offset = i * fs->super->s_blocks_per_group;
+		cur_group_block_offset = fs->super->s_first_data_block +
+			(i * fs->super->s_blocks_per_group);
 
 		ext2fs_get_block_bitmap_range(fs->block_map, cur_group_block_offset,
 				fs->super->s_blocks_per_group,
@@ -89,7 +90,8 @@ int extfs_copy(const char *source, const char *dest,
 		for (j = 0; j < fs->super->s_blocks_per_group &&
 				j + cur_group_block_offset < fs->super->s_blocks_count; j++) {
 
-			if (ext2fs_test_bit(j, block_bitmap)) {
+			if (ext2fs_test_bit(j, block_bitmap) ||
+					j < fs->super->s_first_data_block) {
 				cur_block_offset = cur_group_block_offset + j;
 				seek_amt = b_size_bytes * cur_block_offset;
 
