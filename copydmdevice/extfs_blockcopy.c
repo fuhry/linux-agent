@@ -23,7 +23,7 @@ int extfs_copy(const char *source, const char *dest,
 	unsigned int i;
 	unsigned int j;
 
-	ext2_filsys fs;
+	ext2_filsys fs = NULL;
 	int b_size_bytes;
 
 	FILE *source_fd = NULL;
@@ -131,11 +131,14 @@ out:
 		fclose(dest_fd);
 	}
 
+	if (fs != NULL) {
+		ext2fs_close(fs);
+	}
+
 	free(block_bitmap);
 
 	free(block_buf);
 
-	ext2fs_close(fs);
 	remove_error_table(&et_ext2_error_table);
 
 	return r;
