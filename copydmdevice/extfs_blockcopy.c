@@ -66,7 +66,8 @@ int extfs_copy(const char *source, const char *dest,
 		goto out;
 	}
 
-	/* one bit per block */
+	/* One bit in the bitmap corresponds to the allocation of a single block
+	 * As we check one group at a time, allocate space for a group of bits */
 	block_bitmap = malloc(round_up(fs->super->s_blocks_per_group, 8) / 8);
 	if (block_bitmap == NULL) {
 		perror("malloc");
@@ -77,7 +78,11 @@ int extfs_copy(const char *source, const char *dest,
 		*blocks_copied = 0;
 	}
 
+	/* A group is composed of blocks. We are backing up at the block level,
+	 * but load the bitmap for a groups of blocks into memory at a time */
 	for (i = 0; i < fs->group_desc_count; i++) {
+
+		/* Calculate the block offset for the current group */
 		cur_group_block_offset = fs->super->s_first_data_block +
 			(i * fs->super->s_blocks_per_group);
 
@@ -89,6 +94,7 @@ int extfs_copy(const char *source, const char *dest,
 		for (j = 0; j < fs->super->s_blocks_per_group &&
 				j + cur_group_block_offset < fs->super->s_blocks_count; j++) {
 
+			/* If the bit is set then the block is allocated. */
 			if (ext2fs_test_bit(j, block_bitmap)) {
 				cur_block_offset = cur_group_block_offset + j;
 				seek_amt = b_size_bytes * cur_block_offset;
