@@ -82,8 +82,7 @@ int extfs_copy(const char *source, const char *dest,
 			(i * fs->super->s_blocks_per_group);
 
 		ext2fs_get_block_bitmap_range(fs->block_map, cur_group_block_offset,
-				fs->super->s_blocks_per_group,
-				block_bitmap);
+				fs->super->s_blocks_per_group, block_bitmap);
 
 		/* Break if we have reached the end of this group (s_blocks_per_group)
 		 * or the end of the file system (s_blocks_count) */
