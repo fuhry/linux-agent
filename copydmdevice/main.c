@@ -8,7 +8,8 @@ int setup_cow_device(const char *, const char *, char *);
 int takedown_cow_device(const char *);
 int extfs_copy(const char *, const char *, unsigned long *);
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	const char *dm_device_path;
 	const char *dest_path;
 	const char *mem_dev;
