@@ -4,7 +4,6 @@
 #include <ext2fs/ext2_io.h>
 #include <ext2fs/ext2fs.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 int extfs_copy(const char *, const char *, unsigned long *);
 

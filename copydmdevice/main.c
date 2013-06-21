@@ -3,7 +3,6 @@
 #include <getopt.h>
 #include <limits.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 enum {
 	NON_DM = 0

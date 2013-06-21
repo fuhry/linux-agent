@@ -1,8 +1,6 @@
-#include <string.h>
 #include <error.h>
 #include <libdevmapper.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #define DUP_POSTFIX "_datto_dup"
 #define SNAP_POSTFIX "_datto_cow"
