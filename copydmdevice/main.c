@@ -4,6 +4,10 @@
 #include <limits.h>
 #include <stdio.h>
 
+/* While we could do detection on if a device is a DM device or not, we
+ * force the user to explicitly declare the device is a regular block device.
+ * Non-DM devices should only be backed up under unusual circumstances.
+ */
 enum {
 	NON_DM = 0
 };
