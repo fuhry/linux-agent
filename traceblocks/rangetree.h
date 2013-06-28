@@ -21,4 +21,6 @@ struct range {
  */
 extern struct range *add_value(long, struct rb_root *);
 
+extern void free_tree(struct rb_root *);
+
 #endif

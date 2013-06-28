@@ -40,12 +40,13 @@ int main()
 		perror("read");
 	}
 
-	/* Iterate through the tree and free each node */
-	while ((node = rb_first(range_tree))) {
+	node = rb_first(range_tree);
+	while ((node = rb_next(node))) {
 		range = rb_entry(node, struct range, range_node);
 		printf("%ld-%ld\n", range->start, range->end);
-		rb_erase(node, range_tree);
-		free(range);
 	}
+
+	free_tree(range_tree);
+
 	return 0;
 }

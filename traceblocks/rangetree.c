@@ -53,3 +53,17 @@ struct range *add_value(long value, struct rb_root *root)
 
 	return range;
 }
+
+void free_tree(struct rb_root *tree)
+{
+	struct rb_node *node = NULL;
+	struct range *range = NULL;
+
+	/* Iterate through the tree and free each node */
+	while ((node = rb_first(tree))) {
+		range = rb_entry(node, struct range, range_node);
+		rb_erase(node, tree);
+		free(range);
+	}
+}
+
