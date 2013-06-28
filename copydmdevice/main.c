@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 		case '?':
 			break;
 		default:
-			printf("How did we get here this isn't good\n");
+			fprintf(stderr, "Reached unexpected branch\n");
 		}
 	}
 	/* argc is now the number of non-option arguments and does not include the
