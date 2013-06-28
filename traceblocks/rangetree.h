@@ -4,7 +4,7 @@
 #include "rbtree.h"
 #include <unistd.h>
 
-/* startis inclusive, end is exclusive */
+/* start is inclusive, end is exclusive */
 struct range {
 	long start;
 	struct rb_node range_node;
