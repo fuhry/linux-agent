@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 	signal(SIGTERM, cleanup);
 	signal(SIGINT, cleanup);
 
-    num_cpus = get_nprocs();
+	num_cpus = get_nprocs();
 
 	if ((dev_fd = open(argv[1], O_RDONLY | O_NONBLOCK)) == -1) {
 		perror("open");
@@ -59,42 +59,43 @@ int main(int argc, char **argv) {
 	if (ioctl(dev_fd, BLKTRACESTART))
 		perror("ioctl: BLKTRACESTART");
 
-    pfds = malloc(num_cpus * sizeof(struct pollfd));
-    for (i = 0; i < num_cpus; i++) {
-        snprintf(trace_path, sizeof(trace_path), "%s/block/%s/trace%d",
-                DEBUG_FS_PATH, buts.name, i);
-        fprintf(stderr, "%s\n", trace_path);
+	pfds = malloc(num_cpus * sizeof(struct pollfd));
+	for (i = 0; i < num_cpus; i++) {
+		snprintf(trace_path, sizeof(trace_path), "%s/block/%s/trace%d",
+				DEBUG_FS_PATH, buts.name, i);
+		fprintf(stderr, "%s\n", trace_path);
 
-        if ((trace_fd = open(trace_path, O_RDONLY | O_NONBLOCK)) == -1)
-            perror("open");
+		if ((trace_fd = open(trace_path, O_RDONLY | O_NONBLOCK)) == -1)
+			perror("open");
 
-        pfds[i].fd = trace_fd;
-        pfds[i].events = POLLIN;
-    }
+		pfds[i].fd = trace_fd;
+		pfds[i].events = POLLIN;
+	}
 
-    buf = malloc(READ_BUF_SIZE);
+	buf = malloc(READ_BUF_SIZE);
 
 	for (;;) {
 		poll_ret = poll(pfds, num_cpus, BLOCK_TIME_MILLIS);
 		if (poll_ret < 0)
-            perror("poll");
+			perror("poll");
 
-        for (i = 0; i < num_cpus; i++) {
-            trace_fd = pfds[i].fd;
+		for (i = 0; i < num_cpus; i++) {
+			trace_fd = pfds[i].fd;
 
-            read_bytes = read(trace_fd, buf, READ_BUF_SIZE);
+			read_bytes = read(trace_fd, buf, READ_BUF_SIZE);
 
-            if (read_bytes == (size_t)(-1)) {
-                perror("read");
-            }
+			if (read_bytes == (size_t)(-1)) {
+				perror("read");
+			}
 
-            if (read_bytes > 0) {
-                fprintf(stderr, "Read %ld bytes\n", (long int)read_bytes);
-            }
+			if (read_bytes > 0) {
+				fprintf(stderr, "Read %ld bytes\n",
+					(long int)read_bytes);
+			}
 
-            total_read_bytes += read_bytes;
-        }
-    }
+			total_read_bytes += read_bytes;
+		}
+	}
 	return 1;
 }
 
@@ -102,17 +103,17 @@ void cleanup(int signum) {
 	int trace_fd;
 	int i;
 
-    for (i = 0; i < num_cpus; i++) {
-        trace_fd = pfds[i].fd;
-        if (trace_fd != -1) {
-            if (close(trace_fd)) {
-                perror("close trace_fd");
-            }
-        }
-    }
+	for (i = 0; i < num_cpus; i++) {
+		trace_fd = pfds[i].fd;
+		if (trace_fd != -1) {
+			if (close(trace_fd)) {
+				perror("close trace_fd");
+			}
+		}
+	}
 
-    free(buf);
-    free(pfds);
+	free(buf);
+	free(pfds);
 
 	if (ioctl(dev_fd, BLKTRACESTOP))
 		perror("ioctl: BLKTRACESTOP");
@@ -120,11 +121,11 @@ void cleanup(int signum) {
 	if (ioctl(dev_fd, BLKTRACETEARDOWN))
 		perror("ioctl: BLKTRACETEARDOWN");
 
-    if (dev_fd != -1) {
-        if (close(dev_fd)) {
-            perror("close dev_fd");
-        }
-    }
+	if (dev_fd != -1) {
+		if (close(dev_fd)) {
+			perror("close dev_fd");
+		}
+	}
 
 	signal(signum, SIG_DFL);
 	raise(signum);
