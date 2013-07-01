@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 
 	buf = malloc(READ_BUF_SIZE);
 
-	for (;;) {
+	while (1) {
 		poll_ret = poll(pfds, num_cpus, BLOCK_TIME_MILLIS);
 		if (poll_ret < 0)
 			perror("poll");
