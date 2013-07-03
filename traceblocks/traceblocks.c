@@ -5,7 +5,6 @@
 #include <linux/fs.h>
 #include <linux/limits.h>
 #include <poll.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,7 +21,7 @@ int num_cpus;
 int dev_fd = -1;
 struct pollfd *pfds;
 void *buf;
-void cleanup(int signum);
+void cleanup();
 
 int main(int argc, char **argv) {
 	int trace_fd;
@@ -38,8 +37,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	signal(SIGTERM, cleanup);
-	signal(SIGINT, cleanup);
+	atexit(cleanup);
 
 	num_cpus = get_nprocs();
 
@@ -99,7 +97,7 @@ int main(int argc, char **argv) {
 	return 1;
 }
 
-void cleanup(int signum) {
+void cleanup() {
 	int trace_fd;
 	int i;
 
@@ -127,6 +125,4 @@ void cleanup(int signum) {
 		}
 	}
 
-	signal(signum, SIG_DFL);
-	raise(signum);
 }

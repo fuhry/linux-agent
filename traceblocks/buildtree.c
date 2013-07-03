@@ -21,7 +21,7 @@ int main()
 		return 1;
 	}
 
-	printf("sizeof: %d\n", sizeof(struct blk_io_trace));
+	printf("sizeof: %ld\n", sizeof(struct blk_io_trace));
 	while ((read_bytes =
 				fread(&buf, sizeof(struct blk_io_trace), 1, stdin) > 0)) {
 		total_read_bytes += read_bytes;
