@@ -21,13 +21,20 @@ int get_lock();
 void setup_exit_handler();
 void end_handler(int);
 
-/* done is set to true when we catch some signal that wants to kill dattod */
+/* done is set when a kill signal is caught */
 static volatile sig_atomic_t done;
+
+/* got_msg is set when a message is available on the message queue */
+static volatile sig_atomic_t got_msg;
+
+/* reload is set when we should reload the configuration file */
+static volatile sig_atomic_t reload;
 
 int main(int argc, char **argv) {
 	mqd_t mqd;
 	int lockfd;
 	int num_wrote;
+	sigset_t block_mask;
 
 	if (argc > 1) {
 		fprintf(stderr, "usage: %s\n", argv[0]);
@@ -40,6 +47,8 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
+	setup_exit_handler();
+
 	/* TODO: Move to function and improve error checking.
 	 * In particular, check if the queue exists and remove it */
 	mqd = mq_open(MQUEUE_PATH, O_RDONLY | O_CREAT | O_EXCL,
@@ -49,23 +58,26 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	setup_exit_handler();
-
 	/* Become a daemon. This backgrounds the process, cds to /, and
 	 * redirects std{in,out,err} to /dev/null, among other things */
 	daemon(0, 0);
 
 	/* Write our (newly acquired) PID to the lock file */
-	if (ftruncate(lockfd, 0)) {
-		err_log("Unable to truncate PID file");
+	if (write_pid(lock_fd)) {
 		goto out;
 	}
 
-	num_wrote = dprintf(lockfd, "%d", getpid());
-	if (num_wrote < 0) {
-		err_log("Unable to convert PID to string");
-		goto out;
-	}
+	sigemptyset(&block_mask);
+
+	/* Stop signals */
+	sigaddset(&block_mask, SIGINT);
+	sigaddset(&block_mask, SIGTERM);
+
+	/* Reload configuration */
+	sigaddset(&block_mask, SIGHUP);
+
+	/* Got message on message queue */
+	sigaddset(&block_mask, SIGUSR1);
 
 	while (!done) {
 		utime("/tmp/dattod", NULL);
@@ -134,6 +146,25 @@ int get_lock() {
 
 }
 
+/*
+ * Write our PID to the lock file.
+ * Returns 0 on success and -1 on failure
+ */
+int write_pid(int lockfd) {
+	if (ftruncate(lockfd, 0)) {
+		err_log("Unable to truncate PID file");
+		return -1
+	}
+
+	num_wrote = dprintf(lockfd, "%d", getpid());
+	if (num_wrote < 0) {
+		err_log("Unable to write PID to lock file");
+		return -1
+	}
+
+	return 0;
+}
+
 void setup_exit_handler() {
 	struct sigaction sa;
 	sigset_t block_all;
@@ -143,7 +174,17 @@ void setup_exit_handler() {
 	sa.sa_handler = end_handler;
 	sa.sa_mask = block_all;
 
-	sigaction(SIGTERM, &sa, NULL);
+	/* Intentionally exclude SIGQUIT as we want to exit without cleaning
+	 * up on a SIGQUIT to help with debugging */
+
+	if (sigaction(SIGTERM, &sa, NULL)) {
+		err_log("Unable to set SIGTERM sigaction");
+		return;
+	}
+	if (sigaction(SIGINT, &sa, NULL)) {
+		err_log("Unable to set SIGINT sigaction");
+		return;
+	}
 }
 
 /* Perform clean up at exit. We don't bother to close fds here as they
