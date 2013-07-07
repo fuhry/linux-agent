@@ -18,23 +18,26 @@ void err_log(char *);
 
 void cleanup();
 int get_lock();
-void setup_exit_handler();
-void end_handler(int);
+int setup_handlers();
+void set_flag(int);
+int write_pid(int);
 
 /* done is set when a kill signal is caught */
 static volatile sig_atomic_t done;
-
 /* got_msg is set when a message is available on the message queue */
 static volatile sig_atomic_t got_msg;
-
 /* reload is set when we should reload the configuration file */
 static volatile sig_atomic_t reload;
 
+/* 0 indicates end of array */
+const int handled_signals[] = {SIGINT, SIGTERM, SIGUSR1, SIGHUP, 0};
+
 int main(int argc, char **argv) {
 	mqd_t mqd;
-	int lockfd;
-	int num_wrote;
+	int lock_fd;
 	sigset_t block_mask;
+	sigset_t orig_mask;
+	int i;
 
 	if (argc > 1) {
 		fprintf(stderr, "usage: %s\n", argv[0]);
@@ -43,11 +46,13 @@ int main(int argc, char **argv) {
 
 	openlog(NULL, LOG_PERROR, 0);
 
-	if ((lockfd = get_lock()) == -1) {
+	if ((lock_fd = get_lock()) == -1) {
 		return 1;
 	}
 
-	setup_exit_handler();
+	if (setup_handlers() != 0) {
+		return 1;
+	}
 
 	/* TODO: Move to function and improve error checking.
 	 * In particular, check if the queue exists and remove it */
@@ -67,26 +72,36 @@ int main(int argc, char **argv) {
 		goto out;
 	}
 
+	/* Block all of our handled signals as we will be using
+	 * sigsuspend in the loop below */
 	sigemptyset(&block_mask);
+	for (i = 0; handled_signals[i] != 0; i++) {
+		sigaddset(&block_mask, handled_signals[i]);
+	}
 
-	/* Stop signals */
-	sigaddset(&block_mask, SIGINT);
-	sigaddset(&block_mask, SIGTERM);
-
-	/* Reload configuration */
-	sigaddset(&block_mask, SIGHUP);
-
-	/* Got message on message queue */
-	sigaddset(&block_mask, SIGUSR1);
+	if (sigprocmask(SIG_BLOCK, &block_mask, &orig_mask)) {
+		err_log("Error blocking signals");
+		goto out;
+	}
 
 	while (!done) {
-		utime("/tmp/dattod", NULL);
+		if (sigsuspend(&orig_mask) && errno != EINTR) {
+			err_log("sigsuspend");
+		}
+
+		if (got_msg) {
+			got_msg = 0;
+		}
+		if (reload) {
+			reload = 0;
+			utime("/tmp/dattod", NULL);
+		}
+
 		sleep(1);
 	}
 
 out:
 	/* If these fail we can't do much about it, but should log it */
-
 	if (mq_close(mqd)) {
 		err_log("Unable to close message queue descriptor");
 	}
@@ -95,7 +110,7 @@ out:
 		err_log("Unable to remove message queue descriptor");
 	}
 
-	if (close(lockfd)) {
+	if (close(lock_fd)) {
 		err_log("Unable to close lock file descriptor");
 	}
 
@@ -108,22 +123,22 @@ out:
  * Returns the positive lock fd on success and -1 on failure.
  */
 int get_lock() {
-	int lockfd;
+	int lock_fd;
 	int err;
 	int n_read;
 	char pid[MAX_PID_LEN];
 	char err_msg[MAX_ERR_LEN];
 
-	lockfd = open(LOCK_FILE, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-	if (lockfd == -1) {
+	lock_fd = open(LOCK_FILE, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+	if (lock_fd == -1) {
 		err_log("Unable to open lock file");
 		return -1;
 	}
 
-	if (flock(lockfd, LOCK_EX | LOCK_NB)) {
+	if (flock(lock_fd, LOCK_EX | LOCK_NB)) {
 		err = errno;
 		if (err == EWOULDBLOCK) {
-			n_read = read(lockfd, pid, MAX_PID_LEN - 1);
+			n_read = read(lock_fd, pid, MAX_PID_LEN - 1);
 			if (n_read < 1) {
 				err_log("Unable to get lock pid");
 			} else {
@@ -138,11 +153,11 @@ int get_lock() {
 
 		}
 		/* No need to check return */
-		close(lockfd);
+		close(lock_fd);
 		return -1;
 	}
 
-	return lockfd;
+	return lock_fd;
 
 }
 
@@ -150,51 +165,76 @@ int get_lock() {
  * Write our PID to the lock file.
  * Returns 0 on success and -1 on failure
  */
-int write_pid(int lockfd) {
-	if (ftruncate(lockfd, 0)) {
+int write_pid(int lock_fd) {
+	int num_wrote;
+
+	if (ftruncate(lock_fd, 0)) {
 		err_log("Unable to truncate PID file");
-		return -1
+		return -1;
 	}
 
-	num_wrote = dprintf(lockfd, "%d", getpid());
+	num_wrote = dprintf(lock_fd, "%d", getpid());
 	if (num_wrote < 0) {
 		err_log("Unable to write PID to lock file");
-		return -1
+		return -1;
 	}
 
 	return 0;
 }
 
-void setup_exit_handler() {
+/*
+ * Setup the various signal handlers.
+ * Returns 0 on success and 1 on failure
+ *
+ * This includes:
+ *	 SIGTERM - done
+ *	 SIGINT  - done
+ *	 SIGUSR1 - got_msg
+ *	 SIGHUP  - reload
+ */
+int setup_handlers() {
 	struct sigaction sa;
 	sigset_t block_all;
+	int i;
 	
-	/* Block all other signals while handling exit signals */
+	/* Block all other signals while handling a signal. This is okay as
+	 * our exit handler is very brief */
 	sigfillset(&block_all);
-	sa.sa_handler = end_handler;
 	sa.sa_mask = block_all;
 
-	/* Intentionally exclude SIGQUIT as we want to exit without cleaning
-	 * up on a SIGQUIT to help with debugging */
+	sa.sa_handler = set_flag;
 
-	if (sigaction(SIGTERM, &sa, NULL)) {
-		err_log("Unable to set SIGTERM sigaction");
-		return;
+	for (i = 0; handled_signals[i] != 0; i++) {
+		if (sigaction(handled_signals[i], &sa, NULL)) {
+			err_log("Unable to set sigaction");
+			return 1;
+		}
 	}
-	if (sigaction(SIGINT, &sa, NULL)) {
-		err_log("Unable to set SIGINT sigaction");
-		return;
-	}
+
+	return 0;
 }
 
-/* Perform clean up at exit. We don't bother to close fds here as they
- * will be automatically closed on exit and any errors that might be reported
- * at close time can't be resolved at this point. */
-void end_handler(int signum) {
-	/* unused */
-	(void)signum;
-
-	done = 1;
+/* Set flag to indicate we got a terminate signal */
+void set_flag(int signum) {
+	switch (signum) {
+	/* Intentionally exclude SIGQUIT/SIGABRT/etc. as we want to exit
+	 * without cleaning up on a SIGQUIT to help with debugging */
+	case SIGTERM:
+	case SIGINT:
+		done = 1;
+		break;
+	case SIGUSR1:
+		got_msg = 1;
+		break;
+	case SIGHUP:
+		reload = 1;
+		break;
+	default:
+		/* Should be unreachable, but just in case */
+		if (signal(signum, SIG_DFL) != SIG_ERR) {
+			raise(signum);
+		}
+	}
 }
 
 void err_log(char *log_msg) {
