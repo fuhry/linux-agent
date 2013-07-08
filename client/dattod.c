@@ -19,26 +19,21 @@
 
 void err_log(char *);
 
-static int get_lock();
-static int setup_handlers();
-static void set_flag(int);
-static int write_pid(int);
-static void process_messages(mqd_t);
-static void handle_msg(char *, ssize_t);
-static int reset_handlers();
+static int _get_lock();
+static int _reset_handlers();
+static int _setup_handlers();
+static int _write_pid(int);
+static void _handle_msg(char *, ssize_t);
+static void _process_messages(mqd_t);
+static void _set_flag(int);
 
-/* done is set when a kill signal is caught */
-static volatile sig_atomic_t done = 0;
-/* got_msg is set when a message is available on the message queue */
-static volatile sig_atomic_t got_msg = 0;
-/* reload is set when we should reload the configuration file */
-static volatile sig_atomic_t reload = 0;
+/* _done is set when a kill signal is caught */
+static volatile sig_atomic_t _done = 0;
+/* _got_msg is set when a message is available on the message queue */
+static volatile sig_atomic_t _got_msg = 0;
+/* _reload is set when we should reload the configuration file */
+static volatile sig_atomic_t _reload = 0;
 
-static struct sigevent msg_notification =
-{
-	.sigev_notify = SIGEV_SIGNAL,
-	.sigev_signo = NOTIFY_SIG,
-};
 
 /* 0 indicates end of array */
 const int handled_signals[] = {SIGINT, SIGTERM, NOTIFY_SIG, SIGHUP, 0};
@@ -51,6 +46,11 @@ int main(int argc, char **argv)
 	sigset_t orig_mask;
 	int i;
 	int foreground = 0;
+	struct sigevent msg_notification =
+	{
+		.sigev_notify = SIGEV_SIGNAL,
+		.sigev_signo = NOTIFY_SIG,
+	};
 
 	if (argc > 1) {
 		/* -f puts dattod in the foreground for debugging */
@@ -64,11 +64,11 @@ int main(int argc, char **argv)
 
 	openlog(NULL, LOG_PERROR, 0);
 
-	if ((lock_fd = get_lock()) == -1) {
+	if ((lock_fd = _get_lock()) == -1) {
 		return 1;
 	}
 
-	if (setup_handlers() != 0) {
+	if (_setup_handlers() != 0) {
 		return 1;
 	}
 
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
 	}
 
 	/* Write our (newly acquired) PID to the lock file */
-	if (write_pid(lock_fd)) {
+	if (_write_pid(lock_fd)) {
 		goto out;
 	}
 
@@ -109,22 +109,22 @@ int main(int argc, char **argv)
 		goto out;
 	}
 
-	while (!done) {
+	while (!_done) {
 		if (sigsuspend(&orig_mask) && errno != EINTR) {
 			err_log("sigsuspend");
 		}
 
-		if (got_msg) {
-			got_msg = 0;
+		if (_got_msg) {
+			_got_msg = 0;
 			/* Reregister our message listener */
 			if (mq_notify(mqd, &msg_notification)) {
 				err_log("mq_notify");
 				continue;
 			}
-			process_messages(mqd);
+			_process_messages(mqd);
 		}
-		if (reload) {
-			reload = 0;
+		if (_reload) {
+			_reload = 0;
 			utime("/tmp/reload", NULL);
 		}
 	}
@@ -152,7 +152,7 @@ out:
 	return 0;
 }
 
-static void process_messages(mqd_t mqd)
+static void _process_messages(mqd_t mqd)
 {
 	ssize_t num_read;
 	void *buf = NULL;
@@ -177,11 +177,11 @@ static void process_messages(mqd_t mqd)
 			break;
 		/* Child */
 		case 0:
-			if (reset_handlers())
+			if (_reset_handlers())
 				_exit(1);
 			if (mq_close(mqd))
 				_exit(1);
-			handle_msg(buf, num_read);
+			_handle_msg(buf, num_read);
 			_exit(0);
 			break;
 		/* Parent */
@@ -198,7 +198,7 @@ static void process_messages(mqd_t mqd)
 	free(buf);
 }
 
-static int reset_handlers()
+static int _reset_handlers()
 {
 	struct sigaction sa;
 	sigset_t sig_set;
@@ -232,7 +232,7 @@ static int reset_handlers()
 /*
  * This should only be run from a child process
  */
-static void handle_msg(char *buf, ssize_t num_read)
+static void _handle_msg(char *buf, ssize_t num_read)
 {
 	int msg_type = 0;
 
@@ -264,7 +264,7 @@ static void handle_msg(char *buf, ssize_t num_read)
  * at once.
  * Returns the positive lock fd on success and -1 on failure.
  */
-static int get_lock()
+static int _get_lock()
 {
 	int lock_fd;
 	int n_read;
@@ -306,7 +306,7 @@ static int get_lock()
  * Write our PID to the lock file.
  * Returns 0 on success and -1 on failure
  */
-static int write_pid(int lock_fd)
+static int _write_pid(int lock_fd)
 {
 	int num_wrote;
 
@@ -329,14 +329,14 @@ static int write_pid(int lock_fd)
  * Returns 0 on success and 1 on failure
  *
  * This includes
- *	SIGTERM    - done
- *	SIGINT     - done
- *	NOTIFY_SIG - got_msg
- *	SIGHUP     - reload
+ *	SIGTERM    - _done
+ *	SIGINT     - _done
+ *	NOTIFY_SIG - _got_msg
+ *	SIGHUP     - _reload
  *	SIGCHLD    - (ignore)
  *
  */
-static int setup_handlers()
+static int _setup_handlers()
 {
 	struct sigaction sa;
 	sigset_t block_all;
@@ -347,7 +347,7 @@ static int setup_handlers()
 	sigfillset(&block_all);
 	sa.sa_mask = block_all;
 
-	sa.sa_handler = set_flag;
+	sa.sa_handler = _set_flag;
 	for (i = 0; handled_signals[i] != 0; i++) {
 		if (sigaction(handled_signals[i], &sa, NULL)) {
 			err_log("Unable to set sigaction");
@@ -366,20 +366,20 @@ static int setup_handlers()
 }
 
 /* Set flag to indicate we got a terminate signal */
-static void set_flag(int signum)
+static void _set_flag(int signum)
 {
 	switch (signum) {
 	/* Intentionally exclude SIGQUIT/SIGABRT/etc. as we want to exit
 	 * without cleaning up to help with debugging */
 	case SIGTERM:
 	case SIGINT:
-		done = 1;
+		_done = 1;
 		break;
 	case NOTIFY_SIG:
-		got_msg = 1;
+		_got_msg = 1;
 		break;
 	case SIGHUP:
-		reload = 1;
+		_reload = 1;
 		break;
 	default:
 		/* Should be unreachable, but just in case */
