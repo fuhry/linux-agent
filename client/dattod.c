@@ -6,6 +6,7 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <utime.h>
+#include <sys/time.h>
 
 #include "dattod.h"
 
@@ -23,7 +24,8 @@ static int setup_handlers();
 static void set_flag(int);
 static int write_pid(int);
 static void process_messages(mqd_t);
-static void handle_msg(void *, ssize_t);
+static void handle_msg(char *, ssize_t);
+static int reset_handlers();
 
 /* done is set when a kill signal is caught */
 static volatile sig_atomic_t done = 0;
@@ -41,7 +43,8 @@ static struct sigevent msg_notification =
 /* 0 indicates end of array */
 const int handled_signals[] = {SIGINT, SIGTERM, NOTIFY_SIG, SIGHUP, 0};
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	mqd_t mqd;
 	int lock_fd;
 	sigset_t block_mask;
@@ -128,6 +131,12 @@ int main(int argc, char **argv) {
 
 out:
 	/* If these fail we can't do much about it, but should log it */
+
+	/* Kill all children */
+	if (kill(0, SIGTERM)) {
+		err_log("kill(0, SIGTERM)");
+	}
+
 	if (mq_close(mqd)) {
 		err_log("Unable to close message queue descriptor");
 	}
@@ -143,7 +152,8 @@ out:
 	return 0;
 }
 
-static void process_messages(mqd_t mqd) {
+static void process_messages(mqd_t mqd)
+{
 	ssize_t num_read;
 	void *buf = NULL;
 
@@ -155,20 +165,28 @@ static void process_messages(mqd_t mqd) {
 
 	while ((num_read = mq_receive(mqd, buf,
 			msg_q_attr.mq_msgsize, NULL)) >= 0) {
+		/* Messages shouldn't be zero length.. but deal if they are */
+		if (num_read == 0) {
+			continue;
+		}
+
 		switch(fork()) {
-			/* Child */
-			case 0:
-				mq_close(mqd);
-				handle_msg(buf, num_read);
-				_exit(0);
-				break;
-			/* Error */
-			case -1:
-				err_log("fork");
-				break;
-			/* Parent */
-			default:
-				break;
+		/* Error */
+		case -1:
+			err_log("fork");
+			break;
+		/* Child */
+		case 0:
+			if (reset_handlers())
+				_exit(1);
+			if (mq_close(mqd))
+				_exit(1);
+			handle_msg(buf, num_read);
+			_exit(0);
+			break;
+		/* Parent */
+		default:
+			break;
 		}
 	}
 
@@ -180,21 +198,75 @@ static void process_messages(mqd_t mqd) {
 	free(buf);
 }
 
-static void handle_msg(void *buf, ssize_t num_read) {
-	/* Debugging code for now */
-	((char*)buf)[num_read - 1] = '\0';
-	printf("%s\n", (char*)buf);
+static int reset_handlers()
+{
+	struct sigaction sa;
+	sigset_t sig_set;
+	int i;
+
+	sigemptyset(&sig_set);
+
+	sa.sa_handler = SIG_DFL;
+
+	for (i = 0; handled_signals[i] != 0; i++) {
+		sigaddset(&sig_set, handled_signals[i]);
+		if (sigaction(handled_signals[i], &sa, NULL)) {
+			err_log("sigaction unregister");
+			return 1;
+		}
+	}
+
+	if (sigaction(SIGCHLD, &sa, NULL)) {
+		err_log("sigaction SIGCHLD unregister");
+		return 1;
+	}
+
+	if (sigprocmask(SIG_UNBLOCK, &sig_set, NULL)) {
+		err_log("sigprocmask SIG_UNBLOCK");
+		return 1;
+	}
+
+	return 0;
 }
 
+/*
+ * This should only be run from a child process
+ */
+static void handle_msg(char *buf, ssize_t num_read)
+{
+	int msg_type = 0;
+
+	/* This should never happen as we check as a precondition */
+	if (num_read == 0) {
+		return;
+	}
+
+	msg_type = buf[0];
+
+	switch (msg_type) {
+	case ECHO:
+		buf[num_read - 1] = '\0';
+		break;
+	case FULL:
+		printf("sleeping for %ds\n", buf[1]);
+		sleep(buf[1]);
+		break;
+	default:
+		printf("got type: %d\n", msg_type);
+		break;
+	}
+
+	return;
+}
 
 /*
  * Acquire the PID lock to prevent multiple instances of dattod from running
  * at once.
  * Returns the positive lock fd on success and -1 on failure.
  */
-static int get_lock() {
+static int get_lock()
+{
 	int lock_fd;
-	int err;
 	int n_read;
 	char pid[MAX_PID_LEN];
 	char err_msg[MAX_ERR_LEN];
@@ -206,8 +278,7 @@ static int get_lock() {
 	}
 
 	if (flock(lock_fd, LOCK_EX | LOCK_NB)) {
-		err = errno;
-		if (err == EWOULDBLOCK) {
+		if (errno == EWOULDBLOCK) {
 			n_read = read(lock_fd, pid, MAX_PID_LEN - 1);
 			if (n_read < 1) {
 				err_log("Unable to get lock pid");
@@ -235,7 +306,8 @@ static int get_lock() {
  * Write our PID to the lock file.
  * Returns 0 on success and -1 on failure
  */
-static int write_pid(int lock_fd) {
+static int write_pid(int lock_fd)
+{
 	int num_wrote;
 
 	if (ftruncate(lock_fd, 0)) {
@@ -256,24 +328,26 @@ static int write_pid(int lock_fd) {
  * Setup the various signal handlers.
  * Returns 0 on success and 1 on failure
  *
- * This includes:
- *	 SIGTERM    - done
- *	 SIGINT     - done
- *	 NOTIFY_SIG - got_msg
- *	 SIGHUP     - reload
+ * This includes
+ *	SIGTERM    - done
+ *	SIGINT     - done
+ *	NOTIFY_SIG - got_msg
+ *	SIGHUP     - reload
+ *	SIGCHLD    - (ignore)
+ *
  */
-static int setup_handlers() {
+static int setup_handlers()
+{
 	struct sigaction sa;
 	sigset_t block_all;
 	int i;
 	
 	/* Block all other signals while handling a signal. This is okay as
-	 * our exit handler is very brief */
+	 * our handler is very brief */
 	sigfillset(&block_all);
 	sa.sa_mask = block_all;
 
 	sa.sa_handler = set_flag;
-
 	for (i = 0; handled_signals[i] != 0; i++) {
 		if (sigaction(handled_signals[i], &sa, NULL)) {
 			err_log("Unable to set sigaction");
@@ -281,14 +355,22 @@ static int setup_handlers() {
 		}
 	}
 
+	/* Ignore SIGCHLD as we don't keep track of child success */
+	sa.sa_handler = SIG_IGN;
+	if (sigaction(SIGCHLD, &sa, NULL)) {
+		err_log("Unable to ignore SIGCHLD");
+		return 1;
+	}
+
 	return 0;
 }
 
 /* Set flag to indicate we got a terminate signal */
-static void set_flag(int signum) {
+static void set_flag(int signum)
+{
 	switch (signum) {
 	/* Intentionally exclude SIGQUIT/SIGABRT/etc. as we want to exit
-	 * without cleaning up on a SIGQUIT to help with debugging */
+	 * without cleaning up to help with debugging */
 	case SIGTERM:
 	case SIGINT:
 		done = 1;
@@ -307,7 +389,8 @@ static void set_flag(int signum) {
 	}
 }
 
-void err_log(char *log_msg) {
+void err_log(char *log_msg)
+{
 	if (errno) {
 		syslog(LOG_ERR, "%s - %m\n", log_msg);
 	} else {
