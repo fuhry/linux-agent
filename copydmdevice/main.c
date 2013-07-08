@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 
 	static struct option long_options[] =
 	{
-		{"nondm",	no_argument,	0,	NON_DM}
+		{"nondm", no_argument, 0, NON_DM}
 	};
 
 	while ((c = getopt_long(argc, argv, "", long_options, NULL)) != -1) {
@@ -49,14 +49,14 @@ int main(int argc, char **argv)
 			fprintf(stderr, "Reached unexpected branch\n");
 		}
 	}
-	/* argc is now the number of non-option arguments and does not include the
-	 * program name */
+	/* argc is now the number of non-option arguments and does not include
+	 * the program name */
 	argc -= optind;
 	argv += optind;
 
 	if ((is_dm_dev && argc != 3) || (!is_dm_dev && argc != 2)) {
-		fprintf(stderr,
-				"usage: %s [--nondm] dm_block_dev dest_path [mem_dev]\n",
+		fprintf(stderr, "usage: %s [--nondm] dm_block_dev "
+				"dest_path [mem_dev]\n",
 				prog_name);
 		return 1;
 	}
@@ -68,7 +68,8 @@ int main(int argc, char **argv)
 
 	if (is_dm_dev) {
 		if (!setup_cow_device(source_path, mem_dev, cow_path)) {
-			error(0, errno, "Error setting up COW device for %s", argv[1]);
+			error(0, errno, "Error setting up COW device for %s",
+					argv[1]);
 			return 1;
 		}
 		copy_from = cow_path;
@@ -85,7 +86,8 @@ int main(int argc, char **argv)
 
 	if (is_dm_dev) {
 		if (!takedown_cow_device(source_path)) {
-			error(0, errno, "Error taking down COW device for %s", argv[1]);
+			error(0, errno, "Error taking down COW device for %s",
+					argv[1]);
 			return 1;
 		}
 	}
