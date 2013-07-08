@@ -145,7 +145,8 @@ int setup_cow_device(const char *dm_device_path, const char *mem_dev,
 	}
 
 	if (!_load_from_device(orig_name, dm_device_name)) {
-		error(0, 0, "Error loading snapshot-origin into original device");
+		error(0, 0, "Error loading snapshot-origin"
+				" into original device");
 		goto out;
 	}
 
@@ -186,7 +187,8 @@ static int _create_dup_name(const char *dm_device_name, char **dup_name)
 }
 static int _create_snap_name(const char *dm_device_name, char **snap_name)
 {
-	*snap_name = malloc(strlen(dm_device_name) + strlen(SNAP_POSTFIX) + 1);
+	*snap_name = malloc(strlen(dm_device_name) +
+			strlen(SNAP_POSTFIX) + 1);
 	if (*snap_name == NULL) {
 		perror("malloc");
 		return 0;
@@ -200,7 +202,8 @@ static int _create_snap_name(const char *dm_device_name, char **snap_name)
 
 static int _create_orig_name(const char *dm_device_name, char **orig_name)
 {
-	*orig_name = malloc(strlen(dm_device_name) + strlen(ORIGIN_POSTFIX) + 1);
+	*orig_name = malloc(strlen(dm_device_name) +
+			strlen(ORIGIN_POSTFIX) + 1);
 	if (*orig_name == NULL) {
 		perror("malloc");
 		return 0;
@@ -325,8 +328,8 @@ static int _create_snapshot(const char *dm_device_name,
 	if (!_get_num_sectors(dm_device_name, &num_sectors))
 		goto out;
 
-	if (!dm_task_add_target(dm_create_task, 0, num_sectors, SNAPSHOT_TARGET, 
-			params)) {
+	if (!dm_task_add_target(dm_create_task, 0, num_sectors,
+				SNAPSHOT_TARGET, params)) {
 		goto out;
 	}
 
