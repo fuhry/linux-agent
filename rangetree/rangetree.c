@@ -3,9 +3,10 @@
 struct range *rt_add_value(long value, struct rb_root *root)
 {
 	struct rb_node **curnode = &root->rb_node;
-	struct rb_node *nextnode = NULL;
 	struct rb_node *parent = NULL;
 	struct range *range;
+
+	struct rb_node *nextnode = NULL;
 	struct range *nextrange;
 
 	while (*curnode) {
