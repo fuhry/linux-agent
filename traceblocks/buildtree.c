@@ -21,12 +21,13 @@ int main()
 		return 1;
 	}
 
-	while ((read_bytes =
-				fread(&buf, sizeof(struct blk_io_trace), 1, stdin) > 0)) {
+	while ((read_bytes = fread(&buf, sizeof(struct blk_io_trace), 1,
+					stdin) > 0)) {
 		total_read_bytes += read_bytes;
 		if (buf.magic != (BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION)) {
 			fprintf(stderr, "got magic: 0x%x\n", buf.magic);
-			fprintf(stderr, "total_bytes: %ld\n", total_read_bytes);
+			fprintf(stderr, "total_bytes: %ld\n",
+					total_read_bytes);
 			break;
 		}
 		for (i = 0; i < buf.bytes / 512; i++) {
