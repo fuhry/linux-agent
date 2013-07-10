@@ -11,6 +11,6 @@ QUEUE_NAME = "/dattod"
 
 queue = posix_ipc.MessageQueue(QUEUE_NAME, read=False)
 try:
-    queue.send("F\110")
+    queue.send("EHello, world")
 finally:
     queue.close()
