@@ -157,8 +157,8 @@ void *_handle_mq(void *arg)
 			case ECHO:
 				if ((unsigned int)num_read < sizeof(buf)) {
 					buf[num_read] = '\0';
+					printf("%s\n", buf+1);
 				}
-				printf("%s\n", buf+1);
 				break;
 			default:
 				printf("got type: %d\n", msg_type);
