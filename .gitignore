@@ -1,7 +1,7 @@
 # Executable names
 copydmdevice/copydmdevice
 traceblocks/traceblocks
-traceblocks/buildtree
+rangetree/buildtree
 client/dattod
 
 # Core dumps
