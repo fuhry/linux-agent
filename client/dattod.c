@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,6 +37,8 @@ int main(int argc, char **argv)
 	sigset_t orig_mask;
 	int foreground = 0;
 	int sig;
+
+	pthread_t mq_thread;
 
 	if (argc > 1) {
 		/* -f puts dattod in the foreground for debugging */
@@ -88,7 +91,11 @@ int main(int argc, char **argv)
 	}
 
 	/* TODO: Start block trace thread */
-	/* TODO: Start message listener thread */
+
+	if (pthread_create(&mq_thread, NULL, _handle_mq, &mqd)) {
+		err_log("pthread_create mq listener thread");
+		goto out;
+	}
 
 	while (!_done) {
 		if (sigwait(&block_mask, &sig)) {
@@ -148,11 +155,10 @@ void *_handle_mq(void *arg)
 
 		switch (msg_type) {
 			case ECHO:
-				buf[num_read - 1] = '\0';
-				break;
-			case FULL:
-				printf("sleeping for %ds\n", buf[1]);
-				sleep(buf[1]);
+				if ((unsigned int)num_read < sizeof(buf)) {
+					buf[num_read] = '\0';
+				}
+				printf("%s\n", buf+1);
 				break;
 			default:
 				printf("got type: %d\n", msg_type);
