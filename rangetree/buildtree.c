@@ -11,7 +11,7 @@ int main()
 
 	int read_bytes = -1;
 	struct blk_io_trace trace;
-	long total_read_bytes;
+	long total_read_bytes = 0;
 	unsigned int num_sectors;
 
 	unsigned int i;
