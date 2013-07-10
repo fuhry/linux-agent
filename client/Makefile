@@ -6,4 +6,4 @@ buildtree: dattod.c
 	$(CC) $(CFLAGS) $(DEBUG) -lrt -W -Wall -o dattod dattod.c
 
 clean:
-	rm *.o dattod; true
+	rm -f *.o dattod

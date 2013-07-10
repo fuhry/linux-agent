@@ -14,4 +14,4 @@ extfs_blockcopy.o: extfs_blockcopy.c
 	$(CC) $(CFLAGS) $(DEBUG) -W -Wall -c extfs_blockcopy.c
 
 clean:
-	rm *.o $(EXE)
+	rm -f *.o $(EXE)

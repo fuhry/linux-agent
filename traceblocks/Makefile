@@ -15,4 +15,4 @@ traceblocks: traceblocks.c
 	$(CC) $(CFLAGS) $(DEBUG) -W -Wall -o traceblocks traceblocks.c $(LIBS)
 
 clean:
-	rm *.o traceblocks buildtree; true
+	rm -f *.o traceblocks buildtree
