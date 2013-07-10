@@ -30,8 +30,9 @@ int main()
 
 		/* Sanity check, make sure the blk_io_trace struct has the right format */
 		if (trace.magic != (BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION)) {
-			fprintf(stderr, "got magic: 0x%x\n", trace.magic);
-			fprintf(stderr, "total_bytes: %ld\n",
+			fprintf(stderr, "Error checking magic number\n");
+			fprintf(stderr, "  got magic: 0x%x\n", trace.magic);
+			fprintf(stderr, "  total_bytes: %ld\n",
 					total_read_bytes);
 			break;
 		}
@@ -48,14 +49,16 @@ int main()
 		/* Skip over the extra data at end of trace buffer */
 		fread(&trace, 1, trace.pdu_len, stdin);
 	}
-	if (read_bytes != 0) {
+	if (read_bytes <= 0) {
 		perror("read");
 	}
 
 	node = rb_first(range_tree);
-	while ((node = rb_next(node))) {
-		range = rb_entry(node, struct range, range_node);
-		printf("%ld-%ld\n", range->start, range->end);
+	if (node) {
+		while ((node = rb_next(node))) {
+			range = rb_entry(node, struct range, range_node);
+			printf("%ld-%ld\n", range->start, range->end);
+		}
 	}
 
 	rt_free_tree(range_tree);
