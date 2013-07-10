@@ -42,7 +42,7 @@ struct range *rt_add_value(long value, struct rb_root *root)
 	/* As we've made a modification, check for overlapping ranges.
 	 * Endpoints will only overlap by one as we've only added a single
 	 * value */
-	nextnode = rb_next(*curnode);
+	nextnode = rb_next(&range->range_node);
 	if (nextnode) {
 		nextrange = rb_entry(nextnode, struct range, range_node);
 		if (range->end == nextrange->start) {
