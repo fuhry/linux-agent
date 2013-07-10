@@ -15,28 +15,18 @@
  * linux/threads.h PID_MAX_LIMIT */
 #define MAX_PID_LEN 20
 
-#define NOTIFY_SIG SIGUSR1
-
 void err_log(char *);
 
 static int _get_lock();
-static int _reset_handlers();
-static int _setup_handlers();
 static int _write_pid(int);
-static void _handle_msg(char *, ssize_t);
-static void _process_messages(mqd_t);
-static void _set_flag(int);
+
+/* Thread functions */
+void *_handle_mq(void *);
 
 /* _done is set when a kill signal is caught */
 static volatile sig_atomic_t _done = 0;
 /* _got_msg is set when a message is available on the message queue */
 static volatile sig_atomic_t _got_msg = 0;
-/* _reload is set when we should reload the configuration file */
-static volatile sig_atomic_t _reload = 0;
-
-
-/* 0 indicates end of array */
-const int handled_signals[] = {SIGINT, SIGTERM, NOTIFY_SIG, SIGHUP, 0};
 
 int main(int argc, char **argv)
 {
@@ -44,13 +34,8 @@ int main(int argc, char **argv)
 	int lock_fd;
 	sigset_t block_mask;
 	sigset_t orig_mask;
-	int i;
 	int foreground = 0;
-	struct sigevent msg_notification =
-	{
-		.sigev_notify = SIGEV_SIGNAL,
-		.sigev_signo = NOTIFY_SIG,
-	};
+	int sig;
 
 	if (argc > 1) {
 		/* -f puts dattod in the foreground for debugging */
@@ -68,13 +53,9 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	if (_setup_handlers() != 0) {
-		return 1;
-	}
-
 	/* TODO: Move to function and improve error checking.
 	 * In particular, check if the queue exists and remove it */
-	mqd = mq_open(MQUEUE_PATH, O_RDONLY | O_CREAT | O_EXCL | O_NONBLOCK,
+	mqd = mq_open(MQUEUE_PATH, O_RDONLY | O_CREAT | O_EXCL,
 			S_IRUSR | S_IWUSR, &msg_q_attr);
 	if (mqd == (mqd_t)(-1)) {
 		err_log("Error opening message queue");
@@ -92,138 +73,46 @@ int main(int argc, char **argv)
 		goto out;
 	}
 
-	/* Block all of our handled signals as we will be using
-	 * sigsuspend in the loop below */
+	/* Block various signals so child threads don't handle them.
+	 * - SIGINT / SIGTERM so we can clean up before exiting
+	 * - SIGHUP so the main thread can reload the config
+	 */
 	sigemptyset(&block_mask);
-	for (i = 0; handled_signals[i] != 0; i++) {
-		sigaddset(&block_mask, handled_signals[i]);
-	}
+	sigaddset(&block_mask, SIGINT);
+	sigaddset(&block_mask, SIGTERM);
+	sigaddset(&block_mask, SIGHUP);
 
-	if (sigprocmask(SIG_BLOCK, &block_mask, &orig_mask)) {
+	if (pthread_sigmask(SIG_BLOCK, &block_mask, &orig_mask)) {
 		err_log("Error blocking signals");
 		goto out;
 	}
 
-	if (mq_notify(mqd, &msg_notification)) {
-		err_log("mq_notify");
-		goto out;
-	}
+	/* TODO: Start block trace thread */
+	/* TODO: Start message listener thread */
 
 	while (!_done) {
-		if (sigsuspend(&orig_mask) && errno != EINTR) {
-			err_log("sigsuspend");
+		if (sigwait(&block_mask, &sig)) {
+			err_log("sigwait");
+			break;
 		}
-
-		if (_got_msg) {
-			_got_msg = 0;
-			/* Reregister our message listener */
-			if (mq_notify(mqd, &msg_notification)) {
-				err_log("mq_notify");
-				continue;
-			}
-			_process_messages(mqd);
-		}
-		if (_reload) {
-			_reload = 0;
-			utime("/tmp/reload", NULL);
+		switch (sig) {
+			case SIGTERM:
+			case SIGINT:
+				_done = 1;
+				break;
+			case SIGHUP:
+				fprintf(stderr, "SIGHUP\n");
+				break;
+			default:
+				fprintf(stderr, "Got unxpected signal: %d\n", sig);
 		}
 	}
 
 out:
 	/* If these fail we can't do much about it, but should log it */
 
-	/* Kill all children */
-	if (kill(0, SIGTERM)) {
-		err_log("kill(0, SIGTERM)");
-	}
-
-	if (mq_close(mqd)) {
-		err_log("Unable to close message queue descriptor");
-	}
-
 	if (mq_unlink(MQUEUE_PATH)) {
 		err_log("Unable to remove message queue descriptor");
-	}
-
-	if (close(lock_fd)) {
-		err_log("Unable to close lock file descriptor");
-	}
-
-	return 0;
-}
-
-static void _process_messages(mqd_t mqd)
-{
-	ssize_t num_read;
-	void *buf = NULL;
-
-	buf = malloc(msg_q_attr.mq_msgsize);
-	if (buf == NULL) {
-		err_log("malloc(buf)");
-		return;
-	}
-
-	while ((num_read = mq_receive(mqd, buf,
-			msg_q_attr.mq_msgsize, NULL)) >= 0) {
-		/* Messages shouldn't be zero length.. but deal if they are */
-		if (num_read == 0) {
-			continue;
-		}
-
-		switch(fork()) {
-		/* Error */
-		case -1:
-			err_log("fork");
-			break;
-		/* Child */
-		case 0:
-			if (_reset_handlers())
-				_exit(1);
-			if (mq_close(mqd))
-				_exit(1);
-			_handle_msg(buf, num_read);
-			_exit(0);
-			break;
-		/* Parent */
-		default:
-			break;
-		}
-	}
-
-	/* EAGAIN means we reached the end of the messages in the queue */
-	if (errno != EAGAIN) {
-		err_log("mq_receive");
-	}
-
-	free(buf);
-}
-
-static int _reset_handlers()
-{
-	struct sigaction sa;
-	sigset_t sig_set;
-	int i;
-
-	sigemptyset(&sig_set);
-
-	sa.sa_handler = SIG_DFL;
-
-	for (i = 0; handled_signals[i] != 0; i++) {
-		sigaddset(&sig_set, handled_signals[i]);
-		if (sigaction(handled_signals[i], &sa, NULL)) {
-			err_log("sigaction unregister");
-			return 1;
-		}
-	}
-
-	if (sigaction(SIGCHLD, &sa, NULL)) {
-		err_log("sigaction SIGCHLD unregister");
-		return 1;
-	}
-
-	if (sigprocmask(SIG_UNBLOCK, &sig_set, NULL)) {
-		err_log("sigprocmask SIG_UNBLOCK");
-		return 1;
 	}
 
 	return 0;
@@ -232,31 +121,49 @@ static int _reset_handlers()
 /*
  * This should only be run from a child process
  */
-static void _handle_msg(char *buf, ssize_t num_read)
+/* TODO make static */
+void *_handle_mq(void *arg)
 {
-	int msg_type = 0;
+	mqd_t mqd = *(mqd_t*)(arg);
+	ssize_t num_read;
+	char *buf = NULL;
 
-	/* This should never happen as we check as a precondition */
-	if (num_read == 0) {
-		return;
+	int msg_type;
+
+	buf = malloc(msg_q_attr.mq_msgsize);
+	if (buf == NULL) {
+		err_log("malloc(buf)");
+		return NULL;
 	}
 
-	msg_type = buf[0];
+	while ((num_read = mq_receive(mqd, buf,
+					msg_q_attr.mq_msgsize, NULL)) >= 0) {
 
-	switch (msg_type) {
-	case ECHO:
-		buf[num_read - 1] = '\0';
-		break;
-	case FULL:
-		printf("sleeping for %ds\n", buf[1]);
-		sleep(buf[1]);
-		break;
-	default:
-		printf("got type: %d\n", msg_type);
-		break;
+		/* Messages shouldn't be zero length.. but deal if they are */
+		if (num_read == 0) {
+			continue;
+		}
+
+		msg_type = buf[0];
+
+		switch (msg_type) {
+			case ECHO:
+				buf[num_read - 1] = '\0';
+				break;
+			case FULL:
+				printf("sleeping for %ds\n", buf[1]);
+				sleep(buf[1]);
+				break;
+			default:
+				printf("got type: %d\n", msg_type);
+				break;
+		}
 	}
 
-	return;
+	/* If we get here then something went wrong */
+	err_log("mq_receive");
+
+	return NULL;
 }
 
 /*
@@ -322,71 +229,6 @@ static int _write_pid(int lock_fd)
 	}
 
 	return 0;
-}
-
-/*
- * Setup the various signal handlers.
- * Returns 0 on success and 1 on failure
- *
- * This includes
- *	SIGTERM    - _done
- *	SIGINT     - _done
- *	NOTIFY_SIG - _got_msg
- *	SIGHUP     - _reload
- *	SIGCHLD    - (ignore)
- *
- */
-static int _setup_handlers()
-{
-	struct sigaction sa;
-	sigset_t block_all;
-	int i;
-	
-	/* Block all other signals while handling a signal. This is okay as
-	 * our handler is very brief */
-	sigfillset(&block_all);
-	sa.sa_mask = block_all;
-
-	sa.sa_handler = _set_flag;
-	for (i = 0; handled_signals[i] != 0; i++) {
-		if (sigaction(handled_signals[i], &sa, NULL)) {
-			err_log("Unable to set sigaction");
-			return 1;
-		}
-	}
-
-	/* Ignore SIGCHLD as we don't keep track of child success */
-	sa.sa_handler = SIG_IGN;
-	if (sigaction(SIGCHLD, &sa, NULL)) {
-		err_log("Unable to ignore SIGCHLD");
-		return 1;
-	}
-
-	return 0;
-}
-
-/* Set flag to indicate we got a terminate signal */
-static void _set_flag(int signum)
-{
-	switch (signum) {
-	/* Intentionally exclude SIGQUIT/SIGABRT/etc. as we want to exit
-	 * without cleaning up to help with debugging */
-	case SIGTERM:
-	case SIGINT:
-		_done = 1;
-		break;
-	case NOTIFY_SIG:
-		_got_msg = 1;
-		break;
-	case SIGHUP:
-		_reload = 1;
-		break;
-	default:
-		/* Should be unreachable, but just in case */
-		if (signal(signum, SIG_DFL) != SIG_ERR) {
-			raise(signum);
-		}
-	}
 }
 
 void err_log(char *log_msg)
