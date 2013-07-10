@@ -1,6 +1,6 @@
 #include "rangetree.h"
 
-struct range *add_value(long value, struct rb_root *root)
+struct range *rt_add_value(long value, struct rb_root *root)
 {
 	struct rb_node **curnode = &root->rb_node;
 	struct rb_node *nextnode = NULL;
@@ -54,7 +54,7 @@ struct range *add_value(long value, struct rb_root *root)
 	return range;
 }
 
-void free_tree(struct rb_root *tree)
+void rt_free_tree(struct rb_root *tree)
 {
 	struct rb_node *node = NULL;
 	struct range *range = NULL;

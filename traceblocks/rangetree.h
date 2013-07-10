@@ -19,8 +19,8 @@ struct range {
  * If two ranges overlap after the addition, the ranges
  * are merged.
  */
-extern struct range *add_value(long, struct rb_root *);
+extern struct range *rt_add_value(long, struct rb_root *);
 
-extern void free_tree(struct rb_root *);
+extern void rt_free_tree(struct rb_root *);
 
 #endif

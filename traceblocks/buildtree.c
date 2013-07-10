@@ -31,7 +31,7 @@ int main()
 			break;
 		}
 		for (i = 0; i < buf.bytes / 512; i++) {
-			add_value(buf.sector + i, range_tree);
+			rt_add_value(buf.sector + i, range_tree);
 		}
 		/* Skip over the extra data */
 		fread(&buf, 1, buf.pdu_len, stdin);
@@ -46,7 +46,7 @@ int main()
 		printf("%ld-%ld\n", range->start, range->end);
 	}
 
-	free_tree(range_tree);
+	rt_free_tree(range_tree);
 
 	return 0;
 }
