@@ -1,3 +1,6 @@
+#ifndef DATTOD_H
+#define DATTOD_H
+
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <mqueue.h>
@@ -20,3 +23,5 @@ const struct mq_attr msg_q_attr =
 	.mq_maxmsg = 5,
 	.mq_msgsize = 1024,
 };
+
+#endif
