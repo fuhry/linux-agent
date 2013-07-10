@@ -21,6 +21,7 @@ struct range {
  */
 extern struct range *rt_add_value(long, struct rb_root *);
 
+/* Call this function to free all nodes in the range tree */
 extern void rt_free_tree(struct rb_root *);
 
 #endif
