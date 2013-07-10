@@ -168,7 +168,6 @@ void *_handle_mq(void *arg)
 
 	/* If we get here then something went wrong */
 	err_log("mq_receive");
-
 	return NULL;
 }
 
