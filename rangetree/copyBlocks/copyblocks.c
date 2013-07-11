@@ -1,4 +1,4 @@
-#include "rangetree.h"
+#include "../rangetree.h"
 #include <linux/blktrace_api.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 		perror("malloc");
 		return 1;
 	}
-
+    
     if (argc != 3) {
         printf("usage: %s file1 file2\n", argv[0]); 
         return 1;
@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
         printf("Error opening %s: %s\n", argv[1], strerror(errno));
         return 1;
     }
-
+    
     dest_fd = open(argv[2], O_WRONLY);
     if (dest_fd == -1) {
         printf("Error opening %s: %s\n", argv[2], strerror(errno));
@@ -61,19 +61,19 @@ int main(int argc, char* argv[])
 					total_read_bytes);
 			break;
 		}
-
+        
 		/* Calculate the number of sectors in this trace */
 		num_sectors = trace.bytes / 512;
-
+        
 		/* Add each sector to the tree */
 		for (i = 0; i < num_sectors; i++) {
 			rt_add_value(trace.sector + i, range_tree);
 		}
-
+        
 		/* Skip over the extra data at end of trace buffer */
 		fread(&trace, 1, trace.pdu_len, stdin);
 	}
-
+    
 	if (total_read_bytes <= 0) {
 		perror("read");
     }
@@ -81,8 +81,8 @@ int main(int argc, char* argv[])
     if(copy_changes(src_fd, dest_fd, range_tree)) {
         printf("Error copying changes\n");
     }
-
+    
 	rt_free_tree(range_tree);
-
+    
 	return 0;
 }

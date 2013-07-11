@@ -1,4 +1,4 @@
-#include "rangetree.h"
+#include "../rangetree.h"
 #include <stdio.h>
 #include <errno.h>
 
@@ -11,7 +11,7 @@ int copy_sector_range(int src_fd, int dest_fd, struct range *sector_range)
     off_t offset = (sector_range->start)*BYTES_PER_SEC;
     char buf[BYTES_PER_SEC];
     ssize_t io_bytes = 0;
-
+    
     /* update the file descriptors with the initial offset */
     lseek(src_fd, offset, SEEK_SET);
     lseek(dest_fd, offset, SEEK_SET);
@@ -21,7 +21,7 @@ int copy_sector_range(int src_fd, int dest_fd, struct range *sector_range)
         io_bytes = read(src_fd, buf, BYTES_PER_SEC);
         if (io_bytes != BYTES_PER_SEC)
             return io_bytes;
-
+        
         /* write data from the buffer to dest_fd */
         io_bytes = write(dest_fd, buf, BYTES_PER_SEC);
         if (io_bytes != BYTES_PER_SEC)
@@ -30,7 +30,7 @@ int copy_sector_range(int src_fd, int dest_fd, struct range *sector_range)
         /* increment the offset*/
         offset += BYTES_PER_SEC;
     }
-
+    
     return 0;
 }
 
@@ -48,6 +48,6 @@ int copy_changes(int src_fd, int dest_fd, struct rb_root *root)
                 return errno;
         } while ((node = rb_next(node)));
     }
-
+    
     return 0;
 }
