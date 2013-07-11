@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
         perror("read");
     }
     
-    if(copy_changes(src_fd, dest_fd, range_tree)) {
+    if (copy_changes(src_fd, dest_fd, range_tree)) {
         printf("Error copying changes\n");
     }
     
