@@ -22,14 +22,16 @@ int main()
 		return 1;
 	}
 
-	/* From stdin, read in a blk_io_trace struct. stdin should be the output
-	 * from blktrace or something similar */
+	/* From stdin, read in a blk_io_trace struct. stdin should be
+	 * the output from blktrace or something similar */
 	while ((read_bytes = fread(&trace, sizeof(struct blk_io_trace), 1,
 					stdin) > 0)) {
 		total_read_bytes += read_bytes;
 
-		/* Sanity check, make sure the blk_io_trace struct has the right format */
-		if (trace.magic != (BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION)) {
+		/* Sanity check, make sure the blk_io_trace struct has the
+		 * right format */
+		if (trace.magic != (BLK_IO_TRACE_MAGIC |
+					BLK_IO_TRACE_VERSION)) {
 			fprintf(stderr, "Error checking magic number\n");
 			fprintf(stderr, "  got magic: 0x%x\n", trace.magic);
 			fprintf(stderr, "  total_bytes: %ld\n",
