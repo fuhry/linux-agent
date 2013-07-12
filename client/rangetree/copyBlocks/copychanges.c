@@ -44,7 +44,7 @@ int copy_changes(int src_fd, int dest_fd, struct rb_root *root)
     if (node) {
         do {
             range = rb_entry(node, struct range, range_node);
-            if(copy_sector_range(src_fd, dest_fd, range))
+            if (copy_sector_range(src_fd, dest_fd, range))
                 return errno;
         } while ((node = rb_next(node)));
     }
