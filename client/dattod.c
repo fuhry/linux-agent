@@ -92,6 +92,7 @@ int main(int argc, char **argv)
 
 	/* TODO: Start block trace thread */
 
+	/* Start message queue listener thread */
 	if (pthread_create(&mq_thread, NULL, _handle_mq, &mqd)) {
 		err_log("pthread_create mq listener thread");
 		goto out;
