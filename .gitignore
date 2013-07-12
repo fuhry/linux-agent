@@ -3,6 +3,7 @@ copydmdevice/copydmdevice
 traceblocks/traceblocks
 rangetree/buildtree
 client/dattod
+client/tracetester
 
 # Core dumps
 core
