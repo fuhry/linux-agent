@@ -66,7 +66,32 @@ release:
 
 static inline void add_trace(struct trace_tree *tt)
 {
-	(void)tt;
+	struct trace_linked_list *tt_node = NULL;
+	/* TODO: Prevent cancel */
+	/* TODO: Get mutex */
+
+
+	tt_node = malloc(sizeof(struct trace_linked_list));
+	if (tt_node == NULL) {
+		syslog(LOG_ERR, "Unable to malloc tt_node: %m");
+		goto release;
+	}
+
+	tt_node->tree = tt;
+
+	if (head == NULL) {
+		head = tt_node;
+		head->next = head;
+		head->prev = head;
+	} else {
+		(head->prev)->next = tt_node;
+		(head->next)->prev = tt_node;
+	}
+
+release:
+	/* TODO: Release mutex */
+	/* TODO: Enable cancel */
+	return;
 }
 
 #endif
