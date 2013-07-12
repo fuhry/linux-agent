@@ -154,7 +154,7 @@ static void *_handle_mq(void *arg)
 
 		switch (msg_type) {
 			case ECHO:
-				if ((unsigned int)num_read < sizeof(buf)) {
+				if (num_read < msg_q_attr.mq_msgsize) {
 					buf[num_read] = '\0';
 					printf("%s\n", buf+1);
 				}
