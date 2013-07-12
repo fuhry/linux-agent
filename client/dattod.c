@@ -11,12 +11,9 @@
 
 #include "dattod.h"
 
-#define MAX_ERR_LEN 100
-/* 20 characters is more than enough for the 4 million max specified in 
- * linux/threads.h PID_MAX_LIMIT */
+/* 20 characters is more than enough for the 4 million max (7 characters)
+ * specified in linux/threads.h PID_MAX_LIMIT */
 #define MAX_PID_LEN 20
-
-void err_log(char *);
 
 static int _get_lock();
 static int _write_pid(int);
@@ -61,7 +58,7 @@ int main(int argc, char **argv)
 	mqd = mq_open(MQUEUE_PATH, O_RDONLY | O_CREAT | O_EXCL,
 			S_IRUSR | S_IWUSR, &msg_q_attr);
 	if (mqd == (mqd_t)(-1)) {
-		err_log("Error opening message queue");
+		syslog(LOG_ERR, "Error opening message queue");
 		return 1;
 	}
 
@@ -86,7 +83,7 @@ int main(int argc, char **argv)
 	sigaddset(&block_mask, SIGHUP);
 
 	if (pthread_sigmask(SIG_BLOCK, &block_mask, &orig_mask)) {
-		err_log("Error blocking signals");
+		syslog(LOG_ERR, "Error blocking signals");
 		goto out;
 	}
 
@@ -94,13 +91,13 @@ int main(int argc, char **argv)
 
 	/* Start message queue listener thread */
 	if (pthread_create(&mq_thread, NULL, _handle_mq, &mqd)) {
-		err_log("pthread_create mq listener thread");
+		syslog(LOG_ERR, "pthread_create mq listener thread");
 		goto out;
 	}
 
 	while (!_done) {
 		if (sigwait(&block_mask, &sig)) {
-			err_log("sigwait");
+			syslog(LOG_ERR, "sigwait");
 			break;
 		}
 		switch (sig) {
@@ -120,7 +117,7 @@ out:
 	/* If these fail we can't do much about it, but should log it */
 
 	if (mq_unlink(MQUEUE_PATH)) {
-		err_log("Unable to remove message queue descriptor");
+		syslog(LOG_ERR, "Unable to remove message queue descriptor");
 	}
 
 	return 0;
@@ -140,7 +137,7 @@ static void *_handle_mq(void *arg)
 
 	buf = malloc(msg_q_attr.mq_msgsize);
 	if (buf == NULL) {
-		err_log("malloc(buf)");
+		syslog(LOG_ERR, "malloc(buf)");
 		return NULL;
 	}
 
@@ -168,7 +165,7 @@ static void *_handle_mq(void *arg)
 	}
 
 	/* If we get here then something went wrong */
-	err_log("mq_receive");
+	syslog(LOG_ERR, "mq_receive");
 	return NULL;
 }
 
@@ -182,11 +179,10 @@ static int _get_lock()
 	int lock_fd;
 	int n_read;
 	char pid[MAX_PID_LEN];
-	char err_msg[MAX_ERR_LEN];
 
 	lock_fd = open(LOCK_FILE, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 	if (lock_fd == -1) {
-		err_log("Unable to open lock file");
+		syslog(LOG_ERR, "Unable to open lock file");
 		return -1;
 	}
 
@@ -194,16 +190,12 @@ static int _get_lock()
 		if (errno == EWOULDBLOCK) {
 			n_read = read(lock_fd, pid, MAX_PID_LEN - 1);
 			if (n_read < 1) {
-				err_log("Unable to get lock pid");
+				syslog(LOG_ERR, "Unable to get lock pid");
 			} else {
-				pid[n_read] = '\0';
-				snprintf(err_msg, MAX_ERR_LEN - 1,
-					"Already running with PID: %s", pid);
-				err_msg[MAX_ERR_LEN] = '\0';
-				err_log(err_msg);
+				syslog(LOG_ERR, "Already running with PID: %s", pid);
 			}
 		} else {
-			err_log("Unable to acquire lock");
+			syslog(LOG_ERR, "Unable to acquire lock");
 
 		}
 		/* No need to check return */
@@ -224,24 +216,15 @@ static int _write_pid(int lock_fd)
 	int num_wrote;
 
 	if (ftruncate(lock_fd, 0)) {
-		err_log("Unable to truncate PID file");
+		syslog(LOG_ERR, "Unable to truncate PID file");
 		return -1;
 	}
 
 	num_wrote = dprintf(lock_fd, "%d", getpid());
 	if (num_wrote < 0) {
-		err_log("Unable to write PID to lock file");
+		syslog(LOG_ERR, "Unable to write PID to lock file");
 		return -1;
 	}
 
 	return 0;
-}
-
-void err_log(char *log_msg)
-{
-	if (errno) {
-		syslog(LOG_ERR, "%s - %m\n", log_msg);
-	} else {
-		syslog(LOG_ERR, "%s\n", log_msg);
-	}
 }
