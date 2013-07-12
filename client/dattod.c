@@ -22,7 +22,7 @@ static int _get_lock();
 static int _write_pid(int);
 
 /* Thread functions */
-void *_handle_mq(void *);
+static void *_handle_mq(void *);
 
 /* _done is set when a kill signal is caught */
 static volatile sig_atomic_t _done = 0;
@@ -129,7 +129,7 @@ out:
  * This should only be run from a child process
  */
 /* TODO make static */
-void *_handle_mq(void *arg)
+static void *_handle_mq(void *arg)
 {
 	mqd_t mqd = *(mqd_t*)(arg);
 	ssize_t num_read;
