@@ -16,4 +16,4 @@ rbtree.o:
 	$(CC) $(CFLAGS) $(DEBUG) -W -Wall -c -o rangetree/rbtree.o ./rangetree/rbtree.c $(LIBS)
 
 clean:
-	rm -f *.o dattod tracetester
+	rm -f rangetree/rangetree.o rangetree/rbtree.o dattod tracetester
