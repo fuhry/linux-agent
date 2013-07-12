@@ -29,8 +29,9 @@ struct range *rt_add_value(long value, struct rb_root *root)
 		}
 	}
 
-	/* If we left the above loop at a NULL leaf, then the curnode pointer is
-	 * where we should insert a new node consisting of a single value */
+	/* If we left the above loop at a NULL leaf, then the curnode pointer
+	 * is where we should insert a new node consisting of a single
+	 * value */
 	if (*curnode == NULL) {
 		range = malloc(sizeof(struct range));
 		range->start = value;
