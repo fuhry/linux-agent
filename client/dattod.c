@@ -109,7 +109,9 @@ int main(int argc, char **argv)
 				fprintf(stderr, "SIGHUP\n");
 				break;
 			default:
-				fprintf(stderr, "Got unxpected signal: %d\n", sig);
+				fprintf(stderr, "Got unxpected signal: %d\n",
+						sig);
+				break;
 		}
 	}
 
@@ -143,7 +145,6 @@ static void *_handle_mq(void *arg)
 
 	while ((num_read = mq_receive(mqd, buf,
 					msg_q_attr.mq_msgsize, NULL)) >= 0) {
-
 		/* Messages shouldn't be zero length.. but deal if they are */
 		if (num_read == 0) {
 			continue;
@@ -192,7 +193,8 @@ static int _get_lock()
 			if (n_read < 1) {
 				syslog(LOG_ERR, "Unable to get lock pid");
 			} else {
-				syslog(LOG_ERR, "Already running with PID: %s", pid);
+				syslog(LOG_ERR, "Already running with PID: %s",
+						pid);
 			}
 		} else {
 			syslog(LOG_ERR, "Unable to acquire lock");
