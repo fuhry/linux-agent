@@ -15,19 +15,15 @@ struct trace_linked_list {
 	struct trace_linked_list *next;
 };
 
-static struct trace_linked_list *head = NULL;
-
 //static MUTEX = STATIC ??
 
-/* Returns 0 if removed successfully, non-zero otherwise */
-static inline struct trace_tree *remove_trace(struct trace_tree *tt)
+/* Returns tt if removed successfully, NULL otherwise */
+static inline struct trace_tree *remove_trace(struct trace_linked_list **head,
+		struct trace_tree *tt)
 {
 	struct trace_tree *tree = NULL;
 	struct trace_linked_list *to_free = NULL;
-	struct trace_linked_list **curr = &head;
-
-	/* TODO: Prevent cancel */
-	/* TODO: Get mutex */
+	struct trace_linked_list **curr = head;
 
 	while (*curr) {
 		tree = (*curr)->tree;
@@ -49,28 +45,23 @@ static inline struct trace_tree *remove_trace(struct trace_tree *tt)
 	return tree;
 }
 
-static inline void add_trace(struct trace_tree *tt)
+static inline void add_trace(struct trace_linked_list **head,
+		struct trace_tree *tt)
 {
 	struct trace_linked_list *tt_node = NULL;
-	/* TODO: Prevent cancel */
-	/* TODO: Get mutex */
-
 
 	/* Initialize trace_linked_list struct */
 	tt_node = malloc(sizeof(struct trace_linked_list));
 	if (tt_node == NULL) {
 		syslog(LOG_ERR, "Unable to malloc tt_node: %m");
-		goto release;
+		return;
 	}
 	tt_node->tree = tt;
 
 	/* Insert at front */
-	tt_node->next = head;
-	head = tt_node;
+	tt_node->next = *head;
+	*head = tt_node;
 
-release:
-	/* TODO: Release mutex */
-	/* TODO: Enable cancel */
 	return;
 }
 
