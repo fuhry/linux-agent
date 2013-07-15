@@ -15,8 +15,6 @@ struct trace_linked_list {
 	struct trace_linked_list *next;
 };
 
-//static MUTEX = STATIC ??
-
 /* Returns tt if removed successfully, NULL otherwise */
 static inline struct trace_tree *remove_trace(struct trace_linked_list **head,
 		struct trace_tree *tt)
