@@ -21,28 +21,23 @@ struct trace_linked_list {
 static inline struct trace_tree *remove_trace(struct trace_linked_list **head,
 		struct trace_tree *tt)
 {
-	struct trace_tree *tree = NULL;
 	struct trace_linked_list *to_free = NULL;
 	struct trace_linked_list **curr = head;
 
 	while (*curr) {
-		tree = (*curr)->tree;
-		if (tree == tt) {
+		if ((*curr)->tree == tt) {
 			to_free = *curr;
 
 			*curr = (*curr)->next;
 			free(to_free);
 
-			break;
+			return tt;
 		} else {
 			curr = &(*curr)->next;
 		}
 	}
 
-	/* TODO: Release mutex */
-	/* TODO: Enable cancel */
-
-	return tree;
+	return NULL;
 }
 
 static inline void add_trace(struct trace_linked_list **head,
