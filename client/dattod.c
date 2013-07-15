@@ -38,11 +38,11 @@ int main(int argc, char **argv)
 	pthread_t mq_thread;
 
 	if (argc > 1) {
-		/* -f puts dattod in the foreground for debugging */
-		if (strcmp(argv[1], "-f") == 0) {
+		/* --fg puts dattod in the foreground for debugging */
+		if (strcmp(argv[1], "--fg") == 0) {
 			foreground = 1;
 		} else {
-			fprintf(stderr, "usage: %s\n", argv[0]);
+			fprintf(stderr, "usage: %s [--fg]\n", argv[0]);
 			return 1;
 		}
 	}
