@@ -18,6 +18,8 @@
 static int _get_lock();
 static int _write_pid(int);
 
+int *_start_traces(char **);
+
 /* Thread functions */
 static void *_handle_mq(void *);
 
@@ -87,7 +89,7 @@ int main(int argc, char **argv)
 		goto out;
 	}
 
-	/* TODO: Start block trace thread */
+	// TODO: start_traces(paths);
 
 	/* Start message queue listener thread */
 	if (pthread_create(&mq_thread, NULL, _handle_mq, &mqd)) {
