@@ -5,14 +5,11 @@
 */
 
 #include <stdio.h>
-#include "reiserfs.h"
-#include "xfs.h"
-
-#define TEST_EXIT_OK
-#define TEST_EXIT_ER
+#include "fsparser.h"
 
 #define XFS_TEST_PARTITION "/dev/sdb1"
 #define REISER_TEST_PARTITION "/dev/sdb2"
+#define EXT2_TEST_PARTITION "/dev/sdb3"
 
 void test_xfs(void) {
 
@@ -22,7 +19,10 @@ void test_reiserfs(void) {
 
 }
 
-int main(void) {
+void test_ext2(void) {
 
-	return TEST_EXIT_OK;
+}
+
+int main(void) {
+	return 0;
 }

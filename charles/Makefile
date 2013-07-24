@@ -10,13 +10,13 @@ BINDIR =	bin
 CC =	clang
 
 # Compiler Flags
-CFLAGS =	-std=c99 -pedantic -Wall -g
+CFLAGS =	-std=c89 -ansi -pedantic -Wall -g
 
 # Linker Flags
 LDFLAGS =	
 
 ############################################################
-DEPS=$(OBJDIR)/test.o $(OBJDIR)/xfs.o $(OBJDIR)/reiserfs.o 
+DEPS=$(OBJDIR)/test.o $(OBJDIR)/fsparser.o
 
 all: $(DEPS)
 	$(CC) -o $(BINDIR)/$(EXECNAME) $(DEPS) $(LDFLAGS)
