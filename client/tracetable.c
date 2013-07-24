@@ -1,6 +1,7 @@
 #include <glib.h>
+#include <stdint.h>
 #include "tracetable.h"
-#include "rangetree/rangetree.h"
+#include "rangetree.h"
 
 static GHashTable *trace_table = NULL;
 G_LOCK_DEFINE_STATIC(trace_table);
@@ -24,7 +25,7 @@ void tr_initialize()
 	G_UNLOCK(trace_table);
 }
 
-void tr_new_tree(const gchar *path)
+void tr_new_tree(const char *path)
 {
 	G_LOCK(trace_table);
 
@@ -43,7 +44,7 @@ void tr_new_tree(const gchar *path)
 	G_UNLOCK(trace_table);
 }
 
-void tr_remove_tree(const gchar *path)
+void tr_remove_tree(const char *path)
 {
 	GPtrArray *tree_arr = NULL;
 
@@ -60,7 +61,7 @@ void tr_remove_tree(const gchar *path)
 	G_UNLOCK(trace_table);
 }
 
-void tr_add_block(const gchar *path, guint64 block)
+void tr_add_block(const char *path, uint64_t block)
 {
 	GPtrArray *tree_arr;
 
@@ -74,7 +75,7 @@ void tr_add_block(const gchar *path, guint64 block)
 
 	G_UNLOCK(trace_table);
 }
-void tr_prepare_for_take(const gchar *path)
+void tr_prepare_for_take(const char *path)
 {
 	GPtrArray *tree_arr;
 
