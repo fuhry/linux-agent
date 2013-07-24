@@ -1,7 +1,7 @@
 #ifndef TRACE_H
 #define TRACE_H
 
-#include "rangetree/rangetree.h"
+#include "rangetree.h"
 
 struct trace_tree {
 	char *block_dev_path;
