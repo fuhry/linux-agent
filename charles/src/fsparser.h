@@ -26,8 +26,8 @@
 	Identifies if a given device is of a specific format.
 	Params:  dev     - the device path
 	         FS_TYPE - the type of filesystem to identify
-	Returns: FALSE on success
-	         TRUE on failure
+	Returns: TRUE on success
+	         FALSE on failure
 */
 int fs_identify(const char *dev, int FS_TYPE);
 

@@ -5,6 +5,13 @@
 */
 
 #include "fsparser.h"
+#include <fcntl.h>
+#include <unistd.h>
+
+#if !(defined TRUE && defined FALSE)
+	#define TRUE 1
+	#define FALSE 0
+#endif
 
 /*
 	Developer Note:
@@ -31,15 +38,32 @@ static int reiserfs_iter_blocks(const char *dev, int (*callback)(void* buffer, u
 /*******************************FILESYSTEM FUNCTIONALITY***********************/
 
 int ext2_identify(const char *dev) {
-	return FS_EXIT_OK;
+	int fd = open(dev, O_RDONLY);
+	uint16_t signature = 0x00;
+	int rc = 0;
+	
+	if(fd < 0) return FALSE;
+	if(lseek(fd, 0x6c0, SEEK_SET) < 0) {
+		close(fd);
+		return FALSE;
+	}
+
+	if(read(fd, &signature, sizeof(signature)) < 0) {
+		close(fd);
+		return FALSE;
+	}
+	
+	rc = close(fd);
+	rc = (signature == 0xef53) && (rc == 0);
+	return rc;
 }
 
 int xfs_identify(const char *dev) {
-	return FS_EXIT_OK;
+	return FALSE;
 }
 
 int reiserfs_identify(const char *dev) {
-	return FS_EXIT_OK;
+	return FALSE;
 }
 
 int ext2_iter_blocks(const char *dev, int (*callback)(void* buffer, uint64_t length)) {
