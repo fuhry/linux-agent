@@ -7,7 +7,12 @@
 #include "fsparser.h"
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
+#include <stdio.h>
 
+#define letobe16(x) ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
+#define letobe32(x) (((x) & 0xff) << 24) | (((x) & 0xff00) << 8) | (((x) & 0xff0000) >> 8) | (((x) >> 24) & 0xff)
+		
 #if !(defined TRUE && defined FALSE)
 	#define TRUE 1
 	#define FALSE 0
@@ -39,31 +44,99 @@ static int reiserfs_iter_blocks(const char *dev, int (*callback)(void* buffer, u
 
 int ext2_identify(const char *dev) {
 	int fd = open(dev, O_RDONLY);
-	uint16_t signature = 0x00;
 	int rc = 0;
+	union {
+		uint16_t u16;
+		uint8_t byte[sizeof(uint16_t)];
+	} signature;
 	
-	if(fd < 0) return FALSE;
-	if(lseek(fd, 0x6c0, SEEK_SET) < 0) {
+	if(fd < 0) { 
+		fprintf(stderr, "Could not open device `%s`\n", dev);
+		return FALSE;
+	}
+	
+	if(lseek(fd, 0x438, SEEK_CUR) < 0) {
+		fprintf(stderr, "Could not seek device `%s`\n", dev);
 		close(fd);
 		return FALSE;
 	}
 
-	if(read(fd, &signature, sizeof(signature)) < 0) {
+	if(read(fd, signature.byte, sizeof(signature)) < 0) {
+		fprintf(stderr, "Could not read device `%s`\n", dev);
 		close(fd);
 		return FALSE;
 	}
 	
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	signature.u16 = letobe16(signature.u16);
+#endif
+	
 	rc = close(fd);
-	rc = (signature == 0xef53) && (rc == 0);
+	rc = (signature.u16 == 0x53ef) && (rc == 0);
 	return rc;
 }
 
 int xfs_identify(const char *dev) {
-	return FALSE;
+	int fd = open(dev, O_RDONLY);
+	int rc = 0;
+	union {
+		uint32_t u32;
+		uint8_t byte[sizeof(uint32_t)];
+	} signature;
+	
+	if(fd < 0) { 
+		fprintf(stderr, "Could not open device `%s`\n", dev);
+		return FALSE;
+	}
+	
+	if(lseek(fd, 0x0, SEEK_CUR) < 0) {
+		fprintf(stderr, "Could not seek device `%s`\n", dev);
+		close(fd);
+		return FALSE;
+	}
+
+	if(read(fd, signature.byte, sizeof(signature)) < 0) {
+		fprintf(stderr, "Could not read device `%s`\n", dev);
+		close(fd);
+		return FALSE;
+	}
+	
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	signature.u32 = letobe32(signature.u32);
+#endif
+
+	rc = close(fd);
+	rc = (signature.u32 == 0x58465342) && (rc == 0);
+	return rc;
 }
 
 int reiserfs_identify(const char *dev) {
-	return FALSE;
+	int fd = open(dev, O_RDONLY);
+	int rc = 0;
+	char* expected_signature = "ReIsEr2Fs";
+	int expected_length = strlen(expected_signature);
+	char signature[12];
+	
+	if(fd < 0) { 
+		fprintf(stderr, "Could not open device `%s`\n", dev);
+		return FALSE;
+	}
+	
+	if(lseek(fd, 0x10034, SEEK_CUR) < 0) {
+		fprintf(stderr, "Could not seek device `%s`\n", dev);
+		close(fd);
+		return FALSE;
+	}
+	
+	if(read(fd, signature, 12) < 0) {
+		fprintf(stderr, "Could not read device `%s`\n", dev);
+		close(fd);
+		return FALSE;
+	}
+	signature[expected_length] = 0;
+	rc = close(fd);
+	rc = (strncmp(signature, expected_signature, expected_length) == 0) && (rc == 0);
+	return rc;
 }
 
 int ext2_iter_blocks(const char *dev, int (*callback)(void* buffer, uint64_t length)) {
