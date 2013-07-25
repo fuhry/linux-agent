@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 	
 #if !(defined TRUE && defined FALSE)
 	#define TRUE 1
@@ -30,6 +31,7 @@
 				- A function that identifies the filesystem
 				- A function that iterates over the used blocks and calls the callback on them
 			- Add the new filesystem identifier to the two switches in the lookup table section
+			- Kudos if you offload
 */
 
 /*********************************STATIC DECLARATIONS**************************/
@@ -46,7 +48,10 @@ static int reiserfs_iter_blocks(int fd, int (*callback)(int fd, uint64_t length)
 int ext2_identify(int fd) {
 	int rc;
 	struct ext_fs fs;
-	rc = ext_parse_information(fd, &fs);
+	rc = ext_parse_superblock(fd, &fs);
+	if(rc) {
+		fprintf(stderr, "Could not parse filesystem at 0x%x error %d\n", fd, rc);
+	}
 	return !rc && fs.signature == EXT_SIGNATURE;
 }
 
@@ -55,7 +60,10 @@ int ext2_identify(int fd) {
 int xfs_identify(int fd) {
 	int rc;
 	struct xfs_fs fs;
-	rc = xfs_parse_information(fd, &fs);
+	rc = xfs_parse_superblock(fd, &fs);
+	if(rc) {
+		fprintf(stderr, "Could not parse filesystem at 0x%x error %d\n", fd, rc);
+	}
 	return !rc && fs.signature == XFS_SIGNATURE;
 }
 
@@ -64,7 +72,10 @@ int xfs_identify(int fd) {
 int reiserfs_identify(int fd) {
 	int rc;
 	struct reiser_fs fs;
-	rc = reiser_parse_information(fd, &fs);
+	rc = reiser_parse_superblock(fd, &fs);
+	if(rc) {
+		fprintf(stderr, "Could not parse filesystem at 0x%x error %d\n", fd, rc);
+	}
 	return !rc && strncmp(fs.signature, REISER_SIGNATURE, REISER_SIGNATURE_LEN) == 0;
 }
 
@@ -73,14 +84,22 @@ int reiserfs_identify(int fd) {
 int ext2_iter_blocks(int fd, int (*callback)(int fd, uint64_t length)) {
 	int i, rc;
 	struct ext_fs fs;
-	rc = ext_parse_information(fd, &fs);
+	rc = ext_parse_superblock(fd, &fs);
 	if(rc) {
 		fprintf(stderr, "Could not parse ext family filesystem error code %d\n", rc);
-		return FS_EXIT_ER_UNKOWN;
+		return FS_EXIT_ER_PARSE;
 	}
-		
+	
+	printf("%x %d %d %ld %d %d\n", fs.signature, fs.total_blocks, fs.total_groups, fs.block_size, fs.blocks_per_group, fs.first_group_desc);
 	for(i = 0; i < fs.total_groups; ++i) {
-			
+			int cur_group_block_offset = fs.first_group_desc + (fs.blocks_per_group * fs.block_size  * i);
+			//TODO: FIX!
+			char *bitmap = ext_group_bitmap(fd, cur_group_block_offset, &fs);
+			printf("0x"); int j;
+			for(j = 0; j < 
+			if(bitmap) {
+				free(bitmap);
+			}
 	}
 	return FS_EXIT_OK;
 }
@@ -102,7 +121,6 @@ int fs_identify(const char *dev, const int FS_TYPE) {
 	int fd = open(dev, O_RDONLY);
 	int rc = 0;
 	if(fd < 0) { 
-		fprintf(stderr, "Could not open device `%s`\n", dev);
 		return FS_EXIT_ER_OPEN;
 	}
 	switch(FS_TYPE) {
@@ -122,7 +140,9 @@ int fs_identify(const char *dev, const int FS_TYPE) {
 			close(fd);
 			return FS_EXIT_ER_ID_UNDEF;
 	}	
-	rc = (close(fd) == 0) && rc;
+	if(close(fd)) {
+			return FS_EXIT_ER_CLOSE;
+	}
 	return rc;
 }
 
@@ -132,7 +152,6 @@ int fs_iter_blocks(const char *dev, const int FS_TYPE, int (*callback)(int fd, u
 	int fd = open(dev, O_RDONLY);
 	int rc = 0;
 	if(fd < 0) { 
-		fprintf(stderr, "Could not open device `%s`\n", dev);
 		return FS_EXIT_ER_OPEN;
 	}	
 	switch(FS_TYPE) {
@@ -152,6 +171,8 @@ int fs_iter_blocks(const char *dev, const int FS_TYPE, int (*callback)(int fd, u
 			close(fd);
 			return FS_EXIT_ER_ITER_UNDEF;
 	}
-	rc = close(fd) ^ rc; /* bitwise or: 0x0 ^ 0x0 = 0x0, anything else not 0x00 */
+	if(close(fd)) {
+			return FS_EXIT_ER_CLOSE;
+	}
 	return rc;
 }

@@ -29,7 +29,7 @@ struct reiser_fs {
 	Returns: FALSE on success
 	         TRUE on failure
 */
-int reiser_parse_information(int fd, struct reiser_fs *fs);
+int reiser_parse_superblock(int fd, struct reiser_fs *fs);
 
 
 #endif

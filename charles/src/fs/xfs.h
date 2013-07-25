@@ -30,6 +30,6 @@ struct xfs_fs {
 	Returns: FALSE on success
 	         TRUE on failure
 */
-int xfs_parse_information(int fd, struct xfs_fs *fs);
+int xfs_parse_superblock(int fd, struct xfs_fs *fs);
 
 #endif

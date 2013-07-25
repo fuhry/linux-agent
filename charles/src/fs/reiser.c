@@ -7,7 +7,7 @@
 #include "reiser.h"
 #include "fs.h"
 
-int reiser_parse_information(int fd, struct reiser_fs *fs) {
+int reiser_parse_superblock(int fd, struct reiser_fs *fs) {
 	
 	/** Seek to the signature */
 	if(lseek(fd, REISER_SUPERBLOCK_LOC + REISER_SIGNATURE_OFF, SEEK_SET) < 0) {

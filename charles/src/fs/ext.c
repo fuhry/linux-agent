@@ -8,8 +8,10 @@
 #include "fs.h"
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
 
-int ext_parse_information(int fd, struct ext_fs *fs) {
+int ext_parse_superblock(int fd, struct ext_fs *fs) {
 	uint32_t shift_amnt;
 	union {
 		uint16_t u16;
@@ -31,7 +33,7 @@ int ext_parse_information(int fd, struct ext_fs *fs) {
 	if(read(fd, &shift_amnt, sizeof(shift_amnt)) < 0) {
 		return FS_READ_ER;
 	}
-	fs->block_size = 1024 << shift_amnt;
+	fs->block_size = 0x400 << shift_amnt;
 	
 	
 	/* Seek to the superblock's block shift field location */
@@ -60,11 +62,34 @@ int ext_parse_information(int fd, struct ext_fs *fs) {
 		fs->total_groups = fs->total_blocks / fs->blocks_per_group;
 	
 	/* Determine location of first group descriptor */
-	if(fs->block_size == 0x400) {
-		fs->first_group_desc = EXT_SUPERBLOCK_LOC + (2 * fs->block_size);
-	} else {
-		fs->first_group_desc = EXT_SUPERBLOCK_LOC + fs->block_size;
-	}
+	//TODO: FIX!
+	fs->first_group_desc = /*EXT_SUPERBLOCK_LOC +*/ fs->block_size;
 	
 	return FS_EXIT_OK;
+}
+
+
+
+char* ext_group_bitmap(int fd, int offset, struct ext_fs *fs) {
+	char *bitmap;
+	uint32_t bitmap_location;
+	/* Seek to the group's bitmap location field */
+	if(lseek(fd, offset, SEEK_SET) < 0) {
+		return NULL;
+	}
+	if(read(fd, &bitmap_location, sizeof(bitmap_location)) < 0) {
+		return NULL;
+	}
+
+	bitmap_location *= fs->block_size;
+	bitmap = (char*) malloc(sizeof(char) * fs->block_size);
+	
+	/* Seek to the group's bitmap location */
+	if(lseek(fd, bitmap_location, SEEK_SET) < 0) {
+		return NULL;
+	}
+	if(read(fd, bitmap, fs->block_size) < 0) {
+		return NULL;
+	}	
+	return bitmap;
 }
