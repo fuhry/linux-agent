@@ -15,6 +15,8 @@
 #define FS_EXIT_ER_ID_UNDEF 2
 /** Exit status undefined iteration function */
 #define FS_EXIT_ER_ITER_UNDEF 3
+/** Exit status open failure */
+#define FS_EXIT_ER_OPEN 4
 
 #define FS_EXT2_T     1
 #define FS_XFS_T      2
@@ -29,17 +31,17 @@
 	Returns: TRUE on success
 	         FALSE on failure
 */
-int fs_identify(const char *dev, int FS_TYPE);
+int fs_identify(const char *dev, const int FS_TYPE);
 
 /**
 	Iterates over used blocks and callsback on said blocks.
-	Params:  dev      - the device path
+	Params:  dev      - the device
 	         FS_TYPE  - the type of filesystem to expect
 	         callback - the function to callback on a used block
 	Returns: FALSE on success
 	         TRUE on failure
 */
-int fs_iter_blocks(const char *dev, int FS_TYPE, int (*callback)(void* buffer, uint64_t length));
+int fs_iter_blocks(const char *dev, const int FS_TYPE, int (*callback)(int fd, uint64_t length));
 
 
 #endif

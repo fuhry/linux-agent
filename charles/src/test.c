@@ -26,6 +26,11 @@
 #define REISER_TEST_PARTITION "/dev/sdb2"
 #define EXT2_TEST_PARTITION "/dev/sdb3"
 
+int test_callback(const int fd, const uint64_t length) {
+	printf("Callback called on 0x%x length %ld\n", fd, length);
+	return 0;
+}
+
 void test_xfs(void) {
 	TEST_EQ("XFS identifcation", fs_identify(XFS_TEST_PARTITION, FS_XFS_T), TRUE)
 	TEST_EQ("XFS misidentifcation", fs_identify(REISER_TEST_PARTITION, FS_XFS_T), FALSE)
@@ -42,6 +47,8 @@ void test_ext2(void) {
 	TEST_EQ("ext2 identifcation", fs_identify(EXT2_TEST_PARTITION, FS_EXT2_T), TRUE)
 	TEST_EQ("ext2 misidentifcation", fs_identify(REISER_TEST_PARTITION, FS_EXT2_T), FALSE)
 	TEST_EQ("ext2 misidentifcation", fs_identify(XFS_TEST_PARTITION, FS_EXT2_T), FALSE)
+	
+	fs_iter_blocks(EXT2_TEST_PARTITION, FS_EXT2_T, &test_callback);
 }
 
 int main(void) {

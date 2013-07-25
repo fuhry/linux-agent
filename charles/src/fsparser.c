@@ -5,14 +5,15 @@
 */
 
 #include "fsparser.h"
+#include "fs/ext.h"
+#include "fs/xfs.h"
+#include "fs/reiser.h"
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
-
-#define letobe16(x) ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
-#define letobe32(x) (((x) & 0xff) << 24) | (((x) & 0xff00) << 8) | (((x) & 0xff0000) >> 8) | (((x) >> 24) & 0xff)
-		
+	
 #if !(defined TRUE && defined FALSE)
 	#define TRUE 1
 	#define FALSE 0
@@ -32,156 +33,125 @@
 */
 
 /*********************************STATIC DECLARATIONS**************************/
-static int ext2_identify(const char *dev);
-static int xfs_identify(const char *dev);
-static int reiserfs_identify(const char *dev);
+static int ext2_identify(int fd);
+static int xfs_identify(int fd);
+static int reiserfs_identify(int fd);
 
-static int ext2_iter_blocks(const char *dev, int (*callback)(void* buffer, uint64_t length));
-static int xfs_iter_blocks(const char *dev, int (*callback)(void* buffer, uint64_t length));
-static int reiserfs_iter_blocks(const char *dev, int (*callback)(void* buffer, uint64_t length));
+static int ext2_iter_blocks(int fd, int (*callback)(int fd, uint64_t length));
+static int xfs_iter_blocks(int fd, int (*callback)(int fd, uint64_t length));
+static int reiserfs_iter_blocks(int fd, int (*callback)(int fd, uint64_t length));
 
 /*******************************FILESYSTEM FUNCTIONALITY***********************/
 
-int ext2_identify(const char *dev) {
-	int fd = open(dev, O_RDONLY);
-	int rc = 0;
-	union {
-		uint16_t u16;
-		uint8_t byte[sizeof(uint16_t)];
-	} signature;
-	
-	if(fd < 0) { 
-		fprintf(stderr, "Could not open device `%s`\n", dev);
-		return FALSE;
-	}
-	
-	if(lseek(fd, 0x438, SEEK_CUR) < 0) {
-		fprintf(stderr, "Could not seek device `%s`\n", dev);
-		close(fd);
-		return FALSE;
-	}
-
-	if(read(fd, signature.byte, sizeof(signature)) < 0) {
-		fprintf(stderr, "Could not read device `%s`\n", dev);
-		close(fd);
-		return FALSE;
-	}
-	
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	signature.u16 = letobe16(signature.u16);
-#endif
-	
-	rc = close(fd);
-	rc = (signature.u16 == 0x53ef) && (rc == 0);
-	return rc;
+int ext2_identify(int fd) {
+	int rc;
+	struct ext_fs fs;
+	rc = ext_parse_information(fd, &fs);
+	return !rc && fs.signature == EXT_SIGNATURE;
 }
 
-int xfs_identify(const char *dev) {
-	int fd = open(dev, O_RDONLY);
-	int rc = 0;
-	union {
-		uint32_t u32;
-		uint8_t byte[sizeof(uint32_t)];
-	} signature;
-	
-	if(fd < 0) { 
-		fprintf(stderr, "Could not open device `%s`\n", dev);
-		return FALSE;
-	}
-	
-	if(lseek(fd, 0x0, SEEK_CUR) < 0) {
-		fprintf(stderr, "Could not seek device `%s`\n", dev);
-		close(fd);
-		return FALSE;
-	}
 
-	if(read(fd, signature.byte, sizeof(signature)) < 0) {
-		fprintf(stderr, "Could not read device `%s`\n", dev);
-		close(fd);
-		return FALSE;
-	}
-	
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	signature.u32 = letobe32(signature.u32);
-#endif
 
-	rc = close(fd);
-	rc = (signature.u32 == 0x58465342) && (rc == 0);
-	return rc;
+int xfs_identify(int fd) {
+	int rc;
+	struct xfs_fs fs;
+	rc = xfs_parse_information(fd, &fs);
+	return !rc && fs.signature == XFS_SIGNATURE;
 }
 
-int reiserfs_identify(const char *dev) {
-	int fd = open(dev, O_RDONLY);
-	int rc = 0;
-	char* expected_signature = "ReIsEr2Fs";
-	int expected_length = strlen(expected_signature);
-	char signature[12];
-	
-	if(fd < 0) { 
-		fprintf(stderr, "Could not open device `%s`\n", dev);
-		return FALSE;
-	}
-	
-	if(lseek(fd, 0x10034, SEEK_CUR) < 0) {
-		fprintf(stderr, "Could not seek device `%s`\n", dev);
-		close(fd);
-		return FALSE;
-	}
-	
-	if(read(fd, signature, 12) < 0) {
-		fprintf(stderr, "Could not read device `%s`\n", dev);
-		close(fd);
-		return FALSE;
-	}
-	signature[expected_length] = 0;
-	rc = close(fd);
-	rc = (strncmp(signature, expected_signature, expected_length) == 0) && (rc == 0);
-	return rc;
+
+
+int reiserfs_identify(int fd) {
+	int rc;
+	struct reiser_fs fs;
+	rc = reiser_parse_information(fd, &fs);
+	return !rc && strncmp(fs.signature, REISER_SIGNATURE, REISER_SIGNATURE_LEN) == 0;
 }
 
-int ext2_iter_blocks(const char *dev, int (*callback)(void* buffer, uint64_t length)) {
+
+
+int ext2_iter_blocks(int fd, int (*callback)(int fd, uint64_t length)) {
+	int i, rc;
+	struct ext_fs fs;
+	rc = ext_parse_information(fd, &fs);
+	if(rc) {
+		fprintf(stderr, "Could not parse ext family filesystem error code %d\n", rc);
+		return FS_EXIT_ER_UNKOWN;
+	}
+		
+	for(i = 0; i < fs.total_groups; ++i) {
+			
+	}
 	return FS_EXIT_OK;
 }
 
-int xfs_iter_blocks(const char *dev, int (*callback)(void* buffer, uint64_t length)) {
+
+
+int xfs_iter_blocks(const int fd, int (*callback)(int fd, uint64_t length)) {
 	return FS_EXIT_OK;
 }
 
-int reiserfs_iter_blocks(const char *dev, int (*callback)(void* buffer, uint64_t length)) {
+
+
+int reiserfs_iter_blocks(const int fd, int (*callback)(int fd, uint64_t length)) {
 	return FS_EXIT_OK;
 }
 
 /************************************LOOKUP TABLE*******************************/
-int fs_identify(const char *dev, int FS_TYPE) {
+int fs_identify(const char *dev, const int FS_TYPE) {
+	int fd = open(dev, O_RDONLY);
+	int rc = 0;
+	if(fd < 0) { 
+		fprintf(stderr, "Could not open device `%s`\n", dev);
+		return FS_EXIT_ER_OPEN;
+	}
 	switch(FS_TYPE) {
 		case FS_EXT2_T:
-			return ext2_identify(dev);
+			rc =  ext2_identify(fd);
+			break;
 		
 		case FS_XFS_T:
-			return xfs_identify(dev);
-		
+			rc =  xfs_identify(fd);
+			break;
+					
 		case FS_REISERFS_T:
-			return reiserfs_identify(dev);
-		
+			rc = reiserfs_identify(fd);
+			break;
+			
 		default:
+			close(fd);
 			return FS_EXIT_ER_ID_UNDEF;
-	}
-	return FS_EXIT_OK;
+	}	
+	rc = (close(fd) == 0) && rc;
+	return rc;
 }
 
-int fs_iter_blocks(const char *dev, int FS_TYPE, int (*callback)(void* buffer, uint64_t length)) {
+
+
+int fs_iter_blocks(const char *dev, const int FS_TYPE, int (*callback)(int fd, uint64_t length)) {
+	int fd = open(dev, O_RDONLY);
+	int rc = 0;
+	if(fd < 0) { 
+		fprintf(stderr, "Could not open device `%s`\n", dev);
+		return FS_EXIT_ER_OPEN;
+	}	
 	switch(FS_TYPE) {
 		case FS_EXT2_T:
-			return ext2_iter_blocks(dev, callback);
+			rc = ext2_iter_blocks(fd, callback);
+			break;
 		
 		case FS_XFS_T:
-			return xfs_iter_blocks(dev, callback);
+			rc = xfs_iter_blocks(fd, callback);
+			break;
 		
 		case FS_REISERFS_T:
-			return reiserfs_iter_blocks(dev, callback);
+			rc = reiserfs_iter_blocks(fd, callback);
+			break;
 		
 		default:
+			close(fd);
 			return FS_EXIT_ER_ITER_UNDEF;
 	}
-	return FS_EXIT_OK;
+	rc = close(fd) ^ rc; /* bitwise or: 0x0 ^ 0x0 = 0x0, anything else not 0x00 */
+	return rc;
 }
