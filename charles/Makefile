@@ -10,13 +10,13 @@ BINDIR =	bin
 CC =	clang
 
 # Compiler Flags
-CFLAGS =	-std=c89 -ansi -pedantic -Wall -g
+CFLAGS =	-std=c89 -ansi -pedantic -Wall -g -D_GNU_SOURCE 
 
 # Linker Flags
-LDFLAGS =	
+LDFLAGS =	-lext2fs -lcom_err
 
 ############################################################
-DEPS=$(OBJDIR)/test.o $(OBJDIR)/fsparser.o
+DEPS=$(OBJDIR)/test.o $(OBJDIR)/fsparser.o $(OBJDIR)/fs/ext.o $(OBJDIR)/fs/xfs.o $(OBJDIR)/fs/reiser.o
 
 all: $(DEPS)
 	$(CC) -o $(BINDIR)/$(EXECNAME) $(DEPS) $(LDFLAGS)
