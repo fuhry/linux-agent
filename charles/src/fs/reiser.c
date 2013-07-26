@@ -6,18 +6,25 @@
 
 #include "reiser.h"
 #include "fs.h"
+#include <string.h>
 
-int reiser_parse_superblock(int fd, struct reiser_fs *fs) {
+int reiser_has_identifier(int fd) {
+	char signature[REISER_SIGNATURE_LEN];
 	
 	/** Seek to the signature */
 	if(lseek(fd, REISER_SUPERBLOCK_LOC + REISER_SIGNATURE_OFF, SEEK_SET) < 0) {
-		return FS_SEEK_ER;
+		return FALSE;
 	}
 
-	if(read(fd, fs->signature, REISER_SIGNATURE_LEN) < 0) {
-		return FS_READ_ER;
+	if(read(fd, signature, REISER_SIGNATURE_LEN) < 0) {
+		return FALSE;
 	}
-	fs->signature[REISER_SIGNATURE_LEN - 1] = 0;
-	
-	return FS_EXIT_OK;
+	signature[REISER_SIGNATURE_LEN - 1] = 0;	
+	return strncmp(signature, REISER_SIGNATURE, REISER_SIGNATURE_LEN) == 0;
+}
+
+
+
+int reiser_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length)) {
+	return TRUE;
 }

@@ -18,18 +18,21 @@
 /** Signature field offset from the superblock */
 #define XFS_SIGNATURE_OFF 0x00
 
-/** xfs filesystem information structure */
-struct xfs_fs {
-	uint32_t signature;
-};
+/**
+	Parses the signature for the filesystem and compares it to the expected result.
+	Params:  fd - the file descriptor
+	Returns: TRUE on success
+	         FALSE on failure
+*/
+int xfs_has_identifier(int fd);
 
 /**
-	Parses necessary information into the filesystem structure
-	Params:  fd - the file descriptor
-	         fs - the xfs filesystem structure
+	Iterates over used blocks and callsback on said blocks.
+	Params:  dev      - the device
+	         callback - the function to callback on a used block
 	Returns: FALSE on success
 	         TRUE on failure
 */
-int xfs_parse_superblock(int fd, struct xfs_fs *fs);
+int xfs_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length));
 
 #endif

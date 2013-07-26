@@ -29,7 +29,6 @@
 #define FS_EXIT_ER_PARSE 6
 
 
-
 /** EXT2 family filesystem type */
 #define FS_EXT2_T     1
 

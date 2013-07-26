@@ -17,19 +17,23 @@
 /** Signature field offset from superblock */
 #define REISER_SIGNATURE_OFF 0x034
 
-/** reiser filesystem information structure */
-struct reiser_fs {
-	char signature[REISER_SIGNATURE_LEN];
-};
+#include <stdint.h>
 
 /**
-	Parses necessary information into the filesystem structure
+	Parses the signature for the filesystem and compares it to the expected result.
 	Params:  fd - the file descriptor
-	         fs - the xfs filesystem structure
+	Returns: TRUE on success
+	         FALSE on failure
+*/
+int reiser_has_identifier(int fd);
+
+/**
+	Iterates over used blocks and callsback on said blocks.
+	Params:  dev      - the device
+	         callback - the function to callback on a used block
 	Returns: FALSE on success
 	         TRUE on failure
 */
-int reiser_parse_superblock(int fd, struct reiser_fs *fs);
-
+int reiser_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length));
 
 #endif
