@@ -8,24 +8,78 @@
 #include "fs.h"
 #include <string.h>
 #include <stdbool.h>
+#include <reiserfs/reiserfs.h>
+#include <dal/dal.h>
+#include <dal/file_dal.h>
+#include <errno.h>
+#include <error.h>
+#include <stdio.h>
 
 int reiser_has_identifier(int fd) {
-	char signature[REISER_SIGNATURE_LEN];
+	struct reiserfs_super super;
 	
-	/** Seek to the signature */
-	if(lseek(fd, REISER_SUPERBLOCK_LOC + REISER_SIGNATURE_OFF, SEEK_SET) < 0) {
+	/* Seek to superblock */
+	if(lseek(fd, REISER_SUPERBLOCK_LOC, SEEK_SET) < 0) {
 		return false;
 	}
-
-	if(read(fd, signature, REISER_SIGNATURE_LEN) < 0) {
+	
+	/* Read superblock into struct */
+	if(read(fd, &super, sizeof(super)) < 0) {
 		return false;
 	}
-	signature[REISER_SIGNATURE_LEN - 1] = 0;	
-	return strncmp(signature, REISER_SIGNATURE, REISER_SIGNATURE_LEN) == 0;
+	return strncmp(super.s_v1.sb_magic, REISER_SIGNATURE, REISER_SIGNATURE_LEN) == 0;
 }
 
 
 
-int reiser_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length)) {
+int reiser_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, uint64_t offset)) {
+	int block_size;
+	off_t seek_amnt;
+	dal_t *dal = NULL;
+	reiserfs_fs_t *fs = NULL;
+	reiserfs_bitmap_t *fs_bitmap;
+	reiserfs_tree_t *tree;
+	
+	int fd = open(dev, O_RDONLY);
+	if(fd < 0) { 
+		error(0, errno, "Error opening %s", dev);
+		goto out;
+	}	
+	
+	if(!(dal = (dal_t*) file_dal_open(dev, DEFAULT_BLOCK_SIZE, O_RDONLY))) {
+		error(0, errno, "Couldn't create device abstraction for %s", dev);
+		goto out;
+	}
+	if(!(fs = reiserfs_fs_open(dal, dal))) {
+		error(0, errno, "Unable to open %s as reiserfs", dev);
+		goto out;
+	}
+	
+	block_size = fs->super->s_v1.sb_block_size;
+
+	tree = reiserfs_fs_tree(fs);
+	fs_bitmap = tree->fs->bitmap;
+	
+	for(int i = 0; i < fs->super->s_v1.sb_block_count; ++i) {
+		if(reiserfs_tools_test_bit(i, fs_bitmap->bm_map)) {
+			seek_amnt = REISER_SUPERBLOCK_LOC + REISER_SUPERBLOCK_SIZ + (i * block_size);
+			if(lseek(fd, seek_amnt, SEEK_SET) < 0) {
+				error(0, errno, "Error seeking %s (Block: %d)", dev, i);
+				goto out;
+			}
+			callback(fd, block_size, seek_amnt);
+		}
+	}
+
+out:
+	if(!(fd < 0)) {
+		close(fd);
+	}
+	if(fs) {
+		reiserfs_fs_close(fs);
+	}
+	if(dal) {
+		file_dal_close(dal);
+	}
 	return true;
 }

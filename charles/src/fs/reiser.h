@@ -13,9 +13,7 @@
 
 /** Superblock location */
 #define REISER_SUPERBLOCK_LOC 0x10000
-
-/** Signature field offset from superblock */
-#define REISER_SIGNATURE_OFF 0x034
+#define REISER_SUPERBLOCK_SIZ 0x50
 
 #include <stdint.h>
 
@@ -34,6 +32,6 @@ int reiser_has_identifier(int fd);
 	Returns: FALSE on success
 	         TRUE on failure
 */
-int reiser_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length));
+int reiser_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, uint64_t offset));
 
 #endif

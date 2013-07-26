@@ -27,15 +27,11 @@
 #define REISER_TEST_PARTITION "/dev/sdb2"
 #define EXT2_TEST_PARTITION "/dev/sdb3"
 
-//static FILE *f;
+static int count = 0;
 	
-int test_callback(const int fd, const uint64_t length) {
-/*
-	char buffer[length];
-	read(fd, buffer, length);
-	fwrite(buffer, sizeof(char), length, f);
-*/
-	printf("GOT A BLOCK!\n");
+int test_callback(const int fd, const uint64_t length, uint64_t offset) {
+	//printf("Block length %ld at 0x%lx\n", length, offset);
+	count++;
 	return 0;
 }
 
@@ -49,16 +45,20 @@ void test_reiserfs(void) {
 	TEST_EQ("ReiserFS identifcation", fs_identify(REISER_TEST_PARTITION, FS_REISERFS_T), TRUE)
 	TEST_EQ("ReiserFS misidentifcation", fs_identify(XFS_TEST_PARTITION, FS_REISERFS_T), FALSE)
 	TEST_EQ("ReiserFS misidentifcation", fs_identify(EXT2_TEST_PARTITION, FS_REISERFS_T), FALSE)
+	
+	count = 0;
+	fs_iter_blocks(REISER_TEST_PARTITION, FS_REISERFS_T, &test_callback);
+	TEST_EQ("ReiserFS copied blocks", count, 8219)
 }
 
 void test_ext2(void) {
 	TEST_EQ("ext2 identifcation", fs_identify(EXT2_TEST_PARTITION, FS_EXT2_T), TRUE)
 	TEST_EQ("ext2 misidentifcation", fs_identify(REISER_TEST_PARTITION, FS_EXT2_T), FALSE)
 	TEST_EQ("ext2 misidentifcation", fs_identify(XFS_TEST_PARTITION, FS_EXT2_T), FALSE)
-	
-	//f = fopen("ext2.charles", "w");
+
+	count = 0;
 	fs_iter_blocks(EXT2_TEST_PARTITION, FS_EXT2_T, &test_callback);
-	//fclose(f);
+	TEST_EQ("ext2 copied blocks", count, 4159)
 }
 
 int main(void) {

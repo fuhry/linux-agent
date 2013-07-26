@@ -6,31 +6,34 @@
 
 #include "xfs.h"
 #include "fs.h"
+#include "../include/xfs.h"
 #include <stdbool.h>
+#include <stdio.h>
 
 int xfs_has_identifier(int fd) {
-	union {
-		uint32_t u32;
-		uint8_t byte[sizeof(uint32_t)];
-	} signature;
+	uint32_t signature;
+	xfs_sb_t super;
 	
-	/** Seek to the superblock's start (which is also the signature location) */
-	if(lseek(fd, XFS_SUPERBLOCK_LOC + XFS_SIGNATURE_OFF, SEEK_SET) < 0) {
-		return false;
-	}
-
-	if(read(fd, signature.byte, sizeof(signature)) < 0) {
+	/* Seek to superblock */
+	if(lseek(fd, XFS_SUPERBLOCK_LOC, SEEK_SET) < 0) {
 		return false;
 	}
 	
+	/* Read superblock into struct */
+	if(read(fd, &super, sizeof(super)) < 0) {
+		return false;
+	}
+	
+	/* Switch byte-order to big endian if needed */
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	signature.u32 = letobe32(signature.u32);
+	signature = letobe32(super.sb_magicnum);
 #endif
-	
-	return signature.u32 == XFS_SIGNATURE;
+
+	return signature == XFS_SIGNATURE;
 }
 
 
-int xfs_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length)) {
+int xfs_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, uint64_t offset)) {
+	//TODO: learn
 	return true;
 }

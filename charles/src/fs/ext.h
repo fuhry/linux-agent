@@ -27,6 +27,6 @@ int ext_has_identifier(int fd);
 	Returns: FALSE on success
 	         TRUE on failure
 */
-int ext_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length));
+int ext_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, uint64_t offset));
 
 #endif

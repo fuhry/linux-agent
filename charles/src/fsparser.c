@@ -2,7 +2,6 @@
 	File:        fsparser.c
 	Author:      Charles Roydhouse
 	Description: Provides implementation for a wrapper over POSIX/Linux for various filesystems
-	TODO: convert XFS/REISER to the model that EXT is developing into
 */
 
 #include "fsparser.h"
@@ -44,7 +43,7 @@ int fs_identify(const char *dev, const int FS_TYPE) {
 
 
 
-int fs_iter_blocks(const char *dev, const int FS_TYPE, int (*callback)(int fd, uint64_t length)) {
+int fs_iter_blocks(const char *dev, const int FS_TYPE, int (*callback)(int fd, uint64_t length, uint64_t offset)) {
 	int rc;
 	switch(FS_TYPE) {
 		case FS_EXT2_T:
