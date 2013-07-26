@@ -6,6 +6,7 @@
 
 #include "xfs.h"
 #include "fs.h"
+#include <stdbool.h>
 
 int xfs_has_identifier(int fd) {
 	union {
@@ -15,11 +16,11 @@ int xfs_has_identifier(int fd) {
 	
 	/** Seek to the superblock's start (which is also the signature location) */
 	if(lseek(fd, XFS_SUPERBLOCK_LOC + XFS_SIGNATURE_OFF, SEEK_SET) < 0) {
-		return FALSE;
+		return false;
 	}
 
 	if(read(fd, signature.byte, sizeof(signature)) < 0) {
-		return FALSE;
+		return false;
 	}
 	
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -31,5 +32,5 @@ int xfs_has_identifier(int fd) {
 
 
 int xfs_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length)) {
-	return TRUE;
+	return true;
 }

@@ -6,8 +6,6 @@
 
 #include "ext.h"
 #include "fs.h"
-#include <fcntl.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -50,6 +48,11 @@ int ext_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length)) {
 	add_error_table(&et_ext2_error_table);
 	if((rc = ext2fs_open(dev, 0, 0, 0, unix_io_manager, &fs))) {
 		error(0, errno, "Unable to open %s as extfs - %s", dev, error_message(rc));
+		goto out;
+	}
+	
+	if((rc = ext2fs_read_bitmaps(fs))) {
+		error(0, errno, "Unable to read %s bitmap - %s", dev, error_message(rc));
 		goto out;
 	}
 	

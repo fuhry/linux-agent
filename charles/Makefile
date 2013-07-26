@@ -10,7 +10,7 @@ BINDIR =	bin
 CC =	clang
 
 # Compiler Flags
-CFLAGS =	-std=c89 -ansi -pedantic -Wall -g -D_GNU_SOURCE 
+CFLAGS =	-std=c99 -pedantic -Wall -g -D_GNU_SOURCE 
 
 # Linker Flags
 LDFLAGS =	-lext2fs -lcom_err

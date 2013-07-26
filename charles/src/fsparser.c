@@ -11,17 +11,13 @@
 #include "fs/reiser.h"
 #include <fcntl.h>
 #include <unistd.h>
-
-#if !(defined TRUE && defined FALSE)
-	#define TRUE 1
-	#define FALSE 0
-#endif
+#include <stdbool.h>
 
 int fs_identify(const char *dev, const int FS_TYPE) {
 	int fd = open(dev, O_RDONLY);
 	int rc = 0;
 	if(fd < 0) { 
-		return FALSE;
+		return false;
 	}	
 	switch(FS_TYPE) {
 		case FS_EXT2_T:
@@ -38,10 +34,10 @@ int fs_identify(const char *dev, const int FS_TYPE) {
 			
 		default:
 			close(fd);
-			return FALSE;
+			return false;
 	}	
 	if(close(fd)) {
-			return FALSE;
+			return false;
 	}
 	return rc;
 }
