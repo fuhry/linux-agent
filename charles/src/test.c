@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include "fsparser.h"
+#include <unistd.h>
 
 #if !(defined TRUE && defined FALSE)
 	#define TRUE 1
@@ -26,8 +27,15 @@
 #define REISER_TEST_PARTITION "/dev/sdb2"
 #define EXT2_TEST_PARTITION "/dev/sdb3"
 
+//static FILE *f;
+	
 int test_callback(const int fd, const uint64_t length) {
-	printf("Callback called on 0x%x length %ld\n", fd, length);
+/*
+	char buffer[length];
+	read(fd, buffer, length);
+	fwrite(buffer, sizeof(char), length, f);
+*/
+	printf("GOT A BLOCK!\n");
 	return 0;
 }
 
@@ -48,7 +56,9 @@ void test_ext2(void) {
 	TEST_EQ("ext2 misidentifcation", fs_identify(REISER_TEST_PARTITION, FS_EXT2_T), FALSE)
 	TEST_EQ("ext2 misidentifcation", fs_identify(XFS_TEST_PARTITION, FS_EXT2_T), FALSE)
 	
+	//f = fopen("ext2.charles", "w");
 	fs_iter_blocks(EXT2_TEST_PARTITION, FS_EXT2_T, &test_callback);
+	//fclose(f);
 }
 
 int main(void) {
