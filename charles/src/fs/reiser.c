@@ -50,6 +50,7 @@ int reiser_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length,
 		error(0, errno, "Couldn't create device abstraction for %s", dev);
 		goto out;
 	}
+	
 	if(!(fs = reiserfs_fs_open(dal, dal))) {
 		error(0, errno, "Unable to open %s as reiserfs", dev);
 		goto out;

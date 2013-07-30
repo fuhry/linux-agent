@@ -39,6 +39,9 @@ void test_xfs(void) {
 	TEST_EQ("XFS identifcation", fs_identify(XFS_TEST_PARTITION, FS_XFS_T), TRUE)
 	TEST_EQ("XFS misidentifcation", fs_identify(REISER_TEST_PARTITION, FS_XFS_T), FALSE)
 	TEST_EQ("XFS misidentifcation", fs_identify(EXT2_TEST_PARTITION, FS_XFS_T), FALSE)
+	
+	count = 0;
+	fs_iter_blocks(XFS_TEST_PARTITION, FS_XFS_T, &test_callback);
 }
 
 void test_reiserfs(void) {
