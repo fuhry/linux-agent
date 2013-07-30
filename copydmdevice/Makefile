@@ -1,6 +1,6 @@
 CC=gcc
 EXE=copydmdevice
-LIBS=-ldevmapper -lext2fs
+LIBS=-ldevmapper -lext2fs -lcom_err
 DEBUG=-g
 CFLAGS=-D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 
