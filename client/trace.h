@@ -1,6 +1,8 @@
 #ifndef TRACE_H
 #define TRACE_H
 
+#include <syslog.h>
+
 #include "rangetree.h"
 
 struct trace_tree {
