@@ -8,6 +8,7 @@
 #include "ext.h"
 #include "fs.h"
 #include <stdlib.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
@@ -18,7 +19,6 @@
 
 #define EXT_SUPERBLOCK_LOC 0x400
 #define EXT_SUPERBLOCK_SIZ 0x400
-#define roundup(n, m) m * (((n - 1) / m) + 1)
 
 int ext_has_identifier(int fd) {
 	uint16_t signature;
@@ -26,12 +26,12 @@ int ext_has_identifier(int fd) {
 
 	/* Seek to superblock */
 	if(lseek(fd, EXT_SUPERBLOCK_LOC, SEEK_SET) < 0) {
-		return FS_SEEK_ER;
+		return false;
 	}
 	
 	/* Read superblock into struct */
 	if(read(fd, &super, EXT_SUPERBLOCK_SIZ) < 0) {
-		return FS_READ_ER;
+		return false;
 	}
 	
 	/* Switch byte-order to big endian if needed */
@@ -44,7 +44,7 @@ int ext_has_identifier(int fd) {
 
 
 int ext_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, uint64_t offset)) {
-	int rc = FS_EXIT_OK;
+	int rc = 0;
 	int block_size, bitmap_size;
 	ext2_filsys fs = NULL;
 	void *block_bitmap = NULL;
@@ -94,6 +94,7 @@ int ext_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, ui
 					goto out;
 				}
 				callback(fd, block_size, seek_amnt);
+				rc += block_size;
 			}
 		}
 	}

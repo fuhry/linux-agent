@@ -24,7 +24,7 @@ int fs_identify(const char *dev, const int FS_TYPE) {
 			break;
 		
 		case FS_XFS_T:
-			rc =  xfs_has_identifier(fd);
+			rc = xfs_has_identifier(fd);
 			break;
 					
 		case FS_REISERFS_T:

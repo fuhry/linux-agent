@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include "fsparser.h"
+#include "fs/fs.h"
 #include <unistd.h>
 
 #if !(defined TRUE && defined FALSE)
@@ -27,11 +28,8 @@
 #define REISER_TEST_PARTITION "/dev/sdb2"
 #define EXT2_TEST_PARTITION "/dev/sdb3"
 
-static int count = 0;
-	
 int test_callback(const int fd, const uint64_t length, uint64_t offset) {
 	//printf("Block length %ld at 0x%lx\n", length, offset);
-	count++;
 	return 0;
 }
 
@@ -39,29 +37,21 @@ void test_xfs(void) {
 	TEST_EQ("XFS identifcation", fs_identify(XFS_TEST_PARTITION, FS_XFS_T), TRUE)
 	TEST_EQ("XFS misidentifcation", fs_identify(REISER_TEST_PARTITION, FS_XFS_T), FALSE)
 	TEST_EQ("XFS misidentifcation", fs_identify(EXT2_TEST_PARTITION, FS_XFS_T), FALSE)
-	
-	count = 0;
-	fs_iter_blocks(XFS_TEST_PARTITION, FS_XFS_T, &test_callback);
+	TEST_EQ("XFS copied blocks", fs_iter_blocks(XFS_TEST_PARTITION, FS_XFS_T, &test_callback), 5079040)
 }
 
 void test_reiserfs(void) {
 	TEST_EQ("ReiserFS identifcation", fs_identify(REISER_TEST_PARTITION, FS_REISERFS_T), TRUE)
 	TEST_EQ("ReiserFS misidentifcation", fs_identify(XFS_TEST_PARTITION, FS_REISERFS_T), FALSE)
 	TEST_EQ("ReiserFS misidentifcation", fs_identify(EXT2_TEST_PARTITION, FS_REISERFS_T), FALSE)
-	
-	count = 0;
-	fs_iter_blocks(REISER_TEST_PARTITION, FS_REISERFS_T, &test_callback);
-	TEST_EQ("ReiserFS copied blocks", count, 8219)
+	TEST_EQ("ReiserFS copied blocks", fs_iter_blocks(REISER_TEST_PARTITION, FS_REISERFS_T, &test_callback), 8219)
 }
 
 void test_ext2(void) {
 	TEST_EQ("ext2 identifcation", fs_identify(EXT2_TEST_PARTITION, FS_EXT2_T), TRUE)
 	TEST_EQ("ext2 misidentifcation", fs_identify(REISER_TEST_PARTITION, FS_EXT2_T), FALSE)
 	TEST_EQ("ext2 misidentifcation", fs_identify(XFS_TEST_PARTITION, FS_EXT2_T), FALSE)
-
-	count = 0;
-	fs_iter_blocks(EXT2_TEST_PARTITION, FS_EXT2_T, &test_callback);
-	TEST_EQ("ext2 copied blocks", count, 4159)
+	TEST_EQ("ext2 copied blocks", fs_iter_blocks(EXT2_TEST_PARTITION, FS_EXT2_T, &test_callback), 4159)
 }
 
 int main(void) {

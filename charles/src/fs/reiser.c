@@ -33,6 +33,7 @@ int reiser_has_identifier(int fd) {
 
 
 int reiser_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, uint64_t offset)) {
+	int rc = 0;
 	int block_size;
 	off_t seek_amnt;
 	dal_t *dal = NULL;
@@ -69,6 +70,7 @@ int reiser_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length,
 				goto out;
 			}
 			callback(fd, block_size, seek_amnt);
+			rc += block_size;
 		}
 	}
 
@@ -82,5 +84,5 @@ out:
 	if(dal) {
 		file_dal_close(dal);
 	}
-	return true;
+	return rc;
 }
