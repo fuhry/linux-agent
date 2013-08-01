@@ -14,7 +14,7 @@ CC =	clang
 CFLAGS =	-std=c99 -pedantic -Wall -g -Iinclude -D_GNU_SOURCE 
 
 # Linker Flags
-LDFLAGS =	-static -Llib -lxfs -lext2fs -lreiserfs -lcom_err -ldal -pthread
+LDFLAGS =	-lm -static -Llib -lxfs -lext2fs -lreiserfs -lcom_err -ldal -pthread
 
 ############################################################
 DEPS=$(OBJDIR)/test.o $(OBJDIR)/fsparser.o $(OBJDIR)/fs/ext.o $(OBJDIR)/fs/xfs.o $(OBJDIR)/fs/reiser.o

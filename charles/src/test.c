@@ -8,6 +8,7 @@
 #include "fsparser.h"
 #include "fs/fs.h"
 #include <unistd.h>
+#include <math.h>
 
 #if !(defined TRUE && defined FALSE)
 	#define TRUE 1
@@ -28,8 +29,43 @@
 #define REISER_TEST_PARTITION "/dev/sdb2"
 #define EXT2_TEST_PARTITION "/dev/sdb3"
 
+#define XFS_BYTES 5079040
+#define REISER_BYTES 33665024
+#define EXT2_BYTES 17035264
+
+void printb(uint64_t bytes) {
+	char print_buffer[255];
+	const char* suffixes[7];
+	suffixes[0] = "B";
+	suffixes[1] = "KB";
+	suffixes[2] = "MB";
+	suffixes[3] = "GB";
+	suffixes[4] = "TB";
+	suffixes[5] = "PB";
+	suffixes[6] = "EB";
+	uint s = 0; // which suffix to use
+	double count = bytes;
+	while(count >= 1024 && s < 7) {
+		s++;
+		count /= 1024;
+	}
+	if(count - floor(count) == 0.0f)
+		sprintf(print_buffer, "%d %s", (int)count, suffixes[s]);
+	else
+		sprintf(print_buffer, "%.1f %s", count, suffixes[s]);
+	printf("%s\n", print_buffer);
+}
+
+static int out;
 int test_callback(const int fd, const uint64_t length, uint64_t offset) {
-	//printf("Block length %ld at 0x%lx\n", length, offset);
+	char buffer[length];
+	read(fd, buffer, length);
+	lseek(fd, offset, SEEK_SET); //seek back
+	
+	lseek(out, offset, SEEK_SET); //seek to
+	write(out, buffer, sizeof(char) * sizeof(buffer));
+
+	//printf("Setting bit %ld\n", offset);
 	return 0;
 }
 
@@ -37,26 +73,33 @@ void test_xfs(void) {
 	TEST_EQ("XFS identifcation", fs_identify(XFS_TEST_PARTITION, FS_XFS_T), TRUE)
 	TEST_EQ("XFS misidentifcation", fs_identify(REISER_TEST_PARTITION, FS_XFS_T), FALSE)
 	TEST_EQ("XFS misidentifcation", fs_identify(EXT2_TEST_PARTITION, FS_XFS_T), FALSE)
-	TEST_EQ("XFS copied blocks", fs_iter_blocks(XFS_TEST_PARTITION, FS_XFS_T, &test_callback), 5079040)
+	TEST_EQ("XFS copied blocks", fs_iter_blocks(XFS_TEST_PARTITION, FS_XFS_T, &test_callback), XFS_BYTES)
 }
 
 void test_reiserfs(void) {
 	TEST_EQ("ReiserFS identifcation", fs_identify(REISER_TEST_PARTITION, FS_REISERFS_T), TRUE)
 	TEST_EQ("ReiserFS misidentifcation", fs_identify(XFS_TEST_PARTITION, FS_REISERFS_T), FALSE)
 	TEST_EQ("ReiserFS misidentifcation", fs_identify(EXT2_TEST_PARTITION, FS_REISERFS_T), FALSE)
-	TEST_EQ("ReiserFS copied blocks", fs_iter_blocks(REISER_TEST_PARTITION, FS_REISERFS_T, &test_callback), 8219)
+	TEST_EQ("ReiserFS copied blocks", fs_iter_blocks(REISER_TEST_PARTITION, FS_REISERFS_T, &test_callback), REISER_BYTES)
 }
 
 void test_ext2(void) {
 	TEST_EQ("ext2 identifcation", fs_identify(EXT2_TEST_PARTITION, FS_EXT2_T), TRUE)
 	TEST_EQ("ext2 misidentifcation", fs_identify(REISER_TEST_PARTITION, FS_EXT2_T), FALSE)
 	TEST_EQ("ext2 misidentifcation", fs_identify(XFS_TEST_PARTITION, FS_EXT2_T), FALSE)
-	TEST_EQ("ext2 copied blocks", fs_iter_blocks(EXT2_TEST_PARTITION, FS_EXT2_T, &test_callback), 4159)
+	TEST_EQ("ext2 copied blocks", fs_iter_blocks(EXT2_TEST_PARTITION, FS_EXT2_T, &test_callback), EXT2_BYTES)
 }
 
 int main(void) {
-	test_xfs();
+/*
+	printf("Expecting XFS size ");printb(XFS_BYTES);
+	printf("Expecting REISER size ");printb(REISER_BYTES);
+	printf("Expecting EXT2 size ");printb(EXT2_BYTES);
+*/
+	out = open("/dev/loop0", O_WRONLY);
+	//test_xfs();
 	test_reiserfs();
-	test_ext2();
+	//test_ext2();
+	close(out);
 	return 0;
 }
