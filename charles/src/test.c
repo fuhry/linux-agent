@@ -64,7 +64,6 @@ int test_callback(const int fd, const uint64_t length, uint64_t offset) {
 	
 	lseek(out, offset, SEEK_SET); //seek to
 	write(out, buffer, sizeof(char) * sizeof(buffer));
-
 	//printf("Setting bit %ld\n", offset);
 	return 0;
 }
@@ -90,16 +89,29 @@ void test_ext2(void) {
 	TEST_EQ("ext2 copied blocks", fs_iter_blocks(EXT2_TEST_PARTITION, FS_EXT2_T, &test_callback), EXT2_BYTES)
 }
 
-int main(void) {
+int main(int argc, char *argv[]) {
 /*
 	printf("Expecting XFS size ");printb(XFS_BYTES);
 	printf("Expecting REISER size ");printb(REISER_BYTES);
 	printf("Expecting EXT2 size ");printb(EXT2_BYTES);
 */
-	out = open("/dev/loop0", O_WRONLY);
-	//test_xfs();
-	test_reiserfs();
-	//test_ext2();
+	if(argc != 3) {printf("WRONG ARGUMENTS!\n");return 1;}
+	
+	out = open(argv[1], O_WRONLY);
+	switch(argv[2][0]) {
+		case '1':
+			test_xfs();
+			break;
+		case '2':
+			test_reiserfs();
+			break;
+		case '3':
+			test_ext2();
+			break;
+		default:
+			printf("WRONG FS ID\n");
+			break;
+	}
 	close(out);
 	return 0;
 }
