@@ -19,6 +19,9 @@
 /** REISERFS filesystem type */
 #define FS_REISERFS_T 3
 
+/** BTRFS filesystem type */
+#define FS_BTRFS_T 4
+
 #include <stdint.h>
 
 /**

@@ -28,10 +28,12 @@
 #define XFS_TEST_PARTITION "/dev/sdb1"
 #define REISER_TEST_PARTITION "/dev/sdb2"
 #define EXT2_TEST_PARTITION "/dev/sdb3"
+#define BTRFS_TEST_PARTITION "/dev/sdb4"
 
 #define XFS_BYTES 5079040
 #define REISER_BYTES 33665024
 #define EXT2_BYTES 17035264
+#define BTRFS_BYTES -1
 
 void printb(uint64_t bytes) {
 	char print_buffer[255];
@@ -89,6 +91,15 @@ void test_ext2(void) {
 	TEST_EQ("ext2 copied blocks", fs_iter_blocks(EXT2_TEST_PARTITION, FS_EXT2_T, &test_callback), EXT2_BYTES)
 }
 
+
+void test_btrfs(void) {
+	TEST_EQ("btrfs identifcation", fs_identify(BTRFS_TEST_PARTITION, FS_EXT2_T), TRUE)
+	TEST_EQ("btrfs misidentifcation", fs_identify(REISER_TEST_PARTITION, FS_EXT2_T), FALSE)
+	TEST_EQ("btrfs misidentifcation", fs_identify(XFS_TEST_PARTITION, FS_EXT2_T), FALSE)
+	TEST_EQ("btrfs copied blocks", fs_iter_blocks(BTRFS_TEST_PARTITION, FS_BTRFS_T, &test_callback), BTRFS_BYTES)
+}
+
+
 int main(int argc, char *argv[]) {
 /*
 	printf("Expecting XFS size ");printb(XFS_BYTES);
@@ -107,6 +118,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case '3':
 			test_ext2();
+			break;
+		case '4':
+			test_btrfs();
 			break;
 		default:
 			printf("WRONG FS ID\n");

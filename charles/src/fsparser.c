@@ -8,6 +8,7 @@
 #include "fs/ext.h"
 #include "fs/xfs.h"
 #include "fs/reiser.h"
+#include "fs/btrfs.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdbool.h>
@@ -29,6 +30,10 @@ int fs_identify(const char *dev, const int FS_TYPE) {
 					
 		case FS_REISERFS_T:
 			rc = reiser_has_identifier(fd);
+			break;
+			
+		case FS_BTRFS_T:
+			rc = btrfs_has_identifier(fd);
 			break;
 			
 		default:
@@ -57,6 +62,10 @@ int fs_iter_blocks(const char *dev, const int FS_TYPE, int (*callback)(int fd, u
 		case FS_REISERFS_T:
 			rc = reiser_iter_blocks(dev, callback);
 			break;
+		
+		case FS_BTRFS_T:
+			rc = btrfs_iter_blocks(dev, callback);
+			break;		
 		
 		default:
 			return FS_EXIT_ER_ITER_UNDEF;
