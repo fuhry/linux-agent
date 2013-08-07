@@ -146,10 +146,8 @@ int xfs_iter_ag(int agno, struct xfs_device_info *devinfo, int (*callback)(int f
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 		bb_level = betole16(block->bb_level);
 #endif
-		if(bb_level == 0) break;
-		
+		if(bb_level == 0) break;		
 		ptr = XFS_ALLOC_PTR_ADDR(devinfo->mp, block, 1, devinfo->mp->m_alloc_mxr[1]);
-
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 		bno = betole32(ptr[0]);
@@ -170,52 +168,51 @@ int xfs_iter_ag(int agno, struct xfs_device_info *devinfo, int (*callback)(int f
 		bb_numrecs = betole16(bb_numrecs);
 #endif
 		for(int i = 0; i < bb_numrecs; ++i, ++rec_ptr) {
-		begin = next_begin;
-		if(begin < ag_begin)
-			begin = ag_begin;
-
+			begin = next_begin;
+			if(begin < ag_begin) {
+				begin = ag_begin;
+			}
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-		sizeb = XFS_AGB_TO_DADDR(devinfo->mp, agno, betole32(rec_ptr->ar_startblock)) - begin;
+			sizeb = XFS_AGB_TO_DADDR(devinfo->mp, agno, betole32(rec_ptr->ar_startblock)) - begin;
 #else
-		sizeb = XFS_AGB_TO_DADDR(devinfo->mp, agno, rec_ptr->ar_startblock) - begin;
+			sizeb = XFS_AGB_TO_DADDR(devinfo->mp, agno, rec_ptr->ar_startblock) - begin;
 #endif
-		size = roundup(sizeb << BBSHIFT, devinfo->sector_size);
+			size = roundup(sizeb << BBSHIFT, devinfo->sector_size);		
 		
+			w_position = (xfs_off_t) begin << BBSHIFT;
+			while(size > 0) {
+				if(size > w_size) {
+					w_length = w_size;
+					size -= w_size;
+					sizeb -= wblocks;
+					numblocks += wblocks;
+				} else {
+					w_length = size;
+					numblocks += sizeb;
+					size = 0;
+				}
+				if(lseek(devinfo->fd, w_position, SEEK_SET) < 0) {
+					error(0, errno, "Error seeking %s (w position: %ld)", devinfo->dev, w_position);
+					goto out;
+				}
+				current_block = (w_position/devinfo->block_size);
+				block_count = (w_length/devinfo->block_size);		
+				callback(devinfo->fd, w_length, w_position);
+				rc += w_length;
 		
-		w_position = (xfs_off_t) begin << BBSHIFT;
-		while(size > 0) {
-			if(size > w_size) {
-			w_length = w_size;
-			size -= w_size;
-			sizeb -= wblocks;
-			numblocks += wblocks;
-			} else {
-			w_length = size;
-			numblocks += sizeb;
-			size = 0;
+				if(lseek(devinfo->fd, w_length, SEEK_CUR) < 0) {
+					error(0, errno, "Error seeking %s (w length: %d)", devinfo->dev, w_length);
+					goto out;
+				}
+				w_position += w_length;
 			}
-			if(lseek(devinfo->fd, w_position, SEEK_SET) < 0) {
-				error(0, errno, "Error seeking %s (w position: %ld)", devinfo->dev, w_position);
-				goto out;
-			}
-			current_block = (w_position/devinfo->block_size);
-			block_count = (w_length/devinfo->block_size);		
-			callback(devinfo->fd, w_length, w_position);
-			rc += w_length;
-		
-			if(lseek(devinfo->fd, w_length, SEEK_CUR) < 0) {
-				error(0, errno, "Error seeking %s (w length: %d)", devinfo->dev, w_length);
-				goto out;
-			}
-			w_position += w_length;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+			new_begin = XFS_AGB_TO_DADDR(devinfo->mp, agno, betole32(rec_ptr->ar_startblock) + betole32(rec_ptr->ar_blockcount));
+#else
+			new_begin = XFS_AGB_TO_DADDR(devinfo->mp, agno, rec_ptr->ar_startblock + rec_ptr->ar_blockcount);
+#endif
+			next_begin = rounddown(new_begin, devinfo->sector_size >> BBSHIFT);
 		}
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-		new_begin = XFS_AGB_TO_DADDR(devinfo->mp, agno, betole32(rec_ptr->ar_startblock) + betole32(rec_ptr->ar_blockcount));
-#else
-		new_begin = XFS_AGB_TO_DADDR(devinfo->mp, agno, rec_ptr->ar_startblock + rec_ptr->ar_blockcount);
-#endif
-		next_begin = rounddown(new_begin, devinfo->sector_size >> BBSHIFT);
-	}
 
 	
 		uint32_t bb_rightsib = block->bb_u.s.bb_rightsib;
@@ -285,19 +282,19 @@ int xfs_iter_ag(int agno, struct xfs_device_info *devinfo, int (*callback)(int f
 		int logstart = XFS_FSB_TO_DADDR(devinfo->mp, devinfo->mp->m_sb.sb_logstart) << BBSHIFT;
 		int logstart_pos = rounddown(logstart, (xfs_off_t) log_length);
 		if(logstart % log_length) { 
-		if(lseek(devinfo->fd, logstart_pos, SEEK_SET) < 0) {
-			error(0, errno, "Error seeking %s (logstart pos: %d)", devinfo->dev, logstart_pos);
-			goto out;
-		}
-		current_block = (logstart_pos/devinfo->block_size);
-		block_count = (log_length/devinfo->block_size);
-		callback(devinfo->fd, log_length, logstart_pos);
-		rc += log_length;
+			if(lseek(devinfo->fd, logstart_pos, SEEK_SET) < 0) {
+				error(0, errno, "Error seeking %s (logstart pos: %d)", devinfo->dev, logstart_pos);
+				goto out;
+			}
+			current_block = (logstart_pos/devinfo->block_size);
+			block_count = (log_length/devinfo->block_size);
+			callback(devinfo->fd, log_length, logstart_pos);
+			rc += log_length;
 		
-		if(lseek(devinfo->fd, log_length, SEEK_CUR) < 0) {
-			error(0, errno, "Error seeking %s (loglength: %d)", devinfo->dev, log_length);
-			goto out;
-		}
+			if(lseek(devinfo->fd, log_length, SEEK_CUR) < 0) {
+				error(0, errno, "Error seeking %s (loglength: %d)", devinfo->dev, log_length);
+				goto out;
+			}
 		}
 	
 		int logend = XFS_FSB_TO_DADDR(devinfo->mp, devinfo->mp->m_sb.sb_logstart) << BBSHIFT;
@@ -305,19 +302,19 @@ int xfs_iter_ag(int agno, struct xfs_device_info *devinfo, int (*callback)(int f
 		int logend_pos = rounddown(logend, (xfs_off_t) log_length);
 
 		if(logend % log_length) { 
-		if(lseek(devinfo->fd, logend_pos, SEEK_SET) < 0) {
-			error(0, errno, "Error seeking %s (logstart pos: %d)", devinfo->dev, logstart_pos);
-			goto out;
-		}
-		current_block = (logend_pos/devinfo->block_size);
-		block_count = (log_length/devinfo->block_size);
-		callback(devinfo->fd, log_length, logend_pos);
-		rc += log_length;
+			if(lseek(devinfo->fd, logend_pos, SEEK_SET) < 0) {
+				error(0, errno, "Error seeking %s (logstart pos: %d)", devinfo->dev, logstart_pos);
+				goto out;
+			}
+			current_block = (logend_pos/devinfo->block_size);
+			block_count = (log_length/devinfo->block_size);
+			callback(devinfo->fd, log_length, logend_pos);
+			rc += log_length;
 		
-		if(lseek(devinfo->fd, log_length, SEEK_CUR) < 0) {
-			error(0, errno, "Error seeking %s (loglength: %d)", devinfo->dev, log_length);
-			goto out;
-		}
+			if(lseek(devinfo->fd, log_length, SEEK_CUR) < 0) {
+				error(0, errno, "Error seeking %s (loglength: %d)", devinfo->dev, log_length);
+				goto out;
+			}
 		}
 	}
 out:
