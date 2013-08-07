@@ -65,11 +65,11 @@ int xfs_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, ui
 	xfs_daddr_t read_ag_off;
 	int read_ag_length;
 	void *read_ag_buf = NULL;
-	xfs_off_t	read_ag_position;
+	xfs_off_t read_ag_position;
 	uint64_t current_block, block_count;
 	void *btree_buf_data = NULL;
 	int btree_buf_length;
-	xfs_off_t	btree_buf_position;
+	xfs_off_t btree_buf_position;
 	xfs_alloc_ptr_t *ptr = NULL;
 	xfs_agblock_t bno;
 	xfs_daddr_t ag_end = 0, next_begin = 0, ag_begin = 0, begin = 0, new_begin = 0;
@@ -125,7 +125,7 @@ int xfs_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, ui
 	 
 	first_agbno = (((XFS_AGFL_DADDR(mp) + 1) * sector_size) + first_residue) / block_size;
 	ag_count = mp->m_sb.sb_agcount;
-	for(agno = 0; agno < ag_count; ++agno)  {
+	for(agno = 0; agno < ag_count; ++agno) {
 		read_ag_off = XFS_AG_DADDR(mp, agno, XFS_SB_DADDR);
 		read_ag_length = first_agbno * block_size;
 		read_ag_position = (xfs_off_t) read_ag_off * (xfs_off_t) BBSIZE;
@@ -370,8 +370,8 @@ int xfs_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, ui
 out:
 	libxfs_device_close(xargs.ddev);
 	if(read_ag_buf) free(read_ag_buf);
-  if(btree_buf_data) free(btree_buf_data);
-  if(ptr) free(ptr);
+	if(btree_buf_data) free(btree_buf_data);
+	if(ptr) free(ptr);
   
 	if(!(fd < 0)) {
 		close(fd);
