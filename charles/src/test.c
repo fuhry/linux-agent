@@ -93,7 +93,7 @@ void test_ext2(void) {
 
 
 void test_btrfs(void) {
-	TEST_EQ("btrfs identifcation", fs_identify(BTRFS_TEST_PARTITION, FS_EXT2_T), TRUE)
+	TEST_EQ("btrfs identifcation", fs_identify(BTRFS_TEST_PARTITION, FS_BTRFS_T), TRUE)
 	TEST_EQ("btrfs misidentifcation", fs_identify(REISER_TEST_PARTITION, FS_EXT2_T), FALSE)
 	TEST_EQ("btrfs misidentifcation", fs_identify(XFS_TEST_PARTITION, FS_EXT2_T), FALSE)
 	TEST_EQ("btrfs copied blocks", fs_iter_blocks(BTRFS_TEST_PARTITION, FS_BTRFS_T, &test_callback), BTRFS_BYTES)
