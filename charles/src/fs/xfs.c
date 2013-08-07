@@ -254,14 +254,14 @@ int xfs_iter_ag(int agno, struct xfs_device_info *devinfo, int (*callback)(int f
 
 			while (size > 0) {
 				if (size > w_size) {
-				w_length = w_size;
-				size -= w_size;
-				sizeb -= wblocks;
-				numblocks += wblocks;
+					w_length = w_size;
+					size -= w_size;
+					sizeb -= wblocks;
+					numblocks += wblocks;
 				} else {
-				w_length = size;
-				numblocks += sizeb;
-				size = 0;
+					w_length = size;
+					numblocks += sizeb;
+					size = 0;
 				}
 
 				if(lseek(devinfo->fd, w_position, SEEK_SET) < 0) {
