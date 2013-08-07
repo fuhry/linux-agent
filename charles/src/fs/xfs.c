@@ -247,10 +247,10 @@ int xfs_iter_ag(int agno, struct xfs_device_info *devinfo, int (*callback)(int f
 		block = (struct xfs_btree_block*) btree_buf_data;
 	
 		if(next_begin < ag_end) {
-		begin = next_begin;
-		sizeb = ag_end - begin;
-		size = roundup(sizeb << BBSHIFT, devinfo->sector_size);
-		w_position = (xfs_off_t) begin << BBSHIFT;
+			begin = next_begin;
+			sizeb = ag_end - begin;
+			size = roundup(sizeb << BBSHIFT, devinfo->sector_size);
+			w_position = (xfs_off_t) begin << BBSHIFT;
 
 			while (size > 0) {
 				if (size > w_size) {
