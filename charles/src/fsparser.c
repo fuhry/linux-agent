@@ -20,7 +20,7 @@ int fs_identify(const char *dev, const int FS_TYPE) {
 		return false;
 	}	
 	switch(FS_TYPE) {
-		case FS_EXT2_T:
+		case FS_EXT_T:
 			rc = ext_has_identifier(fd);
 			break;
 		
@@ -51,7 +51,7 @@ int fs_identify(const char *dev, const int FS_TYPE) {
 int fs_iter_blocks(const char *dev, const int FS_TYPE, int (*callback)(int fd, uint64_t length, uint64_t offset)) {
 	int rc;
 	switch(FS_TYPE) {
-		case FS_EXT2_T:
+		case FS_EXT_T:
 			rc = ext_iter_blocks(dev, callback);
 			break;
 		

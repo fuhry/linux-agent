@@ -11,7 +11,7 @@
 #define FS_EXIT_ER_ITER_UNDEF -1
 
 /** EXT2 family filesystem type */
-#define FS_EXT2_T     1
+#define FS_EXT_T     1
 
 /** XFS filesystem type */
 #define FS_XFS_T      2

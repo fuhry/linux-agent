@@ -4,107 +4,79 @@
 	Description: Tests functionality
 */
 
-#include <stdio.h>
 #include "fsparser.h"
+#include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <math.h>
 
-#if !(defined TRUE && defined FALSE)
-	#define TRUE 1
-	#define FALSE 0
-#endif
+#define print_usage(exec) printf("Usage: %s [option]\n\nOptions:\n\t-i\tinput device (ex: /dev/sdb1)\n\t-o\toutput device (ex: /dev/loop1)\n\t-t\tfilesystem type (ex: ext, reiserfs, xfs, btrfs)\n", exec)
 
-#define _TO_STR(n) #n
-#define _BOOL_TO_STR(b) (b == 0 ? "FAIL" : "PASS")
-#define _TEST_BASE(desc, func, value, comp) printf("[%s] Testing %s\n", _BOOL_TO_STR(func comp value), desc);
-#define TEST_EQ(desc, func, value) _TEST_BASE(desc, func, value, ==)
-#define TEST_NE(desc, func, value) _TEST_BASE(desc, func, value, !=)
-#define TEST_GT(desc, func, value) _TEST_BASE(desc, func, value, >)
-#define TEST_GTE(desc, func, value) _TEST_BASE(desc, func, value, >=)
-#define TEST_LT(desc, func, value) _TEST_BASE(desc, func, value, <)
-#define TEST_LTE(desc, func, value) _TEST_BASE(desc, func, value, <=)
-
-#define XFS_TEST_PARTITION "/dev/sdb1"
-#define REISER_TEST_PARTITION "/dev/sdb2"
-#define EXT2_TEST_PARTITION "/dev/sdb3"
-#define BTRFS_TEST_PARTITION "/dev/sdb4"
-
-#define XFS_BYTES 5079040
-#define REISER_BYTES 33665024
-#define EXT2_BYTES 17035264
-#define BTRFS_BYTES -1
-
-static int out;
+static int outfd = -1;
 int test_callback(const int fd, const uint64_t length, uint64_t offset) {
-/*
 	char buffer[length];
 	read(fd, buffer, length);
-	lseek(fd, offset, SEEK_SET); //seek back
-	
-	lseek(out, offset, SEEK_SET); //seek to
-	write(out, buffer, sizeof(char) * sizeof(buffer));
-	*/
-	//printf("Setting bit %ld\n", offset);
+	lseek(fd, offset, SEEK_SET); //seek back	
+	lseek(outfd, offset, SEEK_SET); //seek to
+	write(outfd, buffer, sizeof(char) * sizeof(buffer));
 	return 0;
 }
 
-void test_xfs(void) {
-	TEST_EQ("XFS identifcation", fs_identify(XFS_TEST_PARTITION, FS_XFS_T), TRUE)
-	TEST_EQ("XFS misidentifcation", fs_identify(REISER_TEST_PARTITION, FS_XFS_T), FALSE)
-	TEST_EQ("XFS misidentifcation", fs_identify(EXT2_TEST_PARTITION, FS_XFS_T), FALSE)
-	TEST_EQ("XFS copied blocks", fs_iter_blocks(XFS_TEST_PARTITION, FS_XFS_T, &test_callback), XFS_BYTES)
-}
-
-void test_reiserfs(void) {
-	TEST_EQ("ReiserFS identifcation", fs_identify(REISER_TEST_PARTITION, FS_REISERFS_T), TRUE)
-	TEST_EQ("ReiserFS misidentifcation", fs_identify(XFS_TEST_PARTITION, FS_REISERFS_T), FALSE)
-	TEST_EQ("ReiserFS misidentifcation", fs_identify(EXT2_TEST_PARTITION, FS_REISERFS_T), FALSE)
-	TEST_EQ("ReiserFS copied blocks", fs_iter_blocks(REISER_TEST_PARTITION, FS_REISERFS_T, &test_callback), REISER_BYTES)
-}
-
-void test_ext2(void) {
-	TEST_EQ("ext2 identifcation", fs_identify(EXT2_TEST_PARTITION, FS_EXT2_T), TRUE)
-	TEST_EQ("ext2 misidentifcation", fs_identify(REISER_TEST_PARTITION, FS_EXT2_T), FALSE)
-	TEST_EQ("ext2 misidentifcation", fs_identify(XFS_TEST_PARTITION, FS_EXT2_T), FALSE)
-	TEST_EQ("ext2 copied blocks", fs_iter_blocks(EXT2_TEST_PARTITION, FS_EXT2_T, &test_callback), EXT2_BYTES)
-}
-
-
-void test_btrfs(void) {
-	TEST_EQ("btrfs identifcation", fs_identify(BTRFS_TEST_PARTITION, FS_BTRFS_T), TRUE)
-	TEST_EQ("btrfs misidentifcation", fs_identify(REISER_TEST_PARTITION, FS_EXT2_T), FALSE)
-	TEST_EQ("btrfs misidentifcation", fs_identify(XFS_TEST_PARTITION, FS_EXT2_T), FALSE)
-	TEST_EQ("btrfs copied blocks", fs_iter_blocks(BTRFS_TEST_PARTITION, FS_BTRFS_T, &test_callback), BTRFS_BYTES)
-}
-
-
-int main(int argc, char *argv[]) {
-/*
-	printf("Expecting XFS size ");printb(XFS_BYTES);
-	printf("Expecting REISER size ");printb(REISER_BYTES);
-	printf("Expecting EXT2 size ");printb(EXT2_BYTES);
-*/
-	if(argc != 3) {printf("WRONG ARGUMENTS!\n");return 1;}
+int main(int argc, char *argv[]) {	
+	char *indev = NULL;
+	int fstype = -1;
 	
-	out = open(argv[1], O_WRONLY);
-	switch(argv[2][0]) {
-		case '1':
-			test_xfs();
+	int c;
+	while((c = getopt (argc, argv, "i:o:t:")) != -1) {
+		switch(c) {
+			case 'i':
+				indev = optarg;
 			break;
-		case '2':
-			test_reiserfs();
+		
+			case 'o':
+				if((outfd = open(optarg, O_WRONLY)) < 0) {
+					fprintf(stderr, "Fatal: Could not open output device %s\n", optarg);
+					return 1;
+				}
 			break;
-		case '3':
-			test_ext2();
+		
+			case 't':
+				if(strncmp(optarg, "ext", 3) == 0)
+					fstype = FS_EXT_T;
+				else if(strncmp(optarg, "xfs", 3) == 0)
+					fstype = FS_XFS_T;
+				else if(strncmp(optarg, "btrfs", 4) == 0)
+					fstype = FS_BTRFS_T;
+				else if(strncmp(optarg, "reiserfs", 8) == 0)
+					fstype = FS_REISERFS_T;
+				else {
+					fprintf(stderr, "Fatal: Invalid filesystem type %s\n", optarg);
+					return 1;
+				}
 			break;
-		case '4':
-			test_btrfs();
-			break;
-		default:
-			printf("WRONG FS ID\n");
-			break;
+		
+			case '?':
+				print_usage(argv[0]);
+			return 1;
+			
+			default:
+			return 1;
+		}
 	}
-	close(out);
+	
+	if(outfd < 0 || indev == NULL || fstype == -1) {
+		print_usage(argv[0]);
+		return 1;
+	}
+	
+	if(fs_identify(indev, fstype)) {
+		int bytes = fs_iter_blocks(indev, fstype, &test_callback);
+		printf("%d\n", bytes);
+	} else {
+		fprintf(stderr, "Fatal: %s is not of supplied type!\n", indev);
+		return 1;
+	}
+		
+	if(outfd)
+		close(outfd);
 	return 0;
 }
