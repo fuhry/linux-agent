@@ -28,8 +28,7 @@ As this is a general purpose tool, we will be open sourcing the code base under 
 	* Kernel versions
 		* 2.6.18+
 	* They must be using LVM
-		* This is needed so we know they have device-mapper
-		* Things like their /boot drive we will still backup
+		* Real requirement is device-mapper, but LVM uses it
 	* Need to handle poor network connections
 
 ### Required components
