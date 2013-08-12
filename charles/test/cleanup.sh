@@ -10,5 +10,8 @@ losetup -d /dev/loop1
 echo "Removing loopback device /dev/loop2..."
 losetup -d /dev/loop2
 
+echo "Remove mount directory..."
+rmdir $MNTDIR
+
 echo "Removing disk images..."
 rm -f $VDISKI $VDISKO $VDISKT

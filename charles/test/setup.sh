@@ -25,3 +25,6 @@ losetup /dev/loop1 $VDISKI
 
 echo "Setting up loopback device /dev/loop2 for $VDISKO..."
 losetup /dev/loop2 $VDISKO
+
+echo "Making mount directory..."
+mkdir $MNTDIR
