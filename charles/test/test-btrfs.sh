@@ -1,11 +1,17 @@
 #!/bin/sh
-echo "[SETUP]"
-sh setup.sh
-printf "\n"
+if [ -e "$DATTOEXEC" ]; then
 
-echo "[TEST]"
-echo "Not implemented!"
+	echo "[SETUP]"
+	sh setup.sh
+	printf "\n"
 
-printf "\n"
-echo "[CLEANUP]"
-sh cleanup.sh
+	echo "[TEST]"
+	echo "Not implemented!"
+
+	printf "\n"
+	echo "[CLEANUP]"
+	sh cleanup.sh
+	
+else
+	echo "Executable does not exist!"
+fi
