@@ -5,10 +5,10 @@
 */
 
 #include "fsparser.h"
-#include "fs/ext.h"
-#include "fs/xfs.h"
-#include "fs/reiser.h"
-#include "fs/btrfs.h"
+#include "ext.h"
+#include "xfs.h"
+#include "reiser.h"
+#include "btrfs.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdbool.h>

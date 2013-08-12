@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 #include "fsparser.h"
-#include "fs/fs.h"
+#include <fcntl.h>
 #include <unistd.h>
 #include <math.h>
 
@@ -35,37 +35,16 @@
 #define EXT2_BYTES 17035264
 #define BTRFS_BYTES -1
 
-void printb(uint64_t bytes) {
-	char print_buffer[255];
-	const char* suffixes[7];
-	suffixes[0] = "B";
-	suffixes[1] = "KB";
-	suffixes[2] = "MB";
-	suffixes[3] = "GB";
-	suffixes[4] = "TB";
-	suffixes[5] = "PB";
-	suffixes[6] = "EB";
-	uint s = 0; // which suffix to use
-	double count = bytes;
-	while(count >= 1024 && s < 7) {
-		s++;
-		count /= 1024;
-	}
-	if(count - floor(count) == 0.0f)
-		sprintf(print_buffer, "%d %s", (int)count, suffixes[s]);
-	else
-		sprintf(print_buffer, "%.1f %s", count, suffixes[s]);
-	printf("%s\n", print_buffer);
-}
-
 static int out;
 int test_callback(const int fd, const uint64_t length, uint64_t offset) {
+/*
 	char buffer[length];
 	read(fd, buffer, length);
 	lseek(fd, offset, SEEK_SET); //seek back
 	
 	lseek(out, offset, SEEK_SET); //seek to
 	write(out, buffer, sizeof(char) * sizeof(buffer));
+	*/
 	//printf("Setting bit %ld\n", offset);
 	return 0;
 }
