@@ -42,7 +42,7 @@ This is not determined at this point. This will be filled out in the near future
 
 ## Implementation Details
 
-The goal is to **transfer** a **consistent** image, both **full** or **incremental**, of the client block device in an **efficient** manner.
+The goal is to [transfer](#Transfer) a [consistent](#Consistent) image, both [full](#Full) and [incremental](#Incremental), of the client block device in an [efficient](#Efficient) manner.
 
 ### Transfer
 [Network Block Device](http://nbd.sourceforge.net/) is the means of transport. This allows us to write each block to the location we want, and allows the NBD to be backed by a sparse file on the SIRIS. We need to [make sure to set the schedule to deadline](http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=447638) with NBD.
