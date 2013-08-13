@@ -77,7 +77,7 @@ There are three options:
         * Unreliable
         * Requires special handling on the SIRIS
 
-Unfortunately, the cons for each method are blockers. As such, the only reasonable solution appears to be a hybrid approach. This hybrid is a buffered network snapshot.
+Unfortunately, the cons for each method are blockers. As such, the only reasonable solution appears to be a hybrid approach. This hybrid is a [buffered network snapshot](#buffered network snapshot).
 
 ##### Buffered network snapshot
 
