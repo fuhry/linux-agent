@@ -11,6 +11,7 @@ if [ -e $DATTOEXEC ]; then
 	printf "\n"
 	echo "Running mkfs on $INPUTDEV..."
 	mkfs.ext2 $INPUTDEV &>/dev/null
+	
 	echo "Running partclone on $INPUTDEV to $PARTCLONEOUT..."
 	$PARTCLONED.extfs -b -O $PARTCLONEOUT -s $INPUTDEV &>/dev/null
 	
@@ -36,11 +37,11 @@ if [ -e $DATTOEXEC ]; then
 		echo "FAIL" 
 	fi
 	
-	mount $INPUTDEV $MNTDIR
+	mount $INPUTDEV $MNTDIR -o ro,noexec
 	ORIGTREE=$(cd $MNTDIR && find . | sort)
 	umount $MNTDIR
 	
-	mount $DATTOOUT $MNTDIR
+	mount $DATTOOUT $MNTDIR -o ro,noexec
 	DATTOTREE=$(cd $MNTDIR && find . | sort)
 	umount $MNTDIR
 	

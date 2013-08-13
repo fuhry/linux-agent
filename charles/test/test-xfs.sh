@@ -20,9 +20,33 @@ if [ -e $DATTOEXEC ]; then
 	printf "\n"
 	
 	echo "[TEST]"
-	echo -ne "Diffing $PARTCLONEOUT and $DATTOOUT... "
+	echo -ne "Binary diffing $PARTCLONEOUT and $DATTOOUT... "
 	diff $PARTCLONEOUT $DATTOOUT &>/dev/null
 	if [ $? -eq 0 ]; then
+		echo "SUCCESS"
+	else
+		echo "FAIL" 
+	fi
+	
+	mount $INPUTDEV $MNTDIR -o ro,noexec
+	ORIGTREE=$(cd $MNTDIR && find . | sort)
+	INDUMP=$(xfs_info $INPUTDEV 2>/dev/null)
+	umount $MNTDIR
+	
+	mount $DATTOOUT $MNTDIR -o ro,noexec
+	DATTOTREE=$(cd $MNTDIR && find . | sort)
+	DATTODUMP=$(xfs_info $DATTOOUT 2>/dev/null)	
+	umount $MNTDIR
+	
+	echo -ne "xfs_info diffing $INPUTDEV and $DATTOOUT... "
+	if [ "${INDUMP:21}" == "${DATTODUMP:21}" ]; then
+		echo "SUCCESS"
+	else
+		echo "FAIL" 
+	fi
+	
+	echo -ne "Diffing directory tree of $INPUTDEV and $DATTOOUT... "
+	if [ "$ORIGTREE" == "$DATTOTREE" ]; then
 		echo "SUCCESS"
 	else
 		echo "FAIL" 
