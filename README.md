@@ -3,8 +3,7 @@ The Linux Agent is client and server side software that supports image based bac
 
 
 ## Project Overview
-The intention of this project is to create a general purpose tool to perform image based backups of Linux machines. While we are looking to release a tool that functions under systems other than aurora-based Datto products (e.g. SIRIS, Alto), backing up to our products is still the focus. 
-
+The intention of this project is to create a general purpose tool to perform image based backups of Linux machines. However, backing up to our products is still the focus.
 As this is a general purpose tool, we will be open sourcing the code base under GPLv2. This also allows us to leverage existing code under a GPL-compatible license.
 
 ### Technologies
