@@ -6,6 +6,10 @@
 
 #include "btrfs.h"
 #include "fs.h"
+#include <version.h>
+#include <ctree.h>
+#include <disk-io.h>
+#include <volumes.h>
 
 int btrfs_has_identifier(int fd) {
 	return 0;
