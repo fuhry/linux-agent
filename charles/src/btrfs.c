@@ -5,7 +5,6 @@
 */
 
 #include "btrfs.h"   /* Local */
-#include "tools.h"
 #include <stdbool.h> /* Standard */
 #include <error.h>   /* GNU */
 #include <ctree.h>   /* Filesystem */

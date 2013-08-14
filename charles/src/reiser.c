@@ -4,9 +4,7 @@
 	Description: reiser filesystem parsing functions
 */
 
-
 #include "reiser.h"            /* Local */
-#include "tools.h"
 #include <stdbool.h>           /* Standard */
 #include <string.h>
 #include <errno.h>

@@ -4,7 +4,6 @@
 	Description: xfs filesystem parsing functions
 */
 
-
 #include "xfs.h"     /* Local */
 #include "tools.h"
 #include <stdbool.h> /* Standard */
