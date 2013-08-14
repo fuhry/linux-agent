@@ -4,15 +4,14 @@
 	Description: xfs filesystem parsing functions
 */
 
-#include "xfs.h"
-#include "fs.h"
-#include <stdbool.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
-#include <error.h>
-#include <libxfs.h>
-#include <xfs_types.h>
+
+#include "xfs.h"     /* Local */
+#include "tools.h"
+#include <stdbool.h> /* Standard */
+#include <error.h>   /* GNU */
+#include <libxfs.h>  /* Filesystem */
+
+#define XFS_SUPERBLOCK_LOC 0x00
 
 typedef struct ag_header { /*because the xfs library is BAD*/
 	xfs_dsb_t *xfs_sb;
@@ -46,12 +45,15 @@ int xfs_has_identifier(int fd) {
 		return false;
 	}
 	
-	/* Switch byte-order to big endian if needed */
+	/*
+	  Switch byte-order to big endian if needed,
+	  xfs's header doesn't do this for us!
+	*/
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	signature = letobe32(super.sb_magicnum);
 #endif
 
-	return signature == XFS_SIGNATURE;
+	return signature == XFS_SB_MAGIC;
 }
 
 
@@ -396,7 +398,7 @@ int xfs_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, ui
 
 out:
 	libxfs_device_close(xargs.ddev);  
-	if(!(fd < 0)) {
+	if(fd >= 0) {
 		close(fd);
 	}
 	return rc;

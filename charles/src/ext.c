@@ -5,24 +5,16 @@
 	Description: ext filesystem parsing functions
 */
 
-#include "ext.h"
-#include "fs.h"
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#include <error.h>
-#include <ext2fs/ext2_err.h>
-#include <ext2fs/ext2_io.h>
+#include "ext.h"             /* Local */
+#include "tools.h"
+#include <stdbool.h>         /* Standard */
+#include <fcntl.h>           /* POSIX */
+#include <ext2fs/ext2_err.h> /* Filesystem */
 #include <ext2fs/ext2fs.h>
 
 #define EXT_SUPERBLOCK_LOC 0x400
-#define EXT_SUPERBLOCK_SIZ 0x400
 
 int ext_has_identifier(int fd) {
-	uint16_t signature;
 	struct ext2_super_block super;
 
 	/* Seek to superblock */
@@ -31,15 +23,11 @@ int ext_has_identifier(int fd) {
 	}
 	
 	/* Read superblock into struct */
-	if(read(fd, &super, EXT_SUPERBLOCK_SIZ) < 0) {
+	if(read(fd, &super, sizeof(super)) < 0) {
 		return false;
 	}
 	
-	/* Switch byte-order to big endian if needed */
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	signature = letobe16(super.s_magic);
-#endif
-	return signature == EXT_SIGNATURE;
+	return super.s_magic == EXT2_SUPER_MAGIC;
 }
 
 
@@ -106,7 +94,7 @@ out:
 	if(fs) {
 		ext2fs_close(fs);
 	}
-	if(!(fd < 0)) {
+	if(fd >= 0) {
 		close(fd);
 	}
 	if(block_bitmap) {

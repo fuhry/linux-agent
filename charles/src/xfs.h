@@ -9,15 +9,6 @@
 
 #include <stdint.h>
 
-/** XFS's signature */
-#define XFS_SIGNATURE 0x58465342
-
-/** Superblock location */
-#define XFS_SUPERBLOCK_LOC 0x00
-
-/** Signature field offset from the superblock */
-#define XFS_SIGNATURE_OFF 0x00
-
 /**
 	Parses the signature for the filesystem and compares it to the expected result.
 	Params:  fd - the file descriptor

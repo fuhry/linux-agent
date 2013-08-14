@@ -7,14 +7,6 @@
 #ifndef DATTO_REISER_H
 #define DATTO_REISER_H
 
-/** REISER's signature */
-#define REISER_SIGNATURE "ReIsEr2Fs"
-#define REISER_SIGNATURE_LEN 12
-
-/** Superblock location */
-#define REISER_SUPERBLOCK_LOC 0x10000
-#define REISER_SUPERBLOCK_SIZ 0x50
-
 #include <stdint.h>
 
 /**

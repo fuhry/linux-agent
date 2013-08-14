@@ -9,9 +9,6 @@
 
 #include <stdint.h>
 
-/** EXT's signature */
-#define EXT_SIGNATURE 0x53ef
-
 /**
 	Parses the signature for the filesystem and compares it to the expected result.
 	Params:  fd - the file descriptor

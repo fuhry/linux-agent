@@ -4,18 +4,17 @@
 	Description: reiser filesystem parsing functions
 */
 
-#include "reiser.h"
-#include "fs.h"
+
+#include "reiser.h"            /* Local */
+#include "tools.h"
+#include <stdbool.h>           /* Standard */
 #include <string.h>
-#include <stdbool.h>
-#include <reiserfs/reiserfs.h>
-#include <dal/dal.h>
-#include <dal/file_dal.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <errno.h>
-#include <error.h>
-#include <stdio.h>
+#include <fcntl.h>             /* POSIX */
+#include <error.h>             /* GNU */
+#include <reiserfs/reiserfs.h> /* Filesystem */
+
+#define REISER_SUPERBLOCK_LOC 0x10000
 
 int reiser_has_identifier(int fd) {
 	struct reiserfs_super super;
@@ -29,7 +28,8 @@ int reiser_has_identifier(int fd) {
 	if(read(fd, &super, sizeof(super)) < 0) {
 		return false;
 	}
-	return strncmp(super.s_v1.sb_magic, REISER_SIGNATURE, REISER_SIGNATURE_LEN) == 0;
+	
+	return strncmp(super.s_v1.sb_magic, REISERFS_3_6_SUPER_SIGNATURE, strlen(REISERFS_3_6_SUPER_SIGNATURE)) == 0;
 }
 
 
@@ -77,7 +77,7 @@ int reiser_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length,
 	}
 
 out:
-	if(!(fd < 0)) {
+	if(fd >= 0) {
 		close(fd);
 	}
 	if(fs) {
