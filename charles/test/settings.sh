@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 VDISKT=vdisk.orig
 VDISKI=vdisk.in
 VDISKO=vdisk.out

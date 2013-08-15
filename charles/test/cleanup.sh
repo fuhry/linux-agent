@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 source `dirname $0`/settings.sh
 
 echo "Removing loopback device /dev/loop0..."

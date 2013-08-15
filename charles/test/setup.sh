@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 source `dirname $0`/settings.sh
 
 if lsmod | grep loop &>/dev/null; then
