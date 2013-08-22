@@ -34,7 +34,7 @@ static int _get_num_sectors(const char *, uint64_t *);
 
 /* All of these functions malloc memory, caller must free */
 static int _create_dup_name(const char *, char **);
-static int _create_snap_name(const char *, char **);
+static int _build_snap_name(const char *, char **);
 static int _create_orig_name(const char *, char **);
 
 int takedown_cow_device(const char *dm_device_path)
@@ -72,7 +72,7 @@ int takedown_cow_device(const char *dm_device_path)
 	if (!_remove(orig_name))
 		goto out;
 
-	if (!_create_snap_name(dm_device_name, &snap_name))
+	if (!_build_snap_name(dm_device_name, &snap_name))
 		goto out;
 
 	if (!_remove(snap_name))
@@ -128,7 +128,7 @@ int setup_cow_device(const char *dm_device_path, const char *mem_dev,
 	/* Set this flag so we know to resume */
 	suspended = 1;
 
-	if (!_create_snap_name(dm_device_name, &snap_name))
+	if (!_build_snap_name(dm_device_name, &snap_name))
 		goto out;
 
 	if (!_create_snapshot(dup_name, snap_name, mem_dev)) {
@@ -185,7 +185,7 @@ static int _create_dup_name(const char *dm_device_name, char **dup_name)
 
 	return 1;
 }
-static int _create_snap_name(const char *dm_device_name, char **snap_name)
+static int _build_snap_name(const char *dm_device_name, char **snap_name)
 {
 	*snap_name = malloc(strlen(dm_device_name) +
 			strlen(SNAP_POSTFIX) + 1);
