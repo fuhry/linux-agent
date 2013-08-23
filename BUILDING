@@ -1,0 +1,13 @@
+This file contains build information I'll probably forget if I don't record it
+
+glog:
+    don't build it as root, fakeroot may get mad
+    install libunwind for stacktraces
+    build glog after installing libunwind
+    make deb will build the two .debs, do this for easy removal
+
+libraries:
+    glog
+    devmapper
+    probably some fs stuff
+
