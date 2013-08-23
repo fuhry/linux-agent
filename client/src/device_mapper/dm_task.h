@@ -11,16 +11,13 @@ extern "C" {
 namespace datto_linux_client {
 
 class DmTask {
-  public:
-    void Run();
-    virtual ~DmTask();
-  protected:
-    // Resume and Remove should be the only two that set use_udev
-    DmTask(int task_type, bool use_udev = false);
-    struct dm_task *dm_task_;
-  private:
-    const bool use_udev_;
-
+ public:
+  // All Run() calls should call dm_run_task at some point
+  virtual void Run() = 0;
+  virtual ~DmTask();
+ protected:
+  DmTask(int task_type);
+  struct dm_task *dm_task_;
 };
 }
 
