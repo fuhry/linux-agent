@@ -1,10 +1,5 @@
 #include "device_mapper/dm_table_task.h"
 
-// TODO: Remove this
-#if 0
-#include <libdevmapper.h>
-#endif
-
 #include <glog/logging.h>
 
 namespace datto_linux_client {
@@ -15,20 +10,14 @@ DmTableTask::DmTableTask(std::string device_name)
       targets_(),
       was_run_(false) {
 
-  if (!dm_task_set_name(dm_task_, device_name.c_str())) {
-    // TODO: Throw something useful
-    throw "set_name";
-  }
+  DmTask::SetName(device_name_);
 
 }
 
 void DmTableTask::Run() {
   VLOG(1) << "running device-mapper table task";
 
-  if (!dm_task_run(dm_task_)) {
-    // TODO: Throw something useful
-    throw "run";
-  }
+  DmTask::DoRun(false);
 
   // Populate targets_ with the results of the task
   void *next = NULL;

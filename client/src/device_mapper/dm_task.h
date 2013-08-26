@@ -8,25 +8,43 @@ extern "C" {
 #undef private
 }
 
+#include <string>
+#include <vector>
+#include <device_mapper/dm_target.h>
+
 namespace datto_linux_client {
 
+// The DmTask class provides two things.
+// 1. An interface requiring a Run() method
+// 2. Several helper methods for subclasses.
 class DmTask {
+
  public:
-  // All Run() calls should call dm_run_task at some point
   virtual void Run() = 0;
   virtual ~DmTask();
+
  protected:
-  DmTask(int task_type);
+  explicit DmTask(int task_type);
+
   struct dm_task *dm_task_;
 
+  void DoRun(bool use_udev);
+  void SetName(std::string device_name);
+  void AddTargets(std::vector<DmTarget> targets);
+
+ private:
+  // A udev cookie is a semaphore that coordinates udev rules.
+  // Only resume and remove should need to use this
   class UDevCookie {
    public:
     explicit UDevCookie(struct dm_task *task);
     ~UDevCookie();
-    void SetCookie(const DmTask& task);
    private:
     uint32_t cookie_;
   };
+
+  int task_type_;
+  bool use_udev_;
 
 };
 

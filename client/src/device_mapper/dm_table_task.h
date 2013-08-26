@@ -1,18 +1,6 @@
 #ifndef DATTO_CLIENT_DEVICE_MAPPER_DM_TABLE_TASK_H_
 #define DATTO_CLIENT_DEVICE_MAPPER_DM_TABLE_TASK_H_
 
-extern "C" {
-// libdevmapper.h has a variable named 'private'. This is a reserved word in
-// C++ so we need to define it away when including libdevmapper.h
-#define private avoid_cxx_private_keyword
-#include <libdevmapper.h>
-#undef private
-}
-
-#include <string>
-#include <vector>
-
-#include "device_mapper/dm_target.h"
 #include "device_mapper/dm_task.h"
 
 namespace datto_linux_client {
@@ -21,7 +9,7 @@ class DmTableTask : public DmTask {
  public:
   explicit DmTableTask(std::string device_name);
   std::vector<DmTarget> targets() const;
-  virtual void Run();
+  void Run();
   ~DmTableTask();
  private:
   const std::string device_name_;
