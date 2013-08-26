@@ -18,5 +18,17 @@ DmTask::~DmTask() {
   dm_task_destroy(dm_task_);
 }
 
+DmTask::UDevCookie::UDevCookie(struct dm_task *task) {
+  uint16_t flags = 0;
+  // dm_task_set_cookie initializes cookie_ for us
+  if (!dm_task_set_cookie(task, &cookie_, flags)) {
+    throw "unable to set cookie";
+  }
+
 }
 
+DmTask::UDevCookie::~UDevCookie() {
+  dm_udev_wait(cookie_);
+}
+
+}

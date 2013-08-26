@@ -18,7 +18,18 @@ class DmTask {
  protected:
   DmTask(int task_type);
   struct dm_task *dm_task_;
+
+  class UDevCookie {
+   public:
+    explicit UDevCookie(struct dm_task *task);
+    ~UDevCookie();
+    void SetCookie(const DmTask& task);
+   private:
+    uint32_t cookie_;
+  };
+
 };
+
 }
 
 #endif  // DATTO_CLIENT_DEVICE_MAPPER_DM_TASK_H_
