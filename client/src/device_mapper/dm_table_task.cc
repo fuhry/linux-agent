@@ -33,7 +33,8 @@ void DmTableTask::Run() {
     LOG(INFO) << device_name_ << " table: " << start << " " << length << " "
         << target_type << " " << params;
 
-    targets_.push_back(DmTarget(start, length, target_type, params));
+    DmTarget target = {start, length, target_type, params};
+    targets_.push_back(target);
   } while(next);
 
   was_run_ = true;
