@@ -4,6 +4,7 @@ traceblocks/traceblocks
 rangetree/buildtree
 client/dattod
 client/tracetester
+client/src/tests/table_test
 
 # Core dumps
 core
