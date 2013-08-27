@@ -14,10 +14,10 @@ FreezableBlockDevice::~FreezableBlockDevice() {
     } catch (std::exception &e) {
       // If we are in this catch block, we failed to unfreeze the hard drive.
       //
-      // TODO
-      // At this point there isn't too much we can do, if smarter handling was
-      // needed for this drive, the caller of this function should have called
+      // TODO At this point there isn't too much we can do, if smarter handling
+      // was needed for this drive, the caller of this function should have called
       // Unfreeze manually and handled the exception there
+      //
       // TODO: error: "Unable to unfreeze hard drive: " + BlockDevice::block_path());
       std::abort();
     }
