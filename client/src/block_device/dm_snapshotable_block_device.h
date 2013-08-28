@@ -6,8 +6,8 @@
 
 namespace datto_linux_client {
 
-const static std::string DUPLICATE_POSTFIX = "_datto_dup";
-const static std::string SNAPSHOT_POSTFIX = "_datto_snap";
+static const char DUPLICATE_POSTFIX[] = "_datto_dup";
+static const char SNAPSHOT_POSTFIX[] = "_datto_snap";
 
 class DmSnapshotableBlockDevice : public SnapshotableBlockDevice {
  public:
