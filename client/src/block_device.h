@@ -2,6 +2,7 @@
 #define DATTO_CLIENT_BLOCK_DEVICE_H_
 
 #include <boost/noncopyable.hpp>
+#include <boost/cstdint.hpp>
 #include <string>
 
 namespace datto_linux_client {
