@@ -1,5 +1,5 @@
-#ifndef DATTO_CLIENT_DEVICE_MAPPER_DM_TASK_H_
-#define DATTO_CLIENT_DEVICE_MAPPER_DM_TASK_H_
+#ifndef DATTO_CLIENT_BLOCK_DEVICE_DEVICE_MAPPER_DM_TASK_H_
+#define DATTO_CLIENT_BLOCK_DEVICE_DEVICE_MAPPER_DM_TASK_H_
 
 extern "C" {
 // Need to avoid C++ keyword 'private' collision in libdevmapper.h
@@ -50,4 +50,4 @@ class DmTask {
 
 }
 
-#endif  // DATTO_CLIENT_DEVICE_MAPPER_DM_TASK_H_
+#endif  // DATTO_CLIENT_BLOCK_DEVICE_DEVICE_MAPPER_DM_TASK_H_

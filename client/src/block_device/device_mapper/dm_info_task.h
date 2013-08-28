@@ -1,5 +1,5 @@
-#ifndef DATTO_CLIENT_DEVICE_MAPPER_DM_INFO_TASK_H_
-#define DATTO_CLIENT_DEVICE_MAPPER_DM_INFO_TASK_H_
+#ifndef DATTO_CLIENT_BLOCK_DEVICE_DEVICE_MAPPER_DM_INFO_TASK_H_
+#define DATTO_CLIENT_BLOCK_DEVICE_DEVICE_MAPPER_DM_INFO_TASK_H_
 
 #include "block_device/device_mapper/dm_task.h"
 #include "block_device/device_mapper/dm_info.h"
@@ -18,4 +18,4 @@ class DmInfoTask : public DmTask {
 
 }
 
-#endif //  DATTO_CLIENT_DEVICE_MAPPER_DM_INFO_TASK_H_
+#endif //  DATTO_CLIENT_BLOCK_DEVICE_DEVICE_MAPPER_DM_INFO_TASK_H_

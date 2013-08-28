@@ -1,5 +1,5 @@
-#ifndef DATTO_CLIENT_DM_SNAPSHOTABLE_BLOCK_DEVICE_H_
-#define DATTO_CLIENT_DM_SNAPSHOTABLE_BLOCK_DEVICE_H_
+#ifndef DATTO_CLIENT_BLOCK_DEVICE_DM_SNAPSHOTABLE_BLOCK_DEVICE_H_
+#define DATTO_CLIENT_BLOCK_DEVICE_DM_SNAPSHOTABLE_BLOCK_DEVICE_H_
 
 #include <boost/shared_ptr.hpp>
 #include "block_device/snapshotable_block_device.h"
@@ -23,4 +23,4 @@ class DmSnapshotableBlockDevice : public SnapshotableBlockDevice {
 };
 }
 
-#endif //  DATTO_CLIENT_DM_SNAPSHOTABLE_BLOCK_DEVICE_H_
+#endif //  DATTO_CLIENT_BLOCK_DEVICE_DM_SNAPSHOTABLE_BLOCK_DEVICE_H_

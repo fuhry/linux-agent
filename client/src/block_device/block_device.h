@@ -1,5 +1,5 @@
-#ifndef DATTO_CLIENT_BLOCK_DEVICE_H_
-#define DATTO_CLIENT_BLOCK_DEVICE_H_
+#ifndef DATTO_CLIENT_BLOCK_DEVICE_BLOCK_DEVICE_H_
+#define DATTO_CLIENT_BLOCK_DEVICE_BLOCK_DEVICE_H_
 
 #include <boost/noncopyable.hpp>
 #include <boost/cstdint.hpp>
@@ -24,4 +24,4 @@ class BlockDevice : private boost::noncopyable {
 };
 }
 
-#endif //  DATTO_CLIENT_BLOCK_DEVICE_H_
+#endif //  DATTO_CLIENT_BLOCK_DEVICE_BLOCK_DEVICE_H_
