@@ -1,6 +1,6 @@
-#include "dm_snapshotable_block_device.h"
-#include "dm_snapshot.h"
-#include "device_mapper/*.h"
+#include "block_device/dm_snapshotable_block_device.h"
+#include "block_device/dm_snapshot.h"
+#include "block_device/device_mapper/*.h"
 
 namespace datto_linux_client {
 

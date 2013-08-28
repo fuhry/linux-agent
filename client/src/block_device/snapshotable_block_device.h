@@ -1,7 +1,7 @@
 #ifndef DATTO_CLIENT_SNAPSHOTABLE_BLOCK_DEVICE_H_
 #define DATTO_CLIENT_SNAPSHOTABLE_BLOCK_DEVICE_H_
 
-#include "block_device.h"
+#include "block_device/block_device.h"
 #include <memory>
 
 namespace datto_linux_client {

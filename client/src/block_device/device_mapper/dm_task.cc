@@ -1,4 +1,4 @@
-#include "device_mapper/dm_task.h"
+#include "block_device/device_mapper/dm_task.h"
 
 #include <glog/logging.h>
 #include <boost/shared_ptr.hpp>

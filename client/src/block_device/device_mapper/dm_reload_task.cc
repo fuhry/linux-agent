@@ -1,4 +1,4 @@
-#include "device_mapper/dm_reload_task.h"
+#include "block_device/device_mapper/dm_reload_task.h"
 #include <glog/logging.h>
 
 namespace datto_linux_client {

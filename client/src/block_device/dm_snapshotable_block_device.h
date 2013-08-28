@@ -2,7 +2,7 @@
 #define DATTO_CLIENT_DM_SNAPSHOTABLE_BLOCK_DEVICE_H_
 
 #include <boost/shared_ptr.hpp>
-#include "snapshotable_block_device.h"
+#include "block_device/snapshotable_block_device.h"
 
 namespace datto_linux_client {
 

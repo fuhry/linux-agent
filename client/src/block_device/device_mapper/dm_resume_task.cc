@@ -1,4 +1,4 @@
-#include "device_mapper/dm_resume_task.h"
+#include "block_device/device_mapper/dm_resume_task.h"
 
 namespace datto_linux_client {
 
