@@ -1,0 +1,5 @@
+package datto_linux_client;
+
+message BaseSignature {
+    // Nothing yet, this feature is not implemented
+}
