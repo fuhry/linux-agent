@@ -9,13 +9,13 @@ else
 fi
 
 echo "Creating virtual disk $VDISKI ($VDISKSIZE KB)..."
-dd if=/dev/zero of=$VDISKI bs=1024 count=$VDISKSIZE &>/dev/null
+dd if=/dev/zero of=$VDISKI bs=1024 seek=$VDISKSIZE count=0 &>/dev/null
 
 echo "Creating virtual disk $VDISKO ($VDISKSIZE KB)..."
-dd if=/dev/zero of=$VDISKO bs=1024 count=$VDISKSIZE &>/dev/null
+dd if=/dev/zero of=$VDISKO bs=1024 seek=$VDISKSIZE count=0 &>/dev/null
 
 echo "Creating virtual disk $VDISKT ($VDISKSIZE KB)..."
-dd if=/dev/zero of=$VDISKT bs=1024 count=$VDISKSIZE &>/dev/null
+dd if=/dev/zero of=$VDISKT bs=1024 seek=$VDISKSIZE count=0 &>/dev/null
 
 echo "Setting up loopback device /dev/loop0 for $VDISKT..."
 losetup /dev/loop0 $VDISKT || exit 1
