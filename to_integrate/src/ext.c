@@ -5,12 +5,14 @@
 	Description: ext filesystem parsing functions
 */
 
-#include "ext.h"             /* Local */
+#include "ext.h"
 #include "tools.h"
-#include <stdbool.h>         /* Standard */
-#include <fcntl.h>           /* POSIX */
-#include <ext2fs/ext2_err.h> /* Filesystem */
+#include <error.h>
+#include <ext2fs/ext2_err.h>
 #include <ext2fs/ext2fs.h>
+#include <fcntl.h>
+#include <stdbool.h>
+#include <unistd.h>
 
 #define EXT_SUPERBLOCK_LOC 0x400
 
