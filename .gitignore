@@ -6,6 +6,9 @@ client/dattod
 client/tracetester
 client/src/tests/table_test
 
+# Tool generated code
+client/src/message_queue/protobuf_classes
+
 # Core dumps
 core
 
