@@ -4,11 +4,12 @@
 	Description: xfs filesystem parsing functions
 */
 
-#include "xfs.h"     /* Local */
+#include "xfs.h"
 #include "tools.h"
-#include <stdbool.h> /* Standard */
-#include <error.h>   /* GNU */
-#include <libxfs.h>  /* Filesystem */
+
+#include <error.h>
+#include <libxfs.h>
+#include <stdbool.h>
 
 #define XFS_SUPERBLOCK_LOC 0x00
 
