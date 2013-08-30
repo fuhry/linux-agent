@@ -7,7 +7,7 @@ DATTOOUT=/dev/loop2
 
 if [ -e $DATTOEXEC ]; then
 	echo "[SETUP]"
-	sh setup.sh
+	bash setup.sh
 	printf "\n"
 	echo "Running mkfs on $INPUTDEV..."
 	mkfs.ext2 $INPUTDEV &>/dev/null
@@ -54,7 +54,7 @@ if [ -e $DATTOEXEC ]; then
 		
 	printf "\n"
 	echo "[CLEANUP]"
-	sh cleanup.sh
+	bash cleanup.sh
 	
 else
 	echo "Executable does not exist!"
