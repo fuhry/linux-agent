@@ -5,8 +5,9 @@
 */
 
 #include "fsparser.h"
-#include <stdio.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 #define print_usage(exec) printf("Usage: %s [option]\n\nOptions:\n\t-i\tinput device (ex: /dev/sdb1)\n\t-o\toutput device (ex: /dev/loop1)\n\t-t\tfilesystem type (ex: ext, reiserfs, xfs, btrfs)\n", exec)
