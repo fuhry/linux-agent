@@ -59,28 +59,42 @@ int xfs_has_identifier(int fd) {
 
 int xfs_iter_ag(int agno, struct xfs_device_info *devinfo, int (*callback)(int fd, uint64_t length, uint64_t offset)) {
 	int rc = 0;
+
 	ag_header_t ag_hdr;
 	xfs_daddr_t read_ag_off;
 	int read_ag_length;
 	void *read_ag_buf = NULL;
 	xfs_off_t read_ag_position;
-	uint64_t current_block, block_count;
+
+	uint64_t current_block;
+	uint64_t block_count;
+
 	void *btree_buf_data = NULL;
 	int btree_buf_length;
 	xfs_off_t btree_buf_position;
+
 	xfs_alloc_ptr_t *ptr = NULL;
 	xfs_agblock_t bno;
-	xfs_daddr_t ag_end = 0, next_begin = 0, ag_begin = 0, begin = 0, new_begin = 0;
+
+	xfs_daddr_t ag_end = 0;
+	xfs_daddr_t next_begin = 0;
+	xfs_daddr_t ag_begin = 0;
+	xfs_daddr_t begin = 0;
+	xfs_daddr_t new_begin = 0;
+
 	struct xfs_btree_block* block;
 	xfs_off_t pos;
 	int length;
 	xfs_alloc_rec_t *rec_ptr;
+
 	int w_size = 1 * 1024 * 1024;
 	int wblocks = 0;
 	uint64_t numblocks = 0;
 	int w_length = 0;
 	xfs_off_t w_position;
-	uint64_t size, sizeb;
+
+	uint64_t size;
+	uint64_t sizeb;
 
 	read_ag_off = XFS_AG_DADDR(devinfo->mp, agno, XFS_SB_DADDR);
 	read_ag_length = devinfo->first_agbno * devinfo->block_size;
