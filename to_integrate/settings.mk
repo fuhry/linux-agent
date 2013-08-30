@@ -1,5 +1,5 @@
-CC =	clang
-AC =  ar
-EXECNAME =	fsparser
-FSARNAME =	libfsparser.a
+CC = clang
+AC = ar
+EXECNAME = fsparser
+FSARNAME = libfsparser.a
 FSHEADER = fsparser.h
