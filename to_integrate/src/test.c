@@ -15,13 +15,13 @@ static int outfd = -1;
 int test_callback(const int fd, const uint64_t length, uint64_t offset) {
 	char buffer[length];
 	read(fd, buffer, length);
-	lseek(fd, offset, SEEK_SET); //seek back	
+	lseek(fd, offset, SEEK_SET); //seek back
 	lseek(outfd, offset, SEEK_SET); //seek to
 	write(outfd, buffer, sizeof(char) * sizeof(buffer));
 	return 0;
 }
 
-int main(int argc, char *argv[]) {	
+int main(int argc, char *argv[]) {
 	char *indev = NULL;
 	int fstype = -1;
 	
