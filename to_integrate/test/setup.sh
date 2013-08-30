@@ -18,13 +18,13 @@ echo "Creating virtual disk $VDISKT ($VDISKSIZE KB)..."
 dd if=/dev/zero of=$VDISKT bs=1024 count=$VDISKSIZE &>/dev/null
 
 echo "Setting up loopback device /dev/loop0 for $VDISKT..."
-losetup /dev/loop0 $VDISKT
+losetup /dev/loop0 $VDISKT || exit 1
 
 echo "Setting up loopback device /dev/loop1 for $VDISKI..."
-losetup /dev/loop1 $VDISKI
+losetup /dev/loop1 $VDISKI || exit 1
 
 echo "Setting up loopback device /dev/loop2 for $VDISKO..."
-losetup /dev/loop2 $VDISKO
+losetup /dev/loop2 $VDISKO || exit 1
 
 echo "Making mount directory..."
 mkdir $MNTDIR
