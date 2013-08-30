@@ -11,18 +11,18 @@ if [ -e $DATTOEXEC ]; then
 	bash setup.sh
 	printf "\n"
 	echo "Running mkfs on $INPUTDEV..."
-	mkfs.xfs $INPUTDEV &>/dev/null
+	mkfs.xfs $INPUTDEV
 	
 	echo "Running partclone on $INPUTDEV to $PARTCLONEOUT..."
-	$PARTCLONED.xfs -b -O $PARTCLONEOUT -s $INPUTDEV &>/dev/null
+	$PARTCLONED.xfs -b -O $PARTCLONEOUT -s $INPUTDEV
 	
 	echo "Running datto on $INPUTDEV to $DATTOOUT..."
-	$DATTOEXEC -i $INPUTDEV -o $DATTOOUT -t xfs &>/dev/null
+	$DATTOEXEC -i $INPUTDEV -o $DATTOOUT -t xfs
 	printf "\n"
 	
 	echo "[TEST]"
 	echo -ne "Binary diffing $PARTCLONEOUT and $DATTOOUT... "
-	diff $PARTCLONEOUT $DATTOOUT &>/dev/null
+	diff $PARTCLONEOUT $DATTOOUT
 	if [ $? -eq 0 ]; then
 		echo "SUCCESS"
 	else
