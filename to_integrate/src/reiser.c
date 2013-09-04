@@ -9,8 +9,12 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>             /* POSIX */
+#include <unistd.h>
 #include <error.h>             /* GNU */
+#include <dal/dal.h>           /* DAL */
+#include <dal/file_dal.h>
 #include <reiserfs/reiserfs.h> /* Filesystem */
+
 
 #define REISER_SUPERBLOCK_LOC 0x10000
 

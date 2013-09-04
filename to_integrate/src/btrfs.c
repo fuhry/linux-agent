@@ -7,7 +7,9 @@
 #include "btrfs.h"   /* Local */
 #include <stdbool.h> /* Standard */
 #include <error.h>   /* GNU */
+#include <unistd.h>  /* POSIX */
 #include <ctree.h>   /* Filesystem */
+#include <disk-io.h>
 
 #define BTRFS_SUPERBLOCK_LOC 0x10000
 
@@ -29,8 +31,8 @@ int btrfs_has_identifier(int fd) {
 
 int btrfs_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, uint64_t offset)) {
 	int rc = 0;
-	struct btrfs_root *root;
-	struct btrfs_path *path;
+	struct btrfs_root *root = NULL;
+	struct btrfs_path *path = NULL;
 	
 	radix_tree_init();
 	if(!(root = open_ctree(dev, 0, 0))) {

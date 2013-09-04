@@ -1,6 +1,6 @@
 # Project Setup
 include ../settings.mk
-CFLAGS =	-std=c99 -g -Ilibxfs/include -Ilibbtrfs/include -D_GNU_SOURCE 
+CFLAGS =	-std=c99  -Wall -g -Ilibxfs/include -Ilibbtrfs/include -D_GNU_SOURCE
 LDFLAGS =	-static -Llibxfs -Llibbtrfs -lxfs -lbtrfs -lext2fs -lreiserfs -lcom_err -ldal -luuid -lblkid -lpthread -lm
 ARFLAGS =	rcs
 ############################################################
