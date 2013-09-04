@@ -49,9 +49,9 @@ void DmTask::SetName(std::string device_name) {
 void DmTask::AddTargets(std::vector<DmTarget> targets) {
   // Populate the task with targets
   std::vector<DmTarget>::iterator itr;
-  for (itr = targets.begin(); itr != targets.end(); ++itr) {
-    dm_task_add_target(dm_task_, itr->start, itr->length,
-        itr->target_type, itr->params);
+  for (DmTarget& target : targets) {
+    dm_task_add_target(dm_task_, target.start, target.length,
+        target.target_type, target.params);
   }
 }
 

@@ -28,5 +28,5 @@ DmSnapshotableBlockDevice::DmSnapshotableBlockDevice(
 std::auto_ptr<DmSnapshot> DmSnapshotableBlockDevice::TakeSnapshot() {
   // TODO, this function is the one that actually does all of the
   // device mapper work
-  return std::auto_ptr<DmSnapshot>();
+  return std::unique_ptr<DmSnapshot>();
 }

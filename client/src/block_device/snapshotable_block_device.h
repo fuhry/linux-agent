@@ -7,7 +7,7 @@
 namespace datto_linux_client {
 class SnapshotableBlockDevice : public BlockDevice {
  public:
-  virtual std::auto_ptr<Snapshot> TakeSnapshot() = 0;
+  virtual std::unique_ptr<Snapshot> TakeSnapshot() = 0;
   virtual ~SnapshotableBlockDevice();
 };
 }

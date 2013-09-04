@@ -16,7 +16,7 @@ class DmSnapshotableBlockDevice : public SnapshotableBlockDevice {
   DmSnapshotableBlockDevice(uint32_t major,
                             uint32_t minor,
                             boost::shared_ptr<BlockDevice> cow_device);
-  std::auto_ptr<DmSnapshot> TakeSnapshot();
+  std::unique_ptr<DmSnapshot> TakeSnapshot();
   ~DmSnapshotableBlockDevice();
  private:
   boost::shared_ptr<BlockDevice> cow_device_;
