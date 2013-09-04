@@ -10,7 +10,7 @@ extern "C" {
 
 #include <string>
 #include <vector>
-#include <device_mapper/dm_target.h>
+#include "block_device/device_mapper/dm_target.h"
 
 namespace datto_linux_client {
 
