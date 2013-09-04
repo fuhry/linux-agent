@@ -33,9 +33,9 @@ static int _copy_targets_from_device(const char *, struct dm_task *);
 static int _get_num_sectors(const char *, uint64_t *);
 
 /* All of these functions malloc memory, caller must free */
-static int _create_dup_name(const char *, char **);
-static int _create_snap_name(const char *, char **);
-static int _create_orig_name(const char *, char **);
+static int _build_dup_name(const char *, char **);
+static int _build_snap_name(const char *, char **);
+static int _build_orig_name(const char *, char **);
 
 int takedown_cow_device(const char *dm_device_path)
 {
@@ -50,7 +50,7 @@ int takedown_cow_device(const char *dm_device_path)
 
 	dm_device_name = basename(dm_device_path);
 
-	if (!_create_dup_name(dm_device_name, &dup_name))
+	if (!_build_dup_name(dm_device_name, &dup_name))
 		goto out;
 
 	if (!_suspend(dm_device_name))
@@ -66,13 +66,13 @@ int takedown_cow_device(const char *dm_device_path)
 
 	suspended = 0;
 
-	if (!_create_orig_name(dm_device_name, &orig_name))
+	if (!_build_orig_name(dm_device_name, &orig_name))
 		goto out;
 
 	if (!_remove(orig_name))
 		goto out;
 
-	if (!_create_snap_name(dm_device_name, &snap_name))
+	if (!_build_snap_name(dm_device_name, &snap_name))
 		goto out;
 
 	if (!_remove(snap_name))
@@ -112,7 +112,7 @@ int setup_cow_device(const char *dm_device_path, const char *mem_dev,
 
 	dm_device_name = basename(dm_device_path);
 
-	if (!_create_dup_name(dm_device_name, &dup_name))
+	if (!_build_dup_name(dm_device_name, &dup_name))
 		goto out;
 
 	if (!_duplicate_table(dm_device_name, dup_name)) {
@@ -128,7 +128,7 @@ int setup_cow_device(const char *dm_device_path, const char *mem_dev,
 	/* Set this flag so we know to resume */
 	suspended = 1;
 
-	if (!_create_snap_name(dm_device_name, &snap_name))
+	if (!_build_snap_name(dm_device_name, &snap_name))
 		goto out;
 
 	if (!_create_snapshot(dup_name, snap_name, mem_dev)) {
@@ -136,7 +136,7 @@ int setup_cow_device(const char *dm_device_path, const char *mem_dev,
 		goto out;
 	}
 
-	if (!_create_orig_name(dm_device_name, &orig_name))
+	if (!_build_orig_name(dm_device_name, &orig_name))
 		goto out;
 
 	if (!_create_snapshot_origin(dup_name, orig_name)) {
@@ -172,7 +172,7 @@ out:
 	return r;
 }
 
-static int _create_dup_name(const char *dm_device_name, char **dup_name)
+static int _build_dup_name(const char *dm_device_name, char **dup_name)
 {
 	*dup_name = malloc(strlen(dm_device_name) + strlen(DUP_POSTFIX) + 1);
 	if (dup_name == NULL) {
@@ -185,7 +185,7 @@ static int _create_dup_name(const char *dm_device_name, char **dup_name)
 
 	return 1;
 }
-static int _create_snap_name(const char *dm_device_name, char **snap_name)
+static int _build_snap_name(const char *dm_device_name, char **snap_name)
 {
 	*snap_name = malloc(strlen(dm_device_name) +
 			strlen(SNAP_POSTFIX) + 1);
@@ -200,7 +200,7 @@ static int _create_snap_name(const char *dm_device_name, char **snap_name)
 	return 1;
 }
 
-static int _create_orig_name(const char *dm_device_name, char **orig_name)
+static int _build_orig_name(const char *dm_device_name, char **orig_name)
 {
 	*orig_name = malloc(strlen(dm_device_name) +
 			strlen(ORIGIN_POSTFIX) + 1);

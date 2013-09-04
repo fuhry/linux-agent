@@ -15,7 +15,7 @@
 
 #define DEBUG_FS_PATH "/sys/kernel/debug"
 
-void *trace_path(char *path);
+void *trace_path(void *arg);
 
 static void close_trace(void *);
 static void cleanup_tree(void *);
@@ -29,6 +29,8 @@ struct trace_thread {
 	char *bt_name;
 	int cpu_num;
 };
+
+static struct trace_linked_list *trace_list = NULL;
 
 /* 0 on success, < 0 on failure with errno */
 static int skip_noseek_fd(int fd, int num_skip)
@@ -51,7 +53,7 @@ static int skip_noseek_fd(int fd, int num_skip)
 
 static void *trace_cpu(void *arg)
 {
-	struct trace_thread *thread = (struct trace_thread *)arg;
+	struct trace_thread *cpu_thread = (struct trace_thread *)arg;
 
 	int trace_fd;
 	char trace_path[PATH_MAX];
@@ -65,7 +67,8 @@ static void *trace_cpu(void *arg)
 	int old_cancel_type;
 
 	snprintf(trace_path, sizeof(trace_path), "%s/block/%s/trace%d",
-			DEBUG_FS_PATH, thread->bt_name, thread->cpu_num);
+			DEBUG_FS_PATH, cpu_thread->bt_name,
+			cpu_thread->cpu_num);
 
 	if ((trace_fd = open(trace_path, O_RDONLY)) == -1)
 		perror("open");
@@ -83,17 +86,17 @@ static void *trace_cpu(void *arg)
 		/* Lock mutex and prevent cancelling */
 		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,
 				&old_cancel_type);
-		pthread_mutex_lock(thread->tree->mutex);
+		pthread_mutex_lock(cpu_thread->tree->mutex);
 
 		/* Add sectors to the tree */
 		sectors_written = trace.bytes / 512 + 1;
 		for (i = 0; i < sectors_written + 1; i++) {
 			rt_add_value(trace.sector + i,
-					*(thread->tree->range_tree));
+					*(cpu_thread->tree->range_tree));
 		}
 
 		/* Unlock mutex and reenable cancelling */
-		pthread_mutex_unlock(thread->tree->mutex);
+		pthread_mutex_unlock(cpu_thread->tree->mutex);
 		pthread_setcancelstate(old_cancel_type, NULL);
 
 		/* Skip the extra bytes that might be after the trace */
@@ -107,12 +110,15 @@ static void *trace_cpu(void *arg)
 	return NULL;
 }
 
-void *trace_path(char *path)
+/* arg should be a string containing a path to trace */
+void *trace_path(void *arg)
 {
+	char *path = arg;
+
 	struct blk_user_trace_setup buts;
-	struct trace_tree trace_tree;
+	struct trace_tree *trace_tree = (struct trace_tree *)arg;
 	int dev_fd;
-	struct trace_thread *threads;
+	struct trace_thread *cpu_threads;
 
 	int i;
 
@@ -127,7 +133,7 @@ void *trace_path(char *path)
 
 	if ((dev_fd = open(path, O_RDONLY | O_NONBLOCK)) == -1) {
 		syslog(LOG_ERR, "unable to open %s: %m", path);
-		return NULL;
+		pthread_exit(NULL);
 	}
 
 	pthread_cleanup_push(close_trace, &dev_fd);
@@ -143,9 +149,9 @@ void *trace_path(char *path)
 	}
 
 	/* Initialize the trace_tree struct */
-	trace_tree.block_dev_path = path;
+	trace_tree->block_dev_path = path;
 
-	pthread_mutex_init(trace_tree.mutex, NULL);
+	pthread_mutex_init(trace_tree->mutex, NULL);
 	pthread_cleanup_push(cleanup_tree, &trace_tree);
 
 	if ((tree = malloc(sizeof(struct rb_root))) == NULL) {
@@ -153,22 +159,22 @@ void *trace_path(char *path)
 		pthread_exit(NULL);
 	}
 
-	trace_tree.range_tree = &tree;
+	trace_tree->range_tree = &tree;
 
-	threads = malloc(num_cpus * sizeof(struct trace_thread));
-	if (threads == NULL) {
+	cpu_threads = malloc(num_cpus * sizeof(struct trace_thread));
+	if (cpu_threads == NULL) {
 		syslog(LOG_ERR, "unable to malloc threads struct: %m");
 		pthread_exit(NULL);
 	}
 
 	/* Push the clean up before starting them incase this thread
 	 * is cancelled before they all start */
-	pthread_cleanup_push(cancel_cpu_tracers, &trace_tree);
+	pthread_cleanup_push(cancel_cpu_tracers, &cpu_threads);
 
 	/* Start a trace on each CPU */
 	for (i = 0; i < num_cpus; i++) {
-		if (pthread_create(&threads[i].id, NULL, trace_cpu,
-					threads + i)) {
+		if (pthread_create(&(cpu_threads[i].id), NULL, trace_cpu,
+					cpu_threads + i)) {
 			pthread_exit(NULL);
 		}
 	}
@@ -189,18 +195,26 @@ void *trace_path(char *path)
 /* Need to make sure this is not run when something else is using the tree */
 static void cancel_cpu_tracers(void *arg)
 {
-	struct trace_thread *threads = (struct trace_thread *)arg;
+	struct trace_thread *cpu_threads = (struct trace_thread *)arg;
 
 	int num_cpus = get_nprocs();
 	int i;
 
+	int ret_val;
+
+	/* We do this sequentially so if a cancel fails we don't join on
+	 * a thread that isn't going to terminate */
 	for (i = 0; i < num_cpus; i++) {
-		if (pthread_cancel(threads[i].id)) {
-			syslog(LOG_ERR, "unable to cancel trace thread");
+		/* Cancel the thread */
+		if ((ret_val = pthread_cancel(cpu_threads[i].id))) {
+			syslog(LOG_ERR, "unable to cancel trace thread: %d",
+					ret_val);
 			continue;
 		}
-		if (pthread_join(threads[i].id, NULL)) {
-			syslog(LOG_ERR, "unable to join trace thread");
+		/* Wait for it to be done */
+		if ((ret_val = pthread_join(cpu_threads[i].id, NULL))) {
+			syslog(LOG_ERR, "unable to join trace thread: %d",
+					ret_val);
 			continue;
 		}
 	}
@@ -215,6 +229,10 @@ static void cleanup_tree(void *arg)
 
 	if ((err = pthread_mutex_destroy(tree->mutex))) {
 		syslog(LOG_ERR, "could not destroy mutex: %s", strerror(err));
+	}
+
+	if (remove_trace(&trace_list, tree) == NULL) {
+		syslog(LOG_ERR, "could not remove trace from list");
 	}
 
 	rt_free_tree(*tree->range_tree);
