@@ -8,6 +8,7 @@ The `test` directory includes various scripts to verify behavioural correctness.
 
 ####C compiler####
 * Must support C89 and C99 (`clang` or `gcc`)
+* Support various GNU extensions
 
 ####Included libraries####
 * `xfs`
