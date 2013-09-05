@@ -16,6 +16,9 @@ Removing the restriction on exceptions means we are free to do work in construct
 #### Boost
 Google restricts a lot of the Boost libraries. We don't worry about this - Boost contains high quality code, and contains a lot of classes that are perfect for our purposes (e.g. [interval containers](http://www.boost.org/doc/libs/1_54_0/libs/icl/doc/html/index.html) for block trace data).
 
+#### C++11
+In addition to restricting Boost, Google restricts many C++ features. In general we follow these restrictions, but [the concurrency classes](http://en.cppreference.com/w/cpp/thread) are too tempting to resist - we use these without hesitation.
+
 ***
 
 ### C
