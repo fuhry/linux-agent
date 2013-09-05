@@ -363,7 +363,7 @@ out:
 
 
 int xfs_iter_blocks(const char *dev, 
-	int (*callback)(int fd, uint64_t length,	uint64_t offset)) {
+	int (*callback)(int fd, uint64_t length, uint64_t offset)) {
 	
 	int rc = 0;
 	libxfs_init_t xargs;
