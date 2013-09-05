@@ -34,7 +34,8 @@ int ext_has_identifier(int fd) {
 
 
 
-int ext_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, uint64_t offset)) {
+int ext_iter_blocks(const char *dev,
+	int (*callback)(int fd, uint64_t length, uint64_t offset)) {
 	int rc = 0;
 	int block_size, bitmap_size;
 	ext2_filsys fs = NULL;
@@ -67,13 +68,16 @@ int ext_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, ui
 	for(int i = 0; i < fs->group_desc_count; ++i) {
 
 		/* Calculate the block offset for the current group */
-		cur_group_block_offset = fs->super->s_first_data_block + (i * fs->super->s_blocks_per_group);
+		cur_group_block_offset = fs->super->s_first_data_block +
+			(i * fs->super->s_blocks_per_group);
 
-		ext2fs_get_block_bitmap_range(fs->block_map, cur_group_block_offset, fs->super->s_blocks_per_group, block_bitmap);
+		ext2fs_get_block_bitmap_range(fs->block_map, cur_group_block_offset,
+			fs->super->s_blocks_per_group, block_bitmap);
 
 		/* Break if we have reached the end of this group (s_blocks_per_group)
 		 * or the end of the file system (s_blocks_count) */
-		for(int j = 0; j < fs->super->s_blocks_per_group && j + cur_group_block_offset < fs->super->s_blocks_count; ++j) {
+		for(int j = 0; j < fs->super->s_blocks_per_group &&
+			j + cur_group_block_offset < fs->super->s_blocks_count; ++j) {
 
 			/* If the bit is set then the block is allocated. */
 			if(ext2fs_test_bit(j, block_bitmap)) {
@@ -81,7 +85,8 @@ int ext_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, ui
 				seek_amnt = block_size * cur_block_offset;
 
 				if(lseek(fd, seek_amnt, SEEK_SET) < 0) {
-					error(0, errno, "Error seeking %s (Block: %ld)", dev, (long) cur_block_offset);
+					error(0, errno, "Error seeking %s (Block: %ld)", dev,
+						(long) cur_block_offset);
 					goto out;
 				}
 				callback(fd, block_size, seek_amnt);

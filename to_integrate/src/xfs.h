@@ -23,6 +23,7 @@ int xfs_has_identifier(int fd);
 	         callback - the function to callback on a used block
 	Returns: total number of bytes read
 */
-int xfs_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, uint64_t offset));
+int xfs_iter_blocks(const char *dev,
+	int (*callback)(int fd, uint64_t length, uint64_t offset));
 
 #endif

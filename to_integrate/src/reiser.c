@@ -31,12 +31,14 @@ int reiser_has_identifier(int fd) {
 		return false;
 	}
 	
-	return strncmp(super.s_v1.sb_magic, REISERFS_3_6_SUPER_SIGNATURE, strlen(REISERFS_3_6_SUPER_SIGNATURE)) == 0;
+	return strncmp(super.s_v1.sb_magic, REISERFS_3_6_SUPER_SIGNATURE,
+		strlen(REISERFS_3_6_SUPER_SIGNATURE)) == 0;
 }
 
 
 
-int reiser_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, uint64_t offset)) {
+int reiser_iter_blocks(const char *dev,
+	int (*callback)(int fd, uint64_t length, uint64_t offset)) {
 	int rc = 0;
 	int block_size;
 	off_t seek_amnt;
@@ -68,7 +70,7 @@ int reiser_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length,
 	
 	for(int i = 0; i < fs->super->s_v1.sb_block_count; ++i) {
 		if(reiserfs_tools_test_bit(i, fs_bitmap->bm_map)) {
-			seek_amnt = /*REISER_SUPERBLOCK_LOC + REISER_SUPERBLOCK_SIZ + */(i * block_size);
+			seek_amnt = (i * block_size);
 			if(lseek(fd, seek_amnt, SEEK_SET) < 0) {
 				error(0, errno, "Error seeking %s (Block: %d)", dev, i);
 				goto out;

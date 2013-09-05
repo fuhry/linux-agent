@@ -29,7 +29,8 @@ int btrfs_has_identifier(int fd) {
 	return super.magic == BTRFS_MAGIC;
 }
 
-int btrfs_iter_blocks(const char *dev, int (*callback)(int fd, uint64_t length, uint64_t offset)) {
+int btrfs_iter_blocks(const char *dev,
+	int (*callback)(int fd, uint64_t length, uint64_t offset)) {
 	int rc = 0;
 	struct btrfs_root *root = NULL;
 	struct btrfs_path *path = NULL;

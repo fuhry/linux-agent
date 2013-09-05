@@ -40,7 +40,8 @@ int fs_identify(const char *dev, const int FS_TYPE);
 	         callback - the function to callback on a used block
 	Returns: total number of bytes read
 */
-int fs_iter_blocks(const char *dev, const int FS_TYPE, int (*callback)(int fd, uint64_t length, uint64_t offset));
+int fs_iter_blocks(const char *dev, const int FS_TYPE,
+	int (*callback)(int fd, uint64_t length, uint64_t offset));
 
 
 #endif
