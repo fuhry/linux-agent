@@ -7,9 +7,10 @@
 #include "xfs.h"
 #include "tools.h"
 
-#include <error.h>
-#include <libxfs.h>
 #include <stdbool.h>
+#include <error.h>
+#include <endian.h>
+#include <libxfs.h>
 
 #define XFS_SUPERBLOCK_LOC 0x00
 #define MAX_WRITE_BLOCK_LENGTH 0x100000
@@ -34,7 +35,6 @@ struct xfs_device_info {
 };
 
 int xfs_has_identifier(int fd) {
-	uint32_t signature;
 	xfs_sb_t super;
 
 	/* Seek to superblock */
@@ -46,16 +46,7 @@ int xfs_has_identifier(int fd) {
 	if(read(fd, &super, sizeof(super)) < 0) {
 		return false;
 	}
-
-	/*
-	  Switch byte-order to big endian if needed,
-	  xfs's header doesn't do this for us!
-	*/
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	signature = letobe32(super.sb_magicnum);
-#endif
-
-	return signature == XFS_SB_MAGIC;
+	return be32toh(super.sb_magicnum) == XFS_SB_MAGIC;
 }
 
 
@@ -83,19 +74,11 @@ int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 		record_ptr = XFS_ALLOC_REC_ADDR(devinfo->mp, block, 1);
 		
 		/* Handle records */
-		uint16_t bb_numrecs = block->bb_numrecs;
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-		bb_numrecs = betole16(bb_numrecs);
-#endif
+		uint16_t bb_numrecs = be16toh(block->bb_numrecs);
+
 		for(int i = 0; i < bb_numrecs; ++i, ++record_ptr) {
-			
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-			sizeb = XFS_AGB_TO_DADDR(devinfo->mp, agno,
-				betole32(record_ptr->ar_startblock)) - begin;
-#else
-			sizeb = XFS_AGB_TO_DADDR(devinfo->mp, agno, record_ptr->ar_startblock)
-				- begin;
-#endif
+			sizeb = XFS_AGB_TO_DADDR(devinfo->mp, agno,	
+				be32toh(record_ptr->ar_startblock)) - begin;
 			to_read = roundup(sizeb << BBSHIFT, devinfo->sector_size);
 
 			write_position = (xfs_off_t) begin << BBSHIFT;
@@ -127,19 +110,12 @@ int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 		}
 
 		/* Handle btree */
-		uint32_t bb_rightsib = block->bb_u.s.bb_rightsib;
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-		bb_rightsib = betole32(bb_rightsib);
-#endif
-		if(bb_rightsib == NULLAGBLOCK) break;
+		uint32_t bb_rightsib = be32toh(block->bb_u.s.bb_rightsib);
 
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+		if(bb_rightsib == NULLAGBLOCK) break;
+		
 		btree_buf_position = (xfs_off_t)XFS_AGB_TO_DADDR(devinfo->mp, agno,
-			betole32(block->bb_u.s.bb_rightsib)) << BBSHIFT;
-#else
-		btree_buf_position = (xfs_off_t)XFS_AGB_TO_DADDR(devinfo->mp, agno,
-			block->bb_u.s.bb_rightsib) << BBSHIFT;
-#endif
+			be32toh(block->bb_u.s.bb_rightsib)) << BBSHIFT;
 
 		if(lseek(devinfo->fd, btree_buf_position, SEEK_SET) < 0) {
 			error(0, errno, "Error seeking %s (btree pos: %ld)", devinfo->dev,
@@ -301,15 +277,9 @@ int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
 	memmove(btree_buf_data, ag_hdr.xfs_agf, devinfo->sector_size);
 	ag_hdr.xfs_agf = (xfs_agf_t*) btree_buf_data;
 
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-	bno = betole32(ag_hdr.xfs_agf->agf_roots[XFS_BTNUM_BNOi]);
+	bno = be32toh(ag_hdr.xfs_agf->agf_roots[XFS_BTNUM_BNOi]);
 	ag_end = XFS_AGB_TO_DADDR(devinfo->mp, agno, 
-		betole32(ag_hdr.xfs_agf->agf_length) - 1) + devinfo->block_size / BBSIZE;
-#else
-	bno = ag_hdr.xfs_agf->agf_roots[XFS_BTNUM_BNOi];
-	ag_end = XFS_AGB_TO_DADDR(devinfo->mp, agno,
-		ag_hdr.xfs_agf->agf_length - 1) + devinfo->block_size / BBSIZE;
-#endif
+		be32toh(ag_hdr.xfs_agf->agf_length) - 1) + devinfo->block_size / BBSIZE;
 
 	for(uint32_t current_level = 1;; ++current_level) {
 		uint16_t bb_level;
@@ -331,22 +301,14 @@ int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
 			goto out;
 		}
 		block = (struct xfs_btree_block*) btree_buf_data;
-
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-		bb_level = betole16(block->bb_level);
-#else
-		bb_level = block->bb_level;
-#endif
+		bb_level = be16toh(block->bb_level);
 
 		if(bb_level == 0) break;
+		
 		ptr = XFS_ALLOC_PTR_ADDR(devinfo->mp, block, 1,
 			devinfo->mp->m_alloc_mxr[1]);
-
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-		bno = betole32(ptr[0]);
-#else
-		bno = ptr[0];
-#endif
+			
+		bno = be32toh(ptr[0]);
 	}
 
 	ag_begin = (read_ag_position >> BBSHIFT) + (read_ag_length >> BBSHIFT);
