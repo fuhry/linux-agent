@@ -70,7 +70,7 @@ int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 	uint64_t to_read;
 	uint64_t sizeb;
 
-	while(true) {
+	while (true) {
 		record_ptr = XFS_ALLOC_REC_ADDR(devinfo->mp, block, 1);
 		
 		/* Handle records */
