@@ -51,7 +51,7 @@ int xfs_has_identifier(int fd) {
 
 
 /** Parses blocks with in an allocation group (records, btree, journal, etc) */
-int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
+static int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 	xfs_daddr_t ag_end, struct xfs_btree_block* initial_block,
 	struct xfs_device_info *devinfo, int (*callback)(int fd, uint64_t length,
 	uint64_t offset)) {
@@ -224,7 +224,7 @@ out:
 
 
 /** Parse a given allocation group then call function to read the contents */
-int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
+static int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
 	int (*callback)(int fd, uint64_t length, uint64_t offset)) {
 	int rc = 0;
 
