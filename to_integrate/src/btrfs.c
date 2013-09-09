@@ -17,12 +17,12 @@ int btrfs_has_identifier(int fd) {
 	struct btrfs_super_block super;
 	
 	/* Seek to superblock */
-	if(lseek(fd, BTRFS_SUPERBLOCK_LOC, SEEK_SET) < 0) {
+	if (lseek(fd, BTRFS_SUPERBLOCK_LOC, SEEK_SET) < 0) {
 		return false;
 	}
 	
 	/* Read superblock into struct */
-	if(read(fd, &super, sizeof(super)) < 0) {
+	if (read(fd, &super, sizeof(super)) < 0) {
 		return false;
 	}
 	
@@ -36,7 +36,7 @@ int btrfs_iter_blocks(const char *dev,
 	struct btrfs_path *path = NULL;
 	
 	radix_tree_init();
-	if(!(root = open_ctree(dev, 0, 0))) {
+	if (!(root = open_ctree(dev, 0, 0))) {
 		error(0, errno, "Unable to open %s as btrfs", dev);
 		goto out;
 	}	
@@ -45,10 +45,10 @@ int btrfs_iter_blocks(const char *dev,
 	/* TODO: iterate */
 
 out:
-	if(path) {
+	if (path) {
 		btrfs_free_path(path);
 	}
-	if(root) {
+	if (root) {
 		close_ctree(root);
 	}
 	return rc;

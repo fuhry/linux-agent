@@ -38,12 +38,12 @@ int xfs_has_identifier(int fd) {
 	xfs_sb_t super;
 
 	/* Seek to superblock */
-	if(lseek(fd, XFS_SUPERBLOCK_LOC, SEEK_SET) < 0) {
+	if (lseek(fd, XFS_SUPERBLOCK_LOC, SEEK_SET) < 0) {
 		return false;
 	}
 
 	/* Read superblock into struct */
-	if(read(fd, &super, sizeof(super)) < 0) {
+	if (read(fd, &super, sizeof(super)) < 0) {
 		return false;
 	}
 	return be32toh(super.sb_magicnum) == XFS_SB_MAGIC;
@@ -76,14 +76,14 @@ int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 		/* Handle records */
 		uint16_t bb_numrecs = be16toh(block->bb_numrecs);
 
-		for(int i = 0; i < bb_numrecs; ++i, ++record_ptr) {
+		for (int i = 0; i < bb_numrecs; ++i, ++record_ptr) {
 			sizeb = XFS_AGB_TO_DADDR(devinfo->mp, agno,	
 				be32toh(record_ptr->ar_startblock)) - begin;
 			to_read = roundup(sizeb << BBSHIFT, devinfo->sector_size);
 
 			write_position = (xfs_off_t) begin << BBSHIFT;
 			while (to_read > 0) {
-				if(to_read > MAX_WRITE_BLOCK_LENGTH) {
+				if (to_read > MAX_WRITE_BLOCK_LENGTH) {
 					write_block_length = MAX_WRITE_BLOCK_LENGTH;
 					to_read -= MAX_WRITE_BLOCK_LENGTH;
 				} else {
@@ -91,7 +91,7 @@ int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 					to_read = 0;
 				}
 				
-				if(lseek(devinfo->fd, write_position, SEEK_SET) < 0) {
+				if (lseek(devinfo->fd, write_position, SEEK_SET) < 0) {
 					error(0, errno, "Error seeking %s (w position: %ld)", devinfo->dev,
 						write_position);
 					goto out;
@@ -100,7 +100,7 @@ int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 				callback(devinfo->fd, write_block_length, write_position);
 				rc += write_block_length;
 
-				if(lseek(devinfo->fd, write_block_length, SEEK_CUR) < 0) {
+				if (lseek(devinfo->fd, write_block_length, SEEK_CUR) < 0) {
 					error(0, errno, "Error seeking %s (w length: %d)", devinfo->dev,
 						write_block_length);
 					goto out;
@@ -112,12 +112,14 @@ int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 		/* Handle btree */
 		uint32_t bb_rightsib = be32toh(block->bb_u.s.bb_rightsib);
 
-		if(bb_rightsib == NULLAGBLOCK) break;
+		if (bb_rightsib == NULLAGBLOCK) {
+			break;
+		}
 		
 		btree_buf_position = (xfs_off_t)XFS_AGB_TO_DADDR(devinfo->mp, agno,
 			be32toh(block->bb_u.s.bb_rightsib)) << BBSHIFT;
 
-		if(lseek(devinfo->fd, btree_buf_position, SEEK_SET) < 0) {
+		if (lseek(devinfo->fd, btree_buf_position, SEEK_SET) < 0) {
 			error(0, errno, "Error seeking %s (btree pos: %ld)", devinfo->dev,
 				btree_buf_position);
 			goto out;
@@ -126,14 +128,14 @@ int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 		callback(devinfo->fd, devinfo->block_size, btree_buf_position);
 		rc += devinfo->block_size;
 
-		if(read(devinfo->fd, btree_buf_data, devinfo->block_size) < 0) {
+		if (read(devinfo->fd, btree_buf_data, devinfo->block_size) < 0) {
 			error(0, errno, "Error reading %s (btree pos: %ld)", devinfo->dev,
 				btree_buf_position);
 			goto out;
 		}
 		block = (struct xfs_btree_block*) btree_buf_data;
 
-		if(begin < ag_end) {
+		if (begin < ag_end) {
 			sizeb = ag_end - begin;
 			to_read = roundup(sizeb << BBSHIFT, devinfo->sector_size);
 			write_position = (xfs_off_t) begin << BBSHIFT;
@@ -147,7 +149,7 @@ int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 					to_read = 0;
 				}
 
-				if(lseek(devinfo->fd, write_position, SEEK_SET) < 0) {
+				if (lseek(devinfo->fd, write_position, SEEK_SET) < 0) {
 					error(0, errno, "Error seeking %s (w pos: %ld)", devinfo->dev,
 						write_position);
 					goto out;
@@ -156,7 +158,7 @@ int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 				callback(devinfo->fd, write_block_length, write_position);
 				rc += write_block_length;
 
-				if(lseek(devinfo->fd, write_block_length, SEEK_CUR) < 0) {
+				if (lseek(devinfo->fd, write_block_length, SEEK_CUR) < 0) {
 					error(0, errno, "Error seeking %s (w length: %d)", devinfo->dev,
 						write_block_length);
 					goto out;
@@ -172,8 +174,8 @@ int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 		int journal_log_start_pos = rounddown(journal_log_start,
 			(xfs_off_t) JOURNAL_LOG_LENGTH);
 			
-		if(journal_log_start % JOURNAL_LOG_LENGTH) {
-			if(lseek(devinfo->fd, journal_log_start_pos, SEEK_SET) < 0) {
+		if (journal_log_start % JOURNAL_LOG_LENGTH) {
+			if (lseek(devinfo->fd, journal_log_start_pos, SEEK_SET) < 0) {
 				error(0, errno, "Error seeking %s (journal_log_start_pos: %d)",
 					devinfo->dev, journal_log_start_pos);
 				goto out;
@@ -182,7 +184,7 @@ int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 			callback(devinfo->fd, JOURNAL_LOG_LENGTH, journal_log_start_pos);
 			rc += JOURNAL_LOG_LENGTH;
 
-			if(lseek(devinfo->fd, JOURNAL_LOG_LENGTH, SEEK_CUR) < 0) {
+			if (lseek(devinfo->fd, JOURNAL_LOG_LENGTH, SEEK_CUR) < 0) {
 				error(0, errno, "Error seeking %s (loglength: %d)", devinfo->dev,
 					JOURNAL_LOG_LENGTH);
 				goto out;
@@ -196,8 +198,8 @@ int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 		int journal_log_end_pos = rounddown(journal_log_end,
 			(xfs_off_t) JOURNAL_LOG_LENGTH);
 			
-		if(journal_log_end % JOURNAL_LOG_LENGTH) { 
-			if(lseek(devinfo->fd, journal_log_end_pos, SEEK_SET) < 0) {
+		if (journal_log_end % JOURNAL_LOG_LENGTH) { 
+			if (lseek(devinfo->fd, journal_log_end_pos, SEEK_SET) < 0) {
 				error(0, errno, "Error seeking %s (journal_log_start_pos: %d)",
 					devinfo->dev, journal_log_start_pos);
 				goto out;
@@ -206,7 +208,7 @@ int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 			callback(devinfo->fd, JOURNAL_LOG_LENGTH, journal_log_end_pos);
 			rc += JOURNAL_LOG_LENGTH;
 
-			if(lseek(devinfo->fd, JOURNAL_LOG_LENGTH, SEEK_CUR) < 0) {
+			if (lseek(devinfo->fd, JOURNAL_LOG_LENGTH, SEEK_CUR) < 0) {
 				error(0, errno, "Error seeking %s (loglength: %d)", devinfo->dev,
 					JOURNAL_LOG_LENGTH);
 				goto out;
@@ -214,7 +216,9 @@ int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 		}
 	}
 out:
-	if(btree_buf_data) free(btree_buf_data);
+	if (btree_buf_data) {
+		free(btree_buf_data);
+	}
 	return rc;
 }
 
@@ -247,7 +251,7 @@ int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
 
 	memset(read_ag_buf, 0, read_ag_length);
 
-	if(lseek(devinfo->fd, read_ag_position, SEEK_SET) < 0) {
+	if (lseek(devinfo->fd, read_ag_position, SEEK_SET) < 0) {
 		error(0, errno, "Error seeking %s (ag position: %ld)",
 			devinfo->dev, read_ag_position);
 		goto out;
@@ -256,7 +260,7 @@ int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
 	callback(devinfo->fd, read_ag_length, read_ag_position);
 	rc += read_ag_length;
 
-	if(read(devinfo->fd, read_ag_buf, read_ag_length) < 0) {
+	if (read(devinfo->fd, read_ag_buf, read_ag_length) < 0) {
 		error(0, errno, "Error reading %s (ag position: %ld)",
 			devinfo->dev, read_ag_position);
 		goto out;
@@ -281,12 +285,12 @@ int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
 	ag_end = XFS_AGB_TO_DADDR(devinfo->mp, agno, 
 		be32toh(ag_hdr.xfs_agf->agf_length) - 1) + devinfo->block_size / BBSIZE;
 
-	for(uint32_t current_level = 1;; ++current_level) {
+	for (uint32_t current_level = 1;; ++current_level) {
 		uint16_t bb_level;
 		btree_buf_position = (xfs_off_t) XFS_AGB_TO_DADDR(devinfo->mp, agno, bno)
 			<< BBSHIFT;
 
-		if(lseek(devinfo->fd, btree_buf_position, SEEK_SET) < 0) {
+		if (lseek(devinfo->fd, btree_buf_position, SEEK_SET) < 0) {
 			error(0, errno, "Error seeking %s (btree position: %ld)", devinfo->dev,
 				btree_buf_position);
 			goto out;
@@ -295,7 +299,7 @@ int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
 		callback(devinfo->fd, devinfo->block_size, btree_buf_position);
 		rc += devinfo->block_size;
 
-		if(read(devinfo->fd, btree_buf_data, devinfo->block_size) < 0) {
+		if (read(devinfo->fd, btree_buf_data, devinfo->block_size) < 0) {
 			error(0, errno, "Error reading %s (btree position: %ld)", devinfo->dev,
 				btree_buf_position);
 			goto out;
@@ -303,7 +307,9 @@ int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
 		block = (struct xfs_btree_block*) btree_buf_data;
 		bb_level = be16toh(block->bb_level);
 
-		if(bb_level == 0) break;
+		if (bb_level == 0) {
+			break;
+		}
 		
 		ptr = XFS_ALLOC_PTR_ADDR(devinfo->mp, block, 1,
 			devinfo->mp->m_alloc_mxr[1]);
@@ -317,9 +323,15 @@ int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
 		devinfo, callback);
 
 out:
-	if(read_ag_buf) free(read_ag_buf);
-	if(btree_buf_data) free(btree_buf_data);
-	if(ptr) free(ptr);
+	if (read_ag_buf) {
+		free(read_ag_buf);
+	}
+	if(btree_buf_data) {
+		free(btree_buf_data);
+	}
+	if(ptr) {
+		free(ptr);
+	}
 	return rc;
 }
 
@@ -340,7 +352,7 @@ int xfs_iter_blocks(const char *dev,
 	xfs_agnumber_t ag_count;
 
 	int fd = open(dev, O_RDONLY);
-	if(fd < 0) { 
+	if (fd < 0) { 
 		error(0, errno, "Error opening %s", dev);
 		goto out;
 	}
@@ -349,7 +361,7 @@ int xfs_iter_blocks(const char *dev,
 	xargs.isdirect = LIBXFS_DIRECT;
 	xargs.isreadonly = LIBXFS_ISREADONLY;
 	xargs.volname = (char*) dev;
-	if(!libxfs_init(&xargs)) {
+	if (!libxfs_init(&xargs)) {
 		error(0, errno, "Error initializing xfs partition %s", dev);
 		goto out;
 	}
@@ -361,7 +373,7 @@ int xfs_iter_blocks(const char *dev,
 	libxfs_sb_from_disk(super, XFS_BUF_TO_SBP(sbp));
 	mp = libxfs_mount(&mbuf, super, xargs.ddev, xargs.logdev, xargs.rtdev, 1);
 
-	if(!mp || mp->m_sb.sb_inprogress
+	if (!mp || mp->m_sb.sb_inprogress
 		|| !mp->m_sb.sb_logstart || mp->m_sb.sb_rextents) {
 		error(0, errno, "Failed to initialize %s", dev);
 		goto out;
@@ -370,10 +382,10 @@ int xfs_iter_blocks(const char *dev,
 	block_size = mp->m_sb.sb_blocksize;
 	sector_size = mp->m_sb.sb_sectsize;
 
-	if(block_size > sector_size)  {
+	if (block_size > sector_size)  {
 		int leftover = ((XFS_AGFL_DADDR(mp) + 1) * sector_size) % block_size;
 		first_residue = (leftover == 0) ? 0 :  block_size - leftover;
-	} else if(block_size == sector_size) {
+	} else if (block_size == sector_size) {
 		first_residue = 0;
 	} else {
 		error(0, errno, "Fatal: %s block size < sector size", dev);
@@ -392,13 +404,13 @@ int xfs_iter_blocks(const char *dev,
 	devinfo.sector_size = sector_size;
 	devinfo.first_agbno = first_agbno;
 
-	for(xfs_agnumber_t agno = 0; agno < ag_count; ++agno) {
+	for (xfs_agnumber_t agno = 0; agno < ag_count; ++agno) {
 		rc += xfs_iter_allocation_group(agno, &devinfo, callback);
 	}
 
 out:
 	libxfs_device_close(xargs.ddev);  
-	if(fd >= 0) {
+	if (fd >= 0) {
 		close(fd);
 	}
 	return rc;

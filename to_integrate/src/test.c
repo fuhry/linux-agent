@@ -27,27 +27,27 @@ int main(int argc, char *argv[]) {
 	int fstype = -1;
 	
 	int c;
-	while((c = getopt (argc, argv, "i:o:t:")) != -1) {
-		switch(c) {
+	while ((c = getopt (argc, argv, "i:o:t:")) != -1) {
+		switch (c) {
 			case 'i':
 				indev = optarg;
 			break;
 		
 			case 'o':
-				if((outfd = open(optarg, O_WRONLY)) < 0) {
+				if ((outfd = open(optarg, O_WRONLY)) < 0) {
 					fprintf(stderr, "Fatal: Could not open output device %s\n", optarg);
 					return 1;
 				}
 			break;
 		
 			case 't':
-				if(strncmp(optarg, "ext", 3) == 0)
+				if (strncmp(optarg, "ext", 3) == 0)
 					fstype = FS_EXT_T;
-				else if(strncmp(optarg, "xfs", 3) == 0)
+				else if (strncmp(optarg, "xfs", 3) == 0)
 					fstype = FS_XFS_T;
-				else if(strncmp(optarg, "btrfs", 4) == 0)
+				else if (strncmp(optarg, "btrfs", 4) == 0)
 					fstype = FS_BTRFS_T;
-				else if(strncmp(optarg, "reiserfs", 8) == 0)
+				else if (strncmp(optarg, "reiserfs", 8) == 0)
 					fstype = FS_REISERFS_T;
 				else {
 					fprintf(stderr, "Fatal: Invalid filesystem type %s\n", optarg);
@@ -64,12 +64,12 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	
-	if(outfd < 0 || indev == NULL || fstype == -1) {
+	if (outfd < 0 || indev == NULL || fstype == -1) {
 		print_usage(argv[0]);
 		return 1;
 	}
 	
-	if(fs_identify(indev, fstype)) {
+	if (fs_identify(indev, fstype)) {
 		int bytes = fs_iter_blocks(indev, fstype, &test_callback);
 		printf("%d\n", bytes);
 	} else {
@@ -77,7 +77,8 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 		
-	if(outfd)
+	if (outfd) {
 		close(outfd);
+	}
 	return 0;
 }

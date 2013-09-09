@@ -22,12 +22,12 @@ int reiser_has_identifier(int fd) {
 	struct reiserfs_super super;
 	
 	/* Seek to superblock */
-	if(lseek(fd, REISER_SUPERBLOCK_LOC, SEEK_SET) < 0) {
+	if (lseek(fd, REISER_SUPERBLOCK_LOC, SEEK_SET) < 0) {
 		return false;
 	}
 	
 	/* Read superblock into struct */
-	if(read(fd, &super, sizeof(super)) < 0) {
+	if (read(fd, &super, sizeof(super)) < 0) {
 		return false;
 	}
 	
@@ -48,17 +48,17 @@ int reiser_iter_blocks(const char *dev,
 	reiserfs_tree_t *tree;
 	
 	int fd = open(dev, O_RDONLY);
-	if(fd < 0) { 
+	if (fd < 0) { 
 		error(0, errno, "Error opening %s", dev);
 		goto out;
 	}	
 	
-	if(!(dal = (dal_t*) file_dal_open(dev, DEFAULT_BLOCK_SIZE, O_RDONLY))) {
+	if (!(dal = (dal_t*) file_dal_open(dev, DEFAULT_BLOCK_SIZE, O_RDONLY))) {
 		error(0, errno, "Couldn't create device abstraction for %s", dev);
 		goto out;
 	}
 	
-	if(!(fs = reiserfs_fs_open(dal, dal))) {
+	if (!(fs = reiserfs_fs_open(dal, dal))) {
 		error(0, errno, "Unable to open %s as reiserfs", dev);
 		goto out;
 	}
@@ -68,10 +68,10 @@ int reiser_iter_blocks(const char *dev,
 	tree = reiserfs_fs_tree(fs);
 	fs_bitmap = tree->fs->bitmap;
 	
-	for(int i = 0; i < fs->super->s_v1.sb_block_count; ++i) {
-		if(reiserfs_tools_test_bit(i, fs_bitmap->bm_map)) {
+	for (int i = 0; i < fs->super->s_v1.sb_block_count; ++i) {
+		if (reiserfs_tools_test_bit(i, fs_bitmap->bm_map)) {
 			seek_amnt = (i * block_size);
-			if(lseek(fd, seek_amnt, SEEK_SET) < 0) {
+			if (lseek(fd, seek_amnt, SEEK_SET) < 0) {
 				error(0, errno, "Error seeking %s (Block: %d)", dev, i);
 				goto out;
 			}
@@ -81,13 +81,13 @@ int reiser_iter_blocks(const char *dev,
 	}
 
 out:
-	if(fd >= 0) {
+	if (fd >= 0) {
 		close(fd);
 	}
-	if(fs) {
+	if (fs) {
 		reiserfs_fs_close(fs);
 	}
-	if(dal) {
+	if (dal) {
 		file_dal_close(dal);
 	}
 	return rc;
