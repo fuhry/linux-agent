@@ -326,10 +326,10 @@ out:
 	if (read_ag_buf) {
 		free(read_ag_buf);
 	}
-	if(btree_buf_data) {
+	if (btree_buf_data) {
 		free(btree_buf_data);
 	}
-	if(ptr) {
+	if (ptr) {
 		free(ptr);
 	}
 	return rc;
