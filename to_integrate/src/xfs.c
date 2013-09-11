@@ -35,7 +35,8 @@ struct xfs_device_info {
 	struct xfs_btree_block *current_block;
 };
 
-int xfs_has_identifier(int fd) {
+int xfs_has_identifier(int fd)
+{
 	xfs_sb_t super;
 
 	/* Seek to superblock */
@@ -52,24 +53,28 @@ int xfs_has_identifier(int fd) {
 
 
 /** Handles an allocation group (ag)'s record data */
-static int xfs_handle_allocation_group_record(int agno, 
-	struct xfs_device_info *devinfo, xfs_daddr_t ag_begin, xfs_daddr_t ag_end,
-	int (*callback)(int fd, uint64_t length, uint64_t offset)) {
-	
+static int xfs_handle_allocation_group_record(int agno,
+                struct xfs_device_info *devinfo, xfs_daddr_t ag_begin,
+                xfs_daddr_t ag_end,
+                int (*callback)(int fd, uint64_t length, uint64_t offset))
+{
+
 	int rc = 0;
 	int write_block_length = 0;
 	uint16_t num_records = be16toh(devinfo->current_block->bb_numrecs);
 	uint64_t sizeb;
 	uint64_t to_read;
 	xfs_off_t write_position;
-	
+
+	//Get record pointer for block
 	xfs_alloc_rec_t *record_ptr = XFS_ALLOC_REC_ADDR(devinfo->mp,
-		devinfo->current_block, 1); //Get record pointer for block
-	
+	                              devinfo->current_block, 1); 
+
 	//Iterate over all records, and read fully with callback
-	for (int i = 0; i < num_records; ++i, ++record_ptr) { 
+	for (int i = 0; i < num_records; ++i, ++record_ptr) {
 		sizeb = XFS_AGB_TO_DADDR(devinfo->mp, agno,
-			be32toh(record_ptr->ar_startblock)) - ag_begin;
+		                         be32toh(record_ptr->ar_startblock))
+		                         - ag_begin;
 		to_read = roundup(sizeb << BBSHIFT, devinfo->sector_size);
 
 		write_position = (xfs_off_t) ag_begin << BBSHIFT;
@@ -81,10 +86,10 @@ static int xfs_handle_allocation_group_record(int agno,
 				write_block_length = to_read;
 				to_read = 0;
 			}
-				
+
 			if (lseek(devinfo->fd, write_position, SEEK_SET) < 0) {
-				error(0, errno, "Error seeking %s (w position: %ld)", devinfo->dev,
-					write_position);
+				error(0, errno, "Error seeking %s (w position: %ld)", 
+				      devinfo->dev, write_position);
 				goto out;
 			}
 
@@ -92,8 +97,8 @@ static int xfs_handle_allocation_group_record(int agno,
 			rc += write_block_length;
 
 			if (lseek(devinfo->fd, write_block_length, SEEK_CUR) < 0) {
-				error(0, errno, "Error seeking %s (w length: %d)", devinfo->dev,
-					write_block_length);
+				error(0, errno, "Error seeking %s (w length: %d)",
+				      devinfo->dev, write_block_length);
 				goto out;
 			}
 			write_position += write_block_length;
@@ -106,28 +111,31 @@ out:
 
 /** Handles an allocation group (ag)'s btree data */
 static int xfs_handle_allocation_group_btree(int agno,
-	struct xfs_device_info *devinfo, xfs_daddr_t ag_begin, xfs_daddr_t ag_end,
-	int (*callback)(int fd, uint64_t length, uint64_t offset)) {
+                struct xfs_device_info *devinfo, xfs_daddr_t ag_begin,
+                xfs_daddr_t ag_end,
+                int (*callback)(int fd, uint64_t length, uint64_t offset))
+{
 	int rc = 0;
 	int write_block_length = 0;
 	uint32_t bb_rightsib = be32toh(devinfo->current_block->bb_u.s.bb_rightsib);
 	uint64_t sizeb;
-	uint64_t to_read;	
+	uint64_t to_read;
 	xfs_off_t write_position;
 	void *btree_buf_data = NULL;
-	
+
 	if (bb_rightsib == NULLAGBLOCK) { //Are we at the end of the btree?
 		return -1; //This will cause the caller to terminate
 	}
-	
-	btree_buf_data = malloc(devinfo->block_size);	
+
+	btree_buf_data = malloc(devinfo->block_size);
 	// Locate the btree's first block and callback on it
-	xfs_off_t btree_buf_position = (xfs_off_t)XFS_AGB_TO_DADDR(devinfo->mp, agno,
-		be32toh(devinfo->current_block->bb_u.s.bb_rightsib)) << BBSHIFT;
+	xfs_off_t btree_buf_position = (xfs_off_t)XFS_AGB_TO_DADDR(devinfo->mp,
+	                               agno,
+	                               be32toh(devinfo->current_block->bb_u.s.bb_rightsib)) << BBSHIFT;
 
 	if (lseek(devinfo->fd, btree_buf_position, SEEK_SET) < 0) {
 		error(0, errno, "Error seeking %s (btree pos: %ld)", devinfo->dev,
-		btree_buf_position);
+		      btree_buf_position);
 		goto out;
 	}
 
@@ -136,10 +144,10 @@ static int xfs_handle_allocation_group_btree(int agno,
 
 	if (read(devinfo->fd, btree_buf_data, devinfo->block_size) < 0) {
 		error(0, errno, "Error reading %s (btree pos: %ld)", devinfo->dev,
-		btree_buf_position);
+		      btree_buf_position);
 		goto out;
 	}
-	
+
 	//Set the current block to the next block
 	devinfo->current_block = (struct xfs_btree_block*) btree_buf_data;
 
@@ -158,8 +166,8 @@ static int xfs_handle_allocation_group_btree(int agno,
 			}
 
 			if (lseek(devinfo->fd, write_position, SEEK_SET) < 0) {
-				error(0, errno, "Error seeking %s (w pos: %ld)", devinfo->dev,
-					write_position);
+				error(0, errno, "Error seeking %s (w pos: %ld)",
+				      devinfo->dev, write_position);
 				goto out;
 			}
 
@@ -167,8 +175,8 @@ static int xfs_handle_allocation_group_btree(int agno,
 			rc += write_block_length;
 
 			if (lseek(devinfo->fd, write_block_length, SEEK_CUR) < 0) {
-				error(0, errno, "Error seeking %s (w length: %d)", devinfo->dev,
-					write_block_length);
+				error(0, errno, "Error seeking %s (w length: %d)",
+				      devinfo->dev, write_block_length);
 				goto out;
 			}
 			write_position += write_block_length;
@@ -184,18 +192,19 @@ out:
 
 /** Handles an allocation group (ag)'s journal data */
 static int xfs_handle_allocation_group_journal(struct xfs_device_info *devinfo,
-	int (*callback)(int fd, uint64_t length, uint64_t offset)) {
+                int (*callback)(int fd, uint64_t length, uint64_t offset))
+{
 	int rc = 0;
 	int journal_log_start = XFS_FSB_TO_DADDR(devinfo->mp,
-		devinfo->mp->m_sb.sb_logstart) << BBSHIFT;
-		
+	                        devinfo->mp->m_sb.sb_logstart) << BBSHIFT;
+
 	int journal_log_start_pos = rounddown(journal_log_start,
-		(xfs_off_t) JOURNAL_LOG_LENGTH);
-		
+	                                      (xfs_off_t) JOURNAL_LOG_LENGTH);
+
 	if (journal_log_start % JOURNAL_LOG_LENGTH) {
 		if (lseek(devinfo->fd, journal_log_start_pos, SEEK_SET) < 0) {
 			error(0, errno, "Error seeking %s (journal_log_start_pos: %d)",
-				devinfo->dev, journal_log_start_pos);
+			      devinfo->dev, journal_log_start_pos);
 			goto out;
 		}
 
@@ -203,23 +212,23 @@ static int xfs_handle_allocation_group_journal(struct xfs_device_info *devinfo,
 		rc += JOURNAL_LOG_LENGTH;
 
 		if (lseek(devinfo->fd, JOURNAL_LOG_LENGTH, SEEK_CUR) < 0) {
-			error(0, errno, "Error seeking %s (loglength: %d)", devinfo->dev,
-				JOURNAL_LOG_LENGTH);
+			error(0, errno, "Error seeking %s (loglength: %d)",
+			      devinfo->dev, JOURNAL_LOG_LENGTH);
 			goto out;
 		}
 	}
 
 	int journal_log_end = (XFS_FSB_TO_DADDR(devinfo->mp,
-		devinfo->mp->m_sb.sb_logstart) << BBSHIFT) +
-		XFS_FSB_TO_B(devinfo->mp, devinfo->mp->m_sb.sb_logblocks);
-		
+	                                        devinfo->mp->m_sb.sb_logstart) << BBSHIFT) +
+	                      XFS_FSB_TO_B(devinfo->mp, devinfo->mp->m_sb.sb_logblocks);
+
 	int journal_log_end_pos = rounddown(journal_log_end,
-		(xfs_off_t) JOURNAL_LOG_LENGTH);
-		
-	if (journal_log_end % JOURNAL_LOG_LENGTH) { 
+	                                    (xfs_off_t) JOURNAL_LOG_LENGTH);
+
+	if (journal_log_end % JOURNAL_LOG_LENGTH) {
 		if (lseek(devinfo->fd, journal_log_end_pos, SEEK_SET) < 0) {
 			error(0, errno, "Error seeking %s (journal_log_start_pos: %d)",
-				devinfo->dev, journal_log_start_pos);
+			      devinfo->dev, journal_log_start_pos);
 			goto out;
 		}
 
@@ -227,8 +236,8 @@ static int xfs_handle_allocation_group_journal(struct xfs_device_info *devinfo,
 		rc += JOURNAL_LOG_LENGTH;
 
 		if (lseek(devinfo->fd, JOURNAL_LOG_LENGTH, SEEK_CUR) < 0) {
-			error(0, errno, "Error seeking %s (loglength: %d)", devinfo->dev,
-				JOURNAL_LOG_LENGTH);
+			error(0, errno, "Error seeking %s (loglength: %d)", 
+			      devinfo->dev, JOURNAL_LOG_LENGTH);
 			goto out;
 		}
 	}
@@ -238,20 +247,21 @@ out:
 
 
 /** Parses blocks with in an allocation group (records, btree, journal, etc) */
-static int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin, 
-	xfs_daddr_t ag_end, struct xfs_device_info *devinfo,
-	int (*callback)(int fd, uint64_t length, uint64_t offset)) {
-	
+static int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
+                xfs_daddr_t ag_end, struct xfs_device_info *devinfo,
+                int (*callback)(int fd, uint64_t length, uint64_t offset))
+{
+
 	int rc = 0;
 	int btree_rc = 0;
 	while (true) {
 		/* Handle records */
-		rc += xfs_handle_allocation_group_record(agno, devinfo, 
-			ag_begin, ag_end, callback);
+		rc += xfs_handle_allocation_group_record(agno, devinfo,
+		                ag_begin, ag_end, callback);
 
 		/* Handle btree */
-		btree_rc = xfs_handle_allocation_group_btree(agno, devinfo, 
-			ag_begin, ag_end, callback);
+		btree_rc = xfs_handle_allocation_group_btree(agno, devinfo,
+		                ag_begin, ag_end, callback);
 		if (btree_rc == -1) { //Was I told to break?
 			break;
 		} else {
@@ -268,7 +278,8 @@ static int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
 
 /** Parse a given allocation group then call function to read the contents */
 static int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
-	int (*callback)(int fd, uint64_t length, uint64_t offset)) {
+                                     int (*callback)(int fd, uint64_t length, uint64_t offset))
+{
 	int rc = 0;
 
 	ag_header_t ag_hdr;
@@ -280,11 +291,11 @@ static int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
 	void *btree_buf_data = NULL;
 	xfs_off_t btree_buf_position;
 
-	xfs_agblock_t bno;	
+	xfs_agblock_t bno;
 	xfs_daddr_t ag_begin = 0;
 	xfs_daddr_t ag_end = 0;
 	xfs_alloc_ptr_t *ptr = NULL;
-	
+
 	read_ag_off = XFS_AG_DADDR(devinfo->mp, agno, XFS_SB_DADDR);
 	read_ag_length = devinfo->first_agbno * devinfo->block_size;
 	read_ag_position = (xfs_off_t) read_ag_off * (xfs_off_t) BBSIZE;
@@ -294,7 +305,7 @@ static int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
 
 	if (lseek(devinfo->fd, read_ag_position, SEEK_SET) < 0) {
 		error(0, errno, "Error seeking %s (ag position: %ld)",
-			devinfo->dev, read_ag_position);
+		      devinfo->dev, read_ag_position);
 		goto out;
 	}
 
@@ -303,19 +314,19 @@ static int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
 
 	if (read(devinfo->fd, read_ag_buf, read_ag_length) < 0) {
 		error(0, errno, "Error reading %s (ag position: %ld)",
-			devinfo->dev, read_ag_position);
+		      devinfo->dev, read_ag_position);
 		goto out;
 	}
 
 	ag_hdr.xfs_sb = (xfs_dsb_t*) (read_ag_buf);
 	ag_hdr.xfs_agf = (xfs_agf_t*) ((char*) read_ag_buf +
-		devinfo->sector_size);
-		
+	                               devinfo->sector_size);
+
 	ag_hdr.xfs_agi = (xfs_agi_t*) ((char*) read_ag_buf +
-		2 * devinfo->sector_size);
-		
+	                               2 * devinfo->sector_size);
+
 	ag_hdr.xfs_agfl = (xfs_agfl_t*) ((char*) read_ag_buf +
-		3 * devinfo->sector_size);
+	                                 3 * devinfo->sector_size);
 
 	btree_buf_data = malloc(devinfo->block_size);
 	memset(btree_buf_data, 0, devinfo->block_size);
@@ -323,17 +334,18 @@ static int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
 	ag_hdr.xfs_agf = (xfs_agf_t*) btree_buf_data;
 
 	bno = be32toh(ag_hdr.xfs_agf->agf_roots[XFS_BTNUM_BNOi]);
-	ag_end = XFS_AGB_TO_DADDR(devinfo->mp, agno, 
-		be32toh(ag_hdr.xfs_agf->agf_length) - 1) + devinfo->block_size / BBSIZE;
+	ag_end = XFS_AGB_TO_DADDR(devinfo->mp, agno,
+	                          be32toh(ag_hdr.xfs_agf->agf_length) - 1) +
+	                          devinfo->block_size / BBSIZE;
 
 	for (uint32_t current_level = 1;; ++current_level) {
 		uint16_t bb_level;
 		btree_buf_position = (xfs_off_t) XFS_AGB_TO_DADDR(devinfo->mp, agno, bno)
-			<< BBSHIFT;
+		                     << BBSHIFT;
 
 		if (lseek(devinfo->fd, btree_buf_position, SEEK_SET) < 0) {
-			error(0, errno, "Error seeking %s (btree position: %ld)", devinfo->dev,
-				btree_buf_position);
+			error(0, errno, "Error seeking %s (btree position: %ld)", 
+			      devinfo->dev, btree_buf_position);
 			goto out;
 		}
 
@@ -341,8 +353,8 @@ static int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
 		rc += devinfo->block_size;
 
 		if (read(devinfo->fd, btree_buf_data, devinfo->block_size) < 0) {
-			error(0, errno, "Error reading %s (btree position: %ld)", devinfo->dev,
-				btree_buf_position);
+			error(0, errno, "Error reading %s (btree position: %ld)",
+			      devinfo->dev, btree_buf_position);
 			goto out;
 		}
 		devinfo->current_block = (struct xfs_btree_block*) btree_buf_data;
@@ -351,17 +363,17 @@ static int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
 		if (bb_level == 0) {
 			break;
 		}
-		
+
 		ptr = XFS_ALLOC_PTR_ADDR(devinfo->mp, devinfo->current_block, 1,
-			devinfo->mp->m_alloc_mxr[1]);
-			
+		                         devinfo->mp->m_alloc_mxr[1]);
+
 		bno = be32toh(ptr[0]);
 	}
 
 	ag_begin = (read_ag_position >> BBSHIFT) + (read_ag_length >> BBSHIFT);
-	
+
 	rc += xfs_iter_allocation_group_blocks(agno, ag_begin, ag_end, devinfo,
-		callback);
+	                                       callback);
 
 out:
 	if (read_ag_buf) {
@@ -377,9 +389,9 @@ out:
 }
 
 
-int xfs_iter_blocks(const char *dev, 
-	int (*callback)(int fd, uint64_t length, uint64_t offset)) {
-	
+int xfs_iter_blocks(const char *dev,
+                    int (*callback)(int fd, uint64_t length, uint64_t offset))
+{
 	int rc = 0;
 	libxfs_init_t xargs;
 	xfs_mount_t *mp;
@@ -393,7 +405,7 @@ int xfs_iter_blocks(const char *dev,
 	xfs_agnumber_t ag_count;
 
 	int fd = open(dev, O_RDONLY);
-	if (fd < 0) { 
+	if (fd < 0) {
 		error(0, errno, "Error opening %s", dev);
 		goto out;
 	}
@@ -415,7 +427,7 @@ int xfs_iter_blocks(const char *dev,
 	mp = libxfs_mount(&mbuf, super, xargs.ddev, xargs.logdev, xargs.rtdev, 1);
 
 	if (!mp || mp->m_sb.sb_inprogress
-		|| !mp->m_sb.sb_logstart || mp->m_sb.sb_rextents) {
+	                || !mp->m_sb.sb_logstart || mp->m_sb.sb_rextents) {
 		error(0, errno, "Failed to initialize %s", dev);
 		goto out;
 	}
@@ -432,9 +444,9 @@ int xfs_iter_blocks(const char *dev,
 		error(0, errno, "Fatal: %s block size < sector size", dev);
 		goto out;
 	}
-	 
+
 	first_agbno = (((XFS_AGFL_DADDR(mp) + 1) * sector_size) + first_residue)
-		/ block_size;
+	              / block_size;
 	ag_count = mp->m_sb.sb_agcount;
 
 	struct xfs_device_info devinfo;
@@ -445,13 +457,13 @@ int xfs_iter_blocks(const char *dev,
 	devinfo.sector_size = sector_size;
 	devinfo.first_agbno = first_agbno;
 	devinfo.current_block = 0;
-	
+
 	for (xfs_agnumber_t agno = 0; agno < ag_count; ++agno) {
 		rc += xfs_iter_allocation_group(agno, &devinfo, callback);
 	}
 
 out:
-	libxfs_device_close(xargs.ddev);  
+	libxfs_device_close(xargs.ddev);
 	if (fd >= 0) {
 		close(fd);
 	}

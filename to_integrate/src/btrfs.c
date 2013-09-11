@@ -13,35 +13,37 @@
 
 #define BTRFS_SUPERBLOCK_LOC 0x10000
 
-int btrfs_has_identifier(int fd) {
+int btrfs_has_identifier(int fd)
+{
 	struct btrfs_super_block super;
-	
+
 	/* Seek to superblock */
 	if (lseek(fd, BTRFS_SUPERBLOCK_LOC, SEEK_SET) < 0) {
 		return false;
 	}
-	
+
 	/* Read superblock into struct */
 	if (read(fd, &super, sizeof(super)) < 0) {
 		return false;
 	}
-	
+
 	return super.magic == BTRFS_MAGIC;
 }
 
 int btrfs_iter_blocks(const char *dev,
-	int (*callback)(int fd, uint64_t length, uint64_t offset)) {
+                      int (*callback)(int fd, uint64_t length, uint64_t offset))
+{
 	int rc = 0;
 	struct btrfs_root *root = NULL;
 	struct btrfs_path *path = NULL;
-	
+
 	radix_tree_init();
 	if (!(root = open_ctree(dev, 0, 0))) {
 		error(0, errno, "Unable to open %s as btrfs", dev);
 		goto out;
-	}	
+	}
 	path = btrfs_alloc_path();
-	
+
 	/* TODO: iterate */
 
 out:

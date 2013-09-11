@@ -13,7 +13,8 @@
 #define BTRFS_SIGNATURE 0x0
 
 /**
-	Parses the signature for the filesystem and compares it to the expected result.
+	Parses the signature for the filesystem and compares it to the expected
+	result.
 	Params:  fd - the file descriptor
 	Returns: TRUE on success
 	         FALSE on failure
