@@ -1,0 +1,1 @@
+astyle --indent=tab=8 --style=1tbs --lineend=linux --max-code-length=80 --mode=c < in.c > out.c
