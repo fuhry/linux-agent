@@ -16,11 +16,12 @@ namespace datto_linux_client {
 
 class CpuTracer : private boost::noncopyable {
  public:
-  CpuTracer(std::string &block_dev_path, int cpu_num, std::shared_ptr<IntervalQueue> trace_queue);
+  CpuTracer(std::string &block_dev_name, int cpu_num,
+            TraceHandler &trace_handler); 
   ~CpuTracer();
 
  private:
-  std::shared_ptr<IntervalQueue> trace_queue_;
+  TraceHandler trace_handler_;
 };
 
 }

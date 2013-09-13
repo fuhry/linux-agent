@@ -6,7 +6,10 @@
 
 namespace datto_linux_client {
 
-typedef std::queue<boost::icl::interval<int>> IntervalQueue;
+// Each item in this interval is a *sector* not a block
+typedef boost::icl::interval<uint64_t> TraceInterval;
+
+typedef std::queue<std::shared_ptr<TraceInterval>> TraceIntervalQueue;
 
 }
 

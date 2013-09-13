@@ -12,6 +12,8 @@
 
 #include <stdint.h>
 
+#include "block_trace/interval_queue.h"
+
 namespace datto_linux_client {
 
 static const std::string DEBUG_FS_PATH = "/sys/kernel/debug";
@@ -33,6 +35,9 @@ class DeviceTracer : private boost::noncopyable {
   std::string block_dev_path_;
   int block_dev_fd_;
   int num_cpus_;
+
+  std::shared_ptr<IntervalQueue> interval_queue_;
+  std::mutex queue_mutex_;
 
   std::vector<std::unique_ptr<CpuTracer>> cpu_tracers_;
 

@@ -16,6 +16,10 @@ DeviceTracer::DeviceTracer(const std::string &block_dev_path)
     throw "Unable to open block_dev_path";
   }
 
+  interval_queue_(new IntervalQueue());
+
+  PushEmptyInterval();
+
   num_cpus_ = get_nprocs();
   cpu_tracers_ = std::vector<std::unique_ptr<CpuTracer>>(num_cpus_);
 
@@ -32,7 +36,9 @@ DeviceTracer::DeviceTracer(const std::string &block_dev_path)
   }
 }
 
-void DeviceTracer::PushEmptyInterval() { }
+void DeviceTracer::PushEmptyInterval() {
+  (interval_queue_)->push(std::shared_ptr<TraceInterval>(new TraceInterval()));
+}
 
 void DeviceTracer::SetupBlockTrace() { }
 
