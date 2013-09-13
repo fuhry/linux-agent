@@ -45,7 +45,7 @@ class BlockDevice : private boost::noncopyable {
   // Don't throw if one isn't open
   void Close();
 
-  // Should close the file descriptor
+  // Should close the file descriptor and Unthrottle
   ~BlockDevice();
 
  private:
