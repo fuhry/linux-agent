@@ -23,7 +23,7 @@ class Partition : private boost::noncopyable {
 
   // These will be relative from the start of the partition, not from
   // the start of the volume
-  virtual SectorSet GetInUseSectors() = 0;
+  virtual std::unique_ptr<const SectorSet> GetInUseSectors() = 0;
 
   // Remember to unfreeze(!)
   virtual ~Partition();
