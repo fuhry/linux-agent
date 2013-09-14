@@ -1,10 +1,11 @@
 #ifndef DATTO_CLIENT_UNSYNCED_BLOCK_TRACKER_UNSYNCED_BLOCK_TRACKER_H_
 #define DATTO_CLIENT_UNSYNCED_BLOCK_TRACKER_UNSYNCED_BLOCK_TRACKER_H_
 
-#include <boost/icl/interval_set.hpp>
 #include "unsynced_block_tracker/sector_interval.h"
-#include <stdint.h>
+#include "unsynced_block_tracker/sector_set.h"
+
 #include <mutex>
+#include <stdint.h>
 
 namespace datto_linux_client {
 
@@ -28,7 +29,7 @@ class UnsyncedSectorTracker {
 
   uint64_t NumberUnsynced() const;
  private:
-  boost::icl::interval_set<uint64_t> unsynced_sector_set_;
+  SectorSet unsynced_sector_set_;
   mutable std::mutex sector_set_mutex_ ;
 };
 

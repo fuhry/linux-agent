@@ -1,5 +1,8 @@
 #ifndef DATTO_CLIENT_UNSYNCED_BLOCK_TRACKER_SECTOR_INTERVAL_H_
 #define DATTO_CLIENT_UNSYNCED_BLOCK_TRACKER_SECTOR_INTERVAL_H_
+
+#include <boost/icl/interval.hpp>
+
 namespace datto_linux_client {
 
 // A useful constructor for this is: SectorInterval(start, end);
