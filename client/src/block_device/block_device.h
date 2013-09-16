@@ -24,29 +24,35 @@ class BlockDevice : private boost::noncopyable {
 
   // If the block device needs to seek when reading/writing data.
   // e.g. HDDs need to seek, SSDs do not.
-  bool DoesSeek() const;
+  virtual bool DoesSeek() const;
 
   // BLKGETSIZE64
-  uint64_t DeviceSizeBytes() const;
+  virtual uint64_t DeviceSizeBytes() const;
   // Use BLKSSZGET not BLKBSZGET
-  uint64_t BlockSizeBytes() const;
+  virtual uint64_t BlockSizeBytes() const;
 
   // https://www.kernel.org/doc/Documentation/cgroups/blkio-controller.txt
   // scalar is from 0 to 1, but hopefully not 0
-  void Throttle(double scalar);
-  double throttle_scalar() const;
-  void Unthrottle();
+  virtual void Throttle(double scalar);
+  virtual double throttle_scalar() const;
+  virtual void Unthrottle();
 
   // Return a file descriptor for the block device
   // Throw an exception if one is already open
-  int Open();
+  virtual int Open();
 
   // Close the file descriptor returned
   // Don't throw if one isn't open
-  void Close();
+  virtual void Close();
 
   // Should close the file descriptor
-  ~BlockDevice();
+  virtual ~BlockDevice();
+
+ protected:
+  // Use this constructor when the block_path doesn't exist yet
+  // Note that block_path_, major_, and minor_ must be set before the
+  // subclass constructor returns
+  BlockDevice();
 
  private:
   std::string block_path_;
