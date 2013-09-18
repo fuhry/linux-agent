@@ -36,8 +36,9 @@ int main(int argc, char **argv) {
   cout << "\tDevice Size is " << bd1->DeviceSizeBytes() << endl;
   cout << "\tBlock Size is " << bd1->BlockSizeBytes() << endl;
 
+  int fd;
   try {
-    bd1->Open();
+    fd = bd1->Open();
   }
   catch (BlockDeviceException &e) {
     cerr << "Caught BlockDeviceException while creating opening BlockDevice object:\n";
@@ -46,7 +47,7 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  cout << "\tDevice opened, file descriptor is " << bd1->FileDescriptor() << endl;
+  cout << "\tDevice opened, file descriptor is " << fd << endl;
 
   exit(0);
 

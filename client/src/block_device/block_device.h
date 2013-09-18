@@ -58,10 +58,6 @@ class BlockDevice : private boost::noncopyable {
     return block_size_bytes_;
   }
 
-  int FileDescriptor() const {
-    return file_descriptor_;
-  }
-
   // https://www.kernel.org/doc/Documentation/cgroups/blkio-controller.txt
   // scalar is from 0 to 1, but hopefully not 0
   void Throttle(double scalar);
