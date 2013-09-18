@@ -1,0 +1,29 @@
+# Project Setup
+include ../settings.mk
+CFLAGS =	-std=c99  -Wall -g -Ilibxfs/include -Ilibbtrfs/include -D_GNU_SOURCE
+CXXFLAGS =	-std=c++11 -Wall -g -Ilibxfs/include -Ilibbtrfs/include -D_GNU_SOURCE
+LDFLAGS =	-static -Llibxfs -Llibbtrfs -lxfs -lbtrfs -lext2fs -lreiserfs -lcom_err -ldal -luuid -lblkid -lpthread -lm
+############################################################
+EXDEPS=test.cpp
+
+all: $(EXDEPS)
+	cd libxfs; make
+	cd libbtrfs; make
+	$(CXX) -o $(EXECNAME) $(EXDEPS) $(LDFLAGS)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+clean:
+	cd libxfs; make clean
+	cd libbtrfs; make clean
+	rm -f *.o
+
+cleaner: clean
+	cd libxfs; make cleaner
+	cd libbtrfs; make cleaner
+	rm -f $(EXECNAME)
+
