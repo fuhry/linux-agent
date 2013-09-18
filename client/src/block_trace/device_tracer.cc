@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/sysinfo.h>
+#include <sys/ioctl.h>
 
 namespace datto_linux_client {
 
@@ -17,11 +18,11 @@ DeviceTracer::DeviceTracer(const std::string &block_dev_path,
     throw "Unable to open block_dev_path";
   }
 
-  num_cpus_ = get_nprocs();
+  num_cpus_ = get_nprocs_conf();
   cpu_tracers_ = std::vector<std::unique_ptr<CpuTracer>>(num_cpus_);
 
   try {
-    SetupBlockTrace();
+    BeginBlockTrace();
     for (int i = 0; i < num_cpus_; ++i) {
       std::string trace_path = GetTracePath(i, /* TODO */ "");
 
@@ -35,7 +36,40 @@ DeviceTracer::DeviceTracer(const std::string &block_dev_path,
   }
 }
 
-void DeviceTracer::SetupBlockTrace() { }
+void DeviceTracer::BeginBlockTrace() {
+  struct blk_user_trace_setup blktrace_setup = {};
+
+  blktrace_setup.buf_size = BLKTRACE_BUFFER_SIZE;
+  blktrace_setup.buf_nr = BLKTRACE_NUM_SUBBUFFERS;
+  blktrace_setup.act_mask = BLKTRACE_MASK;
+
+  if (ioctl(block_dev_fd_, BLKTRACESETUP, &blktrace_setup) < 0) {
+    // TODO
+    throw "Unable to setup blocktrace";
+  }
+
+  if (ioctl(block_dev_fd_, BLKTRACESTART) < 0) {
+    // TODO
+    throw "Unable to start blocktrace";
+  }
+
+}
+
+void DeviceTracer::CleanupBlockTrace() {
+  // TODO Should we throw here or just be silent?
+  // Probably throw and let the destructor catch..?
+
+  if (ioctl(block_dev_fd_, BLKTRACESTOP) < 0) {
+    // TODO
+    throw "Unable to stop blocktrace";
+  }
+
+  if (ioctl(block_dev_fd_, BLKTRACETEARDOWN) < 0) {
+    // TODO
+    throw "Unable to teardown blocktrace";
+  }
+
+}
 
 std::string DeviceTracer::GetTracePath(int cpu_num,
                                        std::string block_dev_name) {
@@ -56,6 +90,12 @@ std::string DeviceTracer::GetTracePath(int cpu_num,
   return trace_path;
 }
 
-DeviceTracer::~DeviceTracer() { }
+DeviceTracer::~DeviceTracer() {
+  try {
+    CleanupBlockTrace();
+  } catch (...) {
+    // TODO: Log
+  }
+}
 
 }
