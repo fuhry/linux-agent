@@ -1,10 +1,10 @@
 # Project Setup
 include ../settings.mk
-CFLAGS =	-std=c99  -Wall -g -Ilibxfs/include -Ilibbtrfs/include -D_GNU_SOURCE
-CXXFLAGS =	-std=c++11 -Wall -g -Ilibxfs/include -Ilibbtrfs/include -D_GNU_SOURCE
-LDFLAGS =	-std=c++11 -static -Llibxfs -Llibbtrfs -lxfs -lbtrfs -lext2fs -lreiserfs -lcom_err -ldal -luuid -lblkid -lpthread -lm
+CFLAGS =	-std=c99  -Wall -g -Ilibxfs/include -D_GNU_SOURCE
+CXXFLAGS =	-std=c++11 -Wall -g -Ilibxfs/include -D_GNU_SOURCE
+LDFLAGS =	-std=c++11 -static -Llibxfs -lxfs -lext2fs -lreiserfs -lcom_err -ldal -luuid -lblkid -lpthread -lm
 ############################################################
-EXDEPS=test.cpp
+EXDEPS=test.cpp Partition.cpp EXTFSPartition.cpp
 
 all: $(EXDEPS)
 	cd libxfs; make
