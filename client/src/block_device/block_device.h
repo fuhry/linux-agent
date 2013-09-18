@@ -4,8 +4,15 @@
 #include <boost/noncopyable.hpp>
 #include <boost/cstdint.hpp>
 #include <string>
+#include <stdexcept>
 
 namespace datto_linux_client {
+
+class BlockDeviceException : public std::runtime_error {
+  public: 
+    BlockDeviceException(std::string & what) : runtime_error(what) {};
+};
+
 
 class BlockDevice : private boost::noncopyable {
 
@@ -15,26 +22,54 @@ class BlockDevice : private boost::noncopyable {
   // block_path doesn't exist or isn't the path for a block_device
   explicit BlockDevice(std::string block_path);
 
+  //
+  //  Do the actual initialization of the object
+  //
+  void Init();
+
   // If a method is lowercase, then it is should be just an accessor and
   // nothing more. See
   // google-styleguide.googlecode.com/svn/trunk/cppguide.xml#Function_Names
-  std::string block_path() const;
-  uint32_t major() const;
-  uint32_t minor() const;
+  std::string block_path() const {
+    return block_path_;
+  }
+
+  uint32_t major() const {
+    return major_;
+  };
+
+  uint32_t minor() const {
+    return minor_;
+  }
 
   // If the block device needs to seek when reading/writing data.
   // e.g. HDDs need to seek, SSDs do not.
-  bool DoesSeek() const;
+  bool DoesSeek() const {
+    return does_seek_;
+  }
 
   // BLKGETSIZE64
-  uint64_t DeviceSizeBytes() const;
+  uint64_t DeviceSizeBytes() const {
+    return device_size_bytes_;
+  }
+
   // Use BLKSSZGET not BLKBSZGET
-  uint64_t BlockSizeBytes() const;
+  uint64_t BlockSizeBytes() const {
+    return block_size_bytes_;
+  }
+
+  int FileDescriptor() const {
+    return file_descriptor_;
+  }
 
   // https://www.kernel.org/doc/Documentation/cgroups/blkio-controller.txt
   // scalar is from 0 to 1, but hopefully not 0
   void Throttle(double scalar);
-  double throttle_scalar() const;
+
+  double throttle_scalar() const {
+    return throttle_scalar_;
+  }
+
   void Unthrottle();
 
   // Return a file descriptor for the block device
@@ -49,9 +84,20 @@ class BlockDevice : private boost::noncopyable {
   ~BlockDevice();
 
  private:
+
+  // private method for reading a long from a file
+
+  long read_long_(std::string &filepath) const;
+
+  // properties
+
   std::string block_path_;
   uint32_t major_;
   uint32_t minor_;
+
+  uint64_t device_size_bytes_;
+  uint32_t block_size_bytes_;
+  bool     does_seek_;
 
   double throttle_scalar_;
 
