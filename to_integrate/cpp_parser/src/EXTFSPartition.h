@@ -5,8 +5,9 @@
 
 namespace datto_linux_client {
 
-class EXTFSPartition : private Partition {
+class EXTFSPartition : public Partition {
  public:
+  EXTFSPartition();
   virtual std::unique_ptr<const SectorSet> GetInUseSectors();
  private:
   int ext_iter_blocks(SectorSet *sectors);

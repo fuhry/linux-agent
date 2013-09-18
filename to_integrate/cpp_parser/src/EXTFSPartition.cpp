@@ -2,7 +2,6 @@
 #include "tools.h"
 #include <error.h>
 #include <fcntl.h>
-#include <stdbool.h>
 #include <unistd.h>
 #include <ext2fs/ext2fs.h>
 extern "C" {
@@ -10,6 +9,9 @@ extern "C" {
 }
 
 namespace datto_linux_client {
+  EXTFSPartition::EXTFSPartition() : Partition(NULL) { //TODO: remove this
+  }
+  
   std::unique_ptr<const SectorSet> EXTFSPartition::GetInUseSectors() {
     SectorSet *sectors = new SectorSet();
     EXTFSPartition::ext_iter_blocks(sectors);    
@@ -17,7 +19,7 @@ namespace datto_linux_client {
   }
   
   int EXTFSPartition::ext_iter_blocks(SectorSet *sectors) {
-    const char *dev = this->GetMountPoint().c_str();
+    const char *dev = "/dev/sdb3"; //this->GetMountPoint().c_str(); //TODO: Testing
     int rc = 0;
     int block_size, bitmap_size;
     ext2_filsys fs = NULL;

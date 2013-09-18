@@ -4,7 +4,7 @@ CFLAGS =	-std=c99  -Wall -g -Ilibxfs/include -D_GNU_SOURCE
 CXXFLAGS =	-std=c++11 -Wall -g -Ilibxfs/include -D_GNU_SOURCE
 LDFLAGS =	-std=c++11 -static -Llibxfs -lxfs -lext2fs -lreiserfs -lcom_err -ldal -luuid -lblkid -lpthread -lm
 ############################################################
-EXDEPS=test.cpp Partition.cpp EXTFSPartition.cpp
+EXDEPS=test.cpp Partition.cpp EXTFSPartition.cpp XFSPartition.cpp
 
 all: $(EXDEPS)
 	cd libxfs; make
