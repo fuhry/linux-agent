@@ -8,7 +8,6 @@ EXDEPS=test.cpp
 
 all: $(EXDEPS)
 	cd libxfs; make
-	cd libbtrfs; make
 	$(CXX) -o $(EXECNAME) $(EXDEPS) $(LDFLAGS)
 
 %.o: %.c
@@ -19,11 +18,9 @@ all: $(EXDEPS)
 
 clean:
 	cd libxfs; make clean
-	cd libbtrfs; make clean
 	rm -f *.o
 
 cleaner: clean
 	cd libxfs; make cleaner
-	cd libbtrfs; make cleaner
 	rm -f $(EXECNAME)
 
