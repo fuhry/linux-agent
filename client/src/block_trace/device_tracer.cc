@@ -6,9 +6,10 @@
 
 namespace datto_linux_client {
 
-DeviceTracer::DeviceTracer(const std::string &block_dev_path)
+DeviceTracer::DeviceTracer(const std::string &block_dev_path,
+                           std::shared_ptr<TraceHandler> handler)
     : block_dev_path_(block_dev_path),
-      block_dev_fd_(-1) {
+      handler_(handler) {
 
   if ((block_dev_fd_ =
         open(block_dev_path.c_str(), O_RDONLY | O_NONBLOCK)) == -1) {
@@ -16,18 +17,16 @@ DeviceTracer::DeviceTracer(const std::string &block_dev_path)
     throw "Unable to open block_dev_path";
   }
 
-  interval_queue_(new IntervalQueue());
-
-  PushEmptyInterval();
-
   num_cpus_ = get_nprocs();
   cpu_tracers_ = std::vector<std::unique_ptr<CpuTracer>>(num_cpus_);
 
   try {
     SetupBlockTrace();
     for (int i = 0; i < num_cpus_; ++i) {
+      std::string trace_path = GetTracePath(i, /* TODO */ "");
+
       cpu_tracers_[i] = std::unique_ptr<CpuTracer>(
-            new CpuTracer(block_dev_path_, i, nullptr));
+            new CpuTracer(trace_path, handler_));
     }
   } catch (...) {
     // If close fails we can't do much about it, so ignore the return value
@@ -36,15 +35,25 @@ DeviceTracer::DeviceTracer(const std::string &block_dev_path)
   }
 }
 
-void DeviceTracer::PushEmptyInterval() {
-  (interval_queue_)->push(std::shared_ptr<TraceInterval>(new TraceInterval()));
-}
-
 void DeviceTracer::SetupBlockTrace() { }
 
-std::shared_ptr<const boost::icl::interval<uint64_t>>
-DeviceTracer::PopInterval() {
-  return nullptr;
+std::string DeviceTracer::GetTracePath(int cpu_num,
+                                       std::string block_dev_name) {
+  std::string trace_path = DEBUG_FS_PATH + "/block/" + block_dev_name +
+                           "/trace" + std::to_string(cpu_num);
+
+  struct stat stat_buf;
+  if ((stat(trace_path.c_str(), &stat_buf)) == -1) {
+    // TODO
+    throw "Error during stat";
+  }
+
+  if (!S_ISREG(stat_buf.st_mode)) {
+    // Unable to generate trace path
+    throw "Bad trace path: " + trace_path;
+  }
+
+  return trace_path;
 }
 
 DeviceTracer::~DeviceTracer() { }

@@ -2,20 +2,23 @@
 #define DATTO_CLIENT_BLOCK_TRACER_TRACE_HANDLER_H_
 
 #include "linux/blktrace_api.h"
+#include <boost/noncopyable.hpp>
+
+#include "unsynced_sector_tracker/unsynced_sector_tracker.h"
 
 namespace datto_linux_client {
 
 class TraceHandler : private boost::noncopyable {
- public:
-  TraceHandler(std::shared_ptr<TraceIntervalQueue> interval_queue
-               std::mutex queue_mutex_);
+ static const int SECTOR_SIZE = 512;
 
+ public:
+  TraceHandler(std::shared_ptr<UnsyncedSectorTracker> tracker);
   void AddTrace(const struct blk_io_trace &trace_data);
 
  private:
-  std::shared_ptr<TraceIntervalQueue> interval_queue_;
+  std::shared_ptr<UnsyncedSectorTracker> tracker_;
 
-}
+};
 
 }
 

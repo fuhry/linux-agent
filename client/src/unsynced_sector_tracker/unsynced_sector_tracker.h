@@ -1,8 +1,8 @@
-#ifndef DATTO_CLIENT_UNSYNCED_BLOCK_TRACKER_UNSYNCED_BLOCK_TRACKER_H_
-#define DATTO_CLIENT_UNSYNCED_BLOCK_TRACKER_UNSYNCED_BLOCK_TRACKER_H_
+#ifndef DATTO_CLIENT_UNSYNCED_SECTOR_TRACKER_UNSYNCED_SECTOR_TRACKER_H_
+#define DATTO_CLIENT_UNSYNCED_SECTOR_TRACKER_UNSYNCED_SECTOR_TRACKER_H_
 
-#include "unsynced_block_tracker/sector_interval.h"
-#include "unsynced_block_tracker/sector_set.h"
+#include "unsynced_sector_tracker/sector_interval.h"
+#include "unsynced_sector_tracker/sector_set.h"
 
 #include <mutex>
 #include <stdint.h>
@@ -35,4 +35,4 @@ class UnsyncedSectorTracker {
 
 }
 
-#endif //  DATTO_CLIENT_UNSYNCED_BLOCK_TRACKER_UNSYNCED_BLOCK_TRACKER_H_
+#endif //  DATTO_CLIENT_UNSYNCED_SECTOR_TRACKER_UNSYNCED_SECTOR_TRACKER_H_

@@ -2,13 +2,14 @@
 
 namespace datto_linux_client {
 
-TraceHandler::TraceHandler(std::shared_ptr<TraceIntervalQueue> interval_queue,
-                           std::mutex queue_mutex)
-    : interval_queue_(interval_queue),
-      queue_mutex_(queue_mutex) { }
+TraceHandler::TraceHandler(std::shared_ptr<UnsyncedSectorTracker> tracker)
+    : tracker_(tracker) { }
 
-void AddTrace(const struct blk_io_trace &trace_data) {
-  std::lock_guard<std::mutex> lock(queue_mutex);
+void TraceHandler::AddTrace(const struct blk_io_trace &trace_data) {
+  uint64_t sectors_written = trace_data.bytes / SECTOR_SIZE;
+  uint64_t sector = trace_data.sector;
+  SectorInterval interval(sector, sector + sectors_written);
+  (tracker_)->AddUnsyncedInterval(interval);
 }
 
 }
