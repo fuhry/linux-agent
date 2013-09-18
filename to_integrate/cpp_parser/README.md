@@ -16,7 +16,6 @@ The `test` directory includes various scripts to verify behavioural correctness.
 
 #### Included libraries ####
 * `xfs`
-* `btrfs`
 
 #### Required external libraries ####
 * `ext2fs`
