@@ -2,7 +2,7 @@
 include ../settings.mk
 CFLAGS =	-std=c99  -Wall -g -Ilibxfs/include -Ilibbtrfs/include -D_GNU_SOURCE
 CXXFLAGS =	-std=c++11 -Wall -g -Ilibxfs/include -Ilibbtrfs/include -D_GNU_SOURCE
-LDFLAGS =	-static -Llibxfs -Llibbtrfs -lxfs -lbtrfs -lext2fs -lreiserfs -lcom_err -ldal -luuid -lblkid -lpthread -lm
+LDFLAGS =	-std=c++11 -static -Llibxfs -Llibbtrfs -lxfs -lbtrfs -lext2fs -lreiserfs -lcom_err -ldal -luuid -lblkid -lpthread -lm
 ############################################################
 EXDEPS=test.cpp
 
