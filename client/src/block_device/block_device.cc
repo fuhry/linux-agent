@@ -38,8 +38,8 @@ namespace datto_linux_client {
 
     if (! S_ISBLK(statbuf.st_mode) ) {  // bail with exception if not a block device
       std::string err = std::string("Error: ") +
-      block_path_ +
-      std::string(" is not a block device");
+          block_path_ +
+          std::string(" is not a block device");
       throw BlockDeviceException(err);
     }
     
@@ -52,8 +52,8 @@ namespace datto_linux_client {
 
     if (fd < 0) {
       std::string err = std::string("Error opening ") +
-      block_path_ +
-      std::string(" read-only for ioctl() calls\n");
+          block_path_ +
+          std::string(" read-only for ioctl() calls\n");
       throw BlockDeviceException(err);
     }
 
@@ -90,10 +90,10 @@ namespace datto_linux_client {
 
     if (fd < 0) {
       char * error_chars = strerror(errno);
-      std::string err = std::string("Error opening ") +
-                   block_path_ +
-                   std::string("; error: ") +
-                   std::string(error_chars);
+          std::string err = std::string("Error opening ") +
+          block_path_ +
+          std::string("; error: ") +
+          std::string(error_chars);
       throw BlockDeviceException(err);
     }
 
