@@ -10,9 +10,9 @@ namespace datto_linux_client {
 // passed to the ReplyHandler
 class ReplyChannel: private boost::noncopyable {
  public:
-  virtual void SendReply(std::shared_ptr<Reply> reply);
-  virtual bool IsAvailable();
-  virtual ~ReplyChannel();
+  virtual void SendReply(std::shared_ptr<Reply> reply) = 0;
+  virtual bool IsAvailable() = 0;
+  virtual ~ReplyChannel() { }
 };
 
 }

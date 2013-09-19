@@ -15,7 +15,7 @@ class RequestHandler : private boost::noncopyable {
   // Handle() do something like print information to stdout
   virtual void Handle(std::shared_ptr<Request> request,
                       std::shared_ptr<ReplyChannel> reply_channel);
-  virtual ~RequestHandler();
+  virtual ~RequestHandler() { }
 };
 }
 
