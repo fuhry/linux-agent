@@ -29,19 +29,6 @@ namespace datto_linux_client {
 
     struct stat statbuf;
 
-    const std::string DEV_LIT = "/dev/";
-
-    std::string block_dev_name;
-
-    // block_dev_name = block_path_;  // Copy to local storage for notational convenience
-
-    if (block_path_.substr(0,DEV_LIT.length()) != DEV_LIT) {  // bail with exception if not a '/dev/' path
-      std::string err = std::string("Error: ") + 
-        block_path_ + 
-        std::string(" not valid.. does not begin with \"/dev/\"");
-      throw BlockDeviceException(err);
-    }
-
     //  Note:  using lstat() instead of stat() to cause symlinks to block devices to fail
 
     if (lstat(block_path_.c_str(), &statbuf) < 0) {  // bail with exception if stat() fails
@@ -70,15 +57,11 @@ namespace datto_linux_client {
       throw BlockDeviceException(err);
     }
 
-    uint16_t rotational;
 
-    ioctl(fd, BLKROTATIONAL, &rotational);
     ioctl(fd, BLKGETSIZE64, &device_size_bytes_);
     ioctl(fd, BLKSSZGET, &block_size_bytes_);
 
     close(fd);
-
-    does_seek_ = rotational;    // short -> bool here
 
     throttle_scalar_ = 0.0;
 

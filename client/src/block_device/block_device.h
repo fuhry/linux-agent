@@ -42,11 +42,13 @@ class BlockDevice : private boost::noncopyable {
     return minor_;
   }
 
-  // If the block device needs to seek when reading/writing data.
-  // e.g. HDDs need to seek, SSDs do not.
-  bool DoesSeek() const {
-    return does_seek_;
-  }
+// If the block device needs to seek when reading/writing data.
+// e.g. HDDs need to seek, SSDs do not.
+// This is being cut for now, since the ioctl for this is not in the kernel until 3.3
+
+//  bool DoesSeek() const {
+//    return does_seek_;
+//  }
 
   // BLKGETSIZE64
   uint64_t DeviceSizeBytes() const {
@@ -60,6 +62,8 @@ class BlockDevice : private boost::noncopyable {
 
   // https://www.kernel.org/doc/Documentation/cgroups/blkio-controller.txt
   // scalar is from 0 to 1, but hopefully not 0
+
+  // TODO: Throttle unimplemented at this point
   void Throttle(double scalar);
 
   double throttle_scalar() const {
@@ -89,7 +93,7 @@ class BlockDevice : private boost::noncopyable {
 
   uint64_t device_size_bytes_;
   uint32_t block_size_bytes_;
-  bool     does_seek_;
+//  bool     does_seek_;    // removed because not available until kernel 3.3.xxx
 
   double throttle_scalar_;
 

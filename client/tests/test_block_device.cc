@@ -32,7 +32,6 @@ int main(int argc, char **argv) {
   cout << "Block Path Name: " << bd1->block_path() << endl;
   cout << "\tMajor number is " << bd1->major() << endl;
   cout << "\tMinor number is " << bd1->minor() << endl;
-  cout << "\tDoesSeek is " << std::boolalpha << bd1->DoesSeek() << endl;
   cout << "\tDevice Size is " << bd1->DeviceSizeBytes() << endl;
   cout << "\tBlock Size is " << bd1->BlockSizeBytes() << endl;
 
