@@ -81,10 +81,6 @@ class BlockDevice : private boost::noncopyable {
 
  private:
 
-  // private method for reading a long from a file
-
-  long read_long_(std::string &filepath) const;
-
   // properties
 
   std::string block_path_;
