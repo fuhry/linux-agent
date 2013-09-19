@@ -2,16 +2,11 @@ package datto_linux_client;
 
 import "start_backup_request.proto";
 import "stop_backup_request.proto";
-import "start_trace_request.proto";
-import "stop_trace_request.proto";
 
 message Request {
     enum RequestType {
         START_BACKUP = 1;
         STOP_BACKUP = 2;
-
-        START_TRACE = 3;
-        STOP_TRACE = 4;
     }
 
     required RequestType type = 1;
@@ -20,7 +15,4 @@ message Request {
 
     optional StartBackupRequest start_backup_request = 3;
     optional StopBackupRequest stop_backup_request = 4;
-
-    optional StartTraceRequest start_trace_request = 5;
-    optional StopTraceRequest stop_trace_request = 6;
 }

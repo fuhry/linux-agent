@@ -1,5 +1,0 @@
-package datto_linux_client;
-
-message StopTraceRequest {
-    required string block_path = 1;
-}
