@@ -22,9 +22,7 @@ class BlockDevice : private boost::noncopyable {
   // block_path doesn't exist or isn't the path for a block_device
   explicit BlockDevice(std::string block_path);
 
-  //
   //  Do the actual initialization of the object
-  //
   void Init();
 
   // If a method is lowercase, then it is should be just an accessor and
@@ -41,14 +39,6 @@ class BlockDevice : private boost::noncopyable {
   uint32_t minor() const {
     return minor_;
   }
-
-// If the block device needs to seek when reading/writing data.
-// e.g. HDDs need to seek, SSDs do not.
-// This is being cut for now, since the ioctl for this is not in the kernel until 3.3
-
-//  bool DoesSeek() const {
-//    return does_seek_;
-//  }
 
   // BLKGETSIZE64
   uint64_t DeviceSizeBytes() const {
@@ -91,15 +81,12 @@ class BlockDevice : private boost::noncopyable {
 
  private:
 
-  // properties
-
   std::string block_path_;
   uint32_t major_;
   uint32_t minor_;
 
   uint64_t device_size_bytes_;
   uint32_t block_size_bytes_;
-//  bool     does_seek_;    // removed because not available until kernel 3.3.xxx
 
   double throttle_scalar_;
 
