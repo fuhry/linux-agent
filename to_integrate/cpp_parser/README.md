@@ -11,7 +11,7 @@ The `test` directory includes various scripts to verify behavioural correctness.
 * Support various GNU extensions
 
 #### C++ compiler ####
-* Must support C++11 (`clang` or `gcc`)
+* Must support C++11 (`clang++` or `g++`)
 * Support various GNU extensions
 
 #### Included libraries ####
