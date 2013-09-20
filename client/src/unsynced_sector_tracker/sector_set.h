@@ -2,6 +2,7 @@
 #define DATTO_CLIENT_UNSYNCED_SECTOR_TRACKER_SECTOR_SET_H_
 
 #include <boost/icl/interval_set.hpp>
+#include <stdint.h>
 
 namespace datto_linux_client {
 
