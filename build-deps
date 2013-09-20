@@ -1,0 +1,6 @@
+#!/bin/bash
+# This is for Ubuntu 12.04. Things like libboost might require different version numbers depending on the platform,
+# but the primary build platform is 12.04 so all release builds will use these
+
+# TODO: remove --dry-run flag when things are more ironed out
+apt-get install --dry-run build-essential cmake libboost1.48-dev libprotobuf-dev libgoogle-glog-dev libgtest-dev blktrace
