@@ -1,5 +1,5 @@
-#ifndef DATTO_CLIENT_MESSAGE_QUEUE_REPLY_CHANNEL_H_
-#define DATTO_CLIENT_MESSAGE_QUEUE_REPLY_CHANNEL_H_
+#ifndef DATTO_CLIENT_REQUEST_LISTENER_REPLY_CHANNEL_H_
+#define DATTO_CLIENT_REQUEST_LISTENER_REPLY_CHANNEL_H_
 
 #include <boost/noncopyable.hpp>
 #include <memory>
@@ -17,4 +17,4 @@ class ReplyChannel: private boost::noncopyable {
 
 }
 
-#endif //  DATTO_CLIENT_MESSAGE_QUEUE_REPLY_CHANNEL_H_
+#endif //  DATTO_CLIENT_REQUEST_LISTENER_REPLY_CHANNEL_H_
