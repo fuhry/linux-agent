@@ -4,15 +4,10 @@
 #include <boost/noncopyable.hpp>
 #include <boost/cstdint.hpp>
 #include <string>
-#include <stdexcept>
+
+#include "block_device/block_device_exception.h"
 
 namespace datto_linux_client {
-
-class BlockDeviceException : public std::runtime_error {
-  public: 
-    BlockDeviceException(std::string & what) : runtime_error(what) {};
-};
-
 
 class BlockDevice : private boost::noncopyable {
 
