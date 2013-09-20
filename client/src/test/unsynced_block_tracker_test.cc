@@ -1,22 +1,46 @@
-#include "unsynced_block_tracker/unsynced_block_tracker.h"
-#include "unsynced_block_tracker/sector_interval.h"
+#include "unsynced_sector_tracker/unsynced_sector_tracker.h"
+#include "unsynced_sector_tracker/sector_interval.h"
 
-#include <stdio.h>
+#include "gtest/gtest.h"
 
-int main() {
-  datto_linux_client::UnsyncedSectorTracker subject;
+namespace {
 
-  subject.AddUnsyncedSector(123);
-  subject.AddUnsyncedSector(124);
-  subject.AddUnsyncedSector(123);
+using ::datto_linux_client::UnsyncedSectorTracker;
+using ::datto_linux_client::SectorInterval;
 
-  subject.AddUnsyncedSector(125);
+TEST(UnsyncedSectorTrackerTest, DefaultConstructor) {
+  const UnsyncedSectorTracker tracker;
 
-  subject.AddUnsyncedInterval(
-      datto_linux_client::SectorInterval(200, 300));
+  EXPECT_EQ(0, tracker.UnsyncedSectorCount());
 
-  printf("%ld\n", subject.NumberUnsynced());
-
-  printf("%ld\n", boost::icl::length(subject.GetContinuousUnsyncedSectors()));
-
+  const SectorInterval interval = tracker.GetContinuousUnsyncedSectors();
+  EXPECT_EQ(0, boost::icl::length(interval));
 }
+
+TEST(UnsyncedSectorTrackerTest, AddUnsyncedIntervalTest) {
+  UnsyncedSectorTracker tracker;
+  SectorInterval interval1(1, 10);
+  SectorInterval interval2(5, 20);
+
+  tracker.AddUnsyncedInterval(interval1);
+  EXPECT_EQ(9, tracker.UnsyncedSectorCount());
+
+  EXPECT_TRUE(interval1 == tracker.GetContinuousUnsyncedSectors());
+
+  tracker.AddUnsyncedInterval(interval2);
+  EXPECT_TRUE(SectorInterval(1, 20) == tracker.GetContinuousUnsyncedSectors());
+}
+
+TEST(UnsyncedSectorTrackerTest, MarkToSyncIntervalTest) {
+  UnsyncedSectorTracker tracker;
+  SectorInterval interval1(1, 20);
+  SectorInterval interval2(5, 20);
+
+  tracker.AddUnsyncedInterval(interval1);
+
+  tracker.MarkToSyncInterval(interval2);
+  EXPECT_TRUE(SectorInterval(1, 5) == tracker.GetContinuousUnsyncedSectors());
+  EXPECT_EQ(4, tracker.UnsyncedSectorCount());
+}
+
+} // namespace
