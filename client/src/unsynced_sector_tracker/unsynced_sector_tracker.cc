@@ -8,20 +8,10 @@ UnsyncedSectorTracker::UnsyncedSectorTracker()
 
 UnsyncedSectorTracker::~UnsyncedSectorTracker() { }
 
-void UnsyncedSectorTracker::AddUnsyncedSector(uint64_t sector) {
-  std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
-  unsynced_sector_set_.insert(sector);
-}
-
 void UnsyncedSectorTracker::AddUnsyncedInterval(
     const SectorInterval &sector_interval) {
   std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
   unsynced_sector_set_.add(sector_interval);
-}
-
-void UnsyncedSectorTracker::MarkToSyncSector(uint64_t sector) {
-  std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
-  unsynced_sector_set_.erase(sector);
 }
 
 void UnsyncedSectorTracker::MarkToSyncInterval(
@@ -43,7 +33,7 @@ SectorInterval UnsyncedSectorTracker::GetContinuousUnsyncedSectors() const {
   return largestInterval;
 }
 
-uint64_t UnsyncedSectorTracker::NumberUnsynced() const {
+uint64_t UnsyncedSectorTracker::UnsyncedSectorCount() const {
   std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
 
   return boost::icl::cardinality(unsynced_sector_set_);

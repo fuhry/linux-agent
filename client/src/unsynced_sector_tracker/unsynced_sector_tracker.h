@@ -14,20 +14,18 @@ class UnsyncedSectorTracker {
   UnsyncedSectorTracker();
   ~UnsyncedSectorTracker();
 
-  void AddUnsyncedSector(uint64_t sector);
   void AddUnsyncedInterval(const SectorInterval &sector_interval);
 
-  // These must be called *before* syncing to prevent the situation where
+  // This must be called *before* syncing to prevent the situation where
   // the following order of events occurs:
   // 1. Sync the sector
   // 2. *Sector is modified*
   // 3. Mark the, now outdated sector, as synced
-  void MarkToSyncSector(uint64_t sector);
   void MarkToSyncInterval(const SectorInterval &sector_interval);
 
   SectorInterval GetContinuousUnsyncedSectors() const;
 
-  uint64_t NumberUnsynced() const;
+  uint64_t UnsyncedSectorCount() const;
  private:
   SectorSet unsynced_sector_set_;
   mutable std::mutex sector_set_mutex_ ;
