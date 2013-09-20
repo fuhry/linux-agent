@@ -1,8 +1,9 @@
 #ifndef DATTO_CLIENT_BLOCK_TRACER_TRACE_HANDLER_H_
 #define DATTO_CLIENT_BLOCK_TRACER_TRACE_HANDLER_H_
 
-#include "linux/blktrace_api.h"
+#include <linux/blktrace_api.h>
 #include <boost/noncopyable.hpp>
+#include <memory>
 
 #include "unsynced_sector_tracker/unsynced_sector_tracker.h"
 
