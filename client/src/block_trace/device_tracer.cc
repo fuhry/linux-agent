@@ -22,14 +22,23 @@ DeviceTracer::DeviceTracer(const std::string &block_dev_path,
   cpu_tracers_ = std::vector<std::unique_ptr<CpuTracer>>(num_cpus_);
 
   try {
+    // This sets trace_name_
     BeginBlockTrace();
     for (int i = 0; i < num_cpus_; ++i) {
-      std::string trace_path = GetTracePath(i, /* TODO */ "");
+      std::string trace_path = GetTracePath(i);
 
       cpu_tracers_[i] = std::unique_ptr<CpuTracer>(
-            new CpuTracer(trace_path, handler_));
+                          new CpuTracer(trace_path, handler_));
     }
   } catch (...) {
+
+    try {
+      CleanupBlockTrace();
+    } catch (...) {
+      // TODO: Log, but don't rethrow as we are in a try/catch already and the outer
+      // exception is more important
+    }
+
     // If close fails we can't do much about it, so ignore the return value
     close(block_dev_fd_);
     throw;
@@ -53,6 +62,8 @@ void DeviceTracer::BeginBlockTrace() {
     throw "Unable to start blocktrace";
   }
 
+  trace_name_ = blktrace_setup.name;
+
 }
 
 void DeviceTracer::CleanupBlockTrace() {
@@ -71,9 +82,11 @@ void DeviceTracer::CleanupBlockTrace() {
 
 }
 
-std::string DeviceTracer::GetTracePath(int cpu_num,
-                                       std::string block_dev_name) {
-  std::string trace_path = DEBUG_FS_PATH + "/block/" + block_dev_name +
+std::string DeviceTracer::GetTracePath(int cpu_num) {
+
+  // In general this path will be something like
+  // /sys/kernel/debug/block/sda1/trace1
+  std::string trace_path = DEBUG_FS_PATH + "/block/" + trace_name_ +
                            "/trace" + std::to_string(cpu_num);
 
   struct stat stat_buf;

@@ -26,6 +26,7 @@ class DeviceTracer : private boost::noncopyable {
 
  public:
   // Don't pass a BlockDevice here as we want our own file descriptor
+  // block_dev_path must be a real path to a block device (not a symlink)
   DeviceTracer(const std::string &block_dev_path,
                std::shared_ptr<TraceHandler> handler);
 
@@ -36,9 +37,10 @@ class DeviceTracer : private boost::noncopyable {
  private:
   void BeginBlockTrace();
   void CleanupBlockTrace();
-  std::string GetTracePath(int cpu_num, std::string block_dev_name);
+  std::string GetTracePath(int cpu_num);
 
   std::string block_dev_path_;
+  std::string trace_name_;
   int block_dev_fd_;
   int num_cpus_;
 
