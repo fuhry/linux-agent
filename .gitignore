@@ -8,7 +8,7 @@ client/src/tests/table_test
 to_integrate/src/fsparser
 
 # Tool generated code
-client/src/message_queue/protobuf_classes
+client/src/request_listener/protobuf_classes
 
 # Core dumps
 core
