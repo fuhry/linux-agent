@@ -34,6 +34,13 @@ core
 *.out
 *.app
 
+### CMake ###
+CMakeCache.txt
+CMakeFiles
+# Excluded for now: Makefile
+cmake_install.cmake
+install_manifest.txt
+
 ### Python ###
 *.py[cod]
 
