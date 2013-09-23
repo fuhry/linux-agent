@@ -12,7 +12,10 @@ if [ ! -r test/gtest/libgtest.a ]; then
     popd
 fi
 
-clang++ -std=c++11 $TEST_LIBS unsynced_sector_tracker/unsynced_sector_tracker.cc test/unsynced_block_tracker_test.cc -I. -pthread && ./a.out
+clang++ -std=c++11 $TEST_LIBS unsynced_sector_tracker/unsynced_sector_tracker.cc \
+    test/unsynced_block_tracker_test.cc -I. -pthread && ./a.out
 
-clang++ -std=c++11 $TEST_LIBS block_trace/device_tracer.cc test/device_tracer_test.cc -I. -pthread && ./a.out
+clang++ -std=c++11 $TEST_LIBS unsynced_sector_tracker/unsynced_sector_tracker.cc \
+    block_trace/trace_handler.cc block_trace/cpu_tracer.cc block_trace/device_tracer.cc \
+    test/device_tracer_test.cc -I. -pthread && ./a.out
 
