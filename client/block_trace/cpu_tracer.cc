@@ -63,13 +63,13 @@ void CpuTracer::DoTrace() {
       PLOG(ERROR) << "Exception while adding trace" << e.what();
       break;
     }
-    DLOG(INFO) << "Action is 0x"
+    VLOG(2) << "Action is 0x"
       << std::hex << trace.action << std::dec;
 
     if (trace.pdu_len) {
       // Skip over any trailing data
       // TODO Log to see if this ever actually happens
-      DLOG(INFO) << "Skipping trailing data for action 0x"
+      VLOG(2) << "Skipping trailing data for action 0x"
                  << std::hex << trace.action << std::dec;
       try {
         SkipNonseekableFD(trace_fd_, trace.pdu_len);
