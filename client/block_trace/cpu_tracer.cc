@@ -64,13 +64,13 @@ void CpuTracer::DoTrace() {
       break;
     }
     VLOG(2) << "Action is 0x"
-      << std::hex << trace.action << std::dec;
+            << std::hex << trace.action << std::dec;
 
     if (trace.pdu_len) {
       // Skip over any trailing data
       // TODO Log to see if this ever actually happens
       VLOG(2) << "Skipping trailing data for action 0x"
-                 << std::hex << trace.action << std::dec;
+              << std::hex << trace.action << std::dec;
       try {
         SkipNonseekableFD(trace_fd_, trace.pdu_len);
       } catch (...) {
