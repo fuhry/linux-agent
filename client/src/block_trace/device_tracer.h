@@ -22,7 +22,7 @@ static const std::string DEBUG_FS_PATH = "/sys/kernel/debug";
 class DeviceTracer : private boost::noncopyable {
   static const int BLKTRACE_BUFFER_SIZE = 1024;
   static const int BLKTRACE_NUM_SUBBUFFERS = 10;
-  static const int BLKTRACE_MASK = BLK_TC_QUEUE | BLK_TC_WRITE;
+  static const int BLKTRACE_MASK = BLK_TC_QUEUE;
 
  public:
   // Don't pass a BlockDevice here as we want our own file descriptor
