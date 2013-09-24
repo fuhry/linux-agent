@@ -23,6 +23,9 @@ using ::datto_linux_client::DeviceTracer;
 using ::datto_linux_client::BlockTraceException;
 using ::datto_linux_client::TraceHandler;
 
+// TODO: This class assumes that there is a /dev/shm and /tmp is the
+// temporary directory. These assumptions should be made more explicit
+// or removed.
 class DeviceTracerTest : public ::testing::Test {
  public:
   static const uint64_t TEST_BLOCK_DEVICE_SIZE = 1 * 1024 * 1024 * 1024;
@@ -48,6 +51,7 @@ class DeviceTracerTest : public ::testing::Test {
     close(loop_dev_fd);
     system(("losetup -d " + loop_dev_path).c_str());
     unlink(TEST_LOOP_SHARED_MEMORY.c_str());
+    system("rm /tmp/test_loop_file.*");
   }
 
   std::string loop_dev_path;
