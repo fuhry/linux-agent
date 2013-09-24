@@ -1,6 +1,7 @@
 #include "cpu_tracer.h"
 #include <algorithm>
 #include <fcntl.h>
+#include <glog/logging.h>
 #include <linux/blktrace_api.h>
 #include <poll.h>
 #include <sys/stat.h>
@@ -21,6 +22,7 @@ CpuTracer::CpuTracer(std::string &trace_path,
   }
 
   trace_thread_ = std::thread(&CpuTracer::DoTrace, this);
+
 }
 
 // As this is the initial function of a thread, this method must not throw an
@@ -33,7 +35,8 @@ void CpuTracer::DoTrace() {
   int poll_val = -1;
   struct blk_io_trace trace;
 
-  while (!stop_trace_ && ((poll_val = poll(&pfd, 1, POLL_DELAY_MILLIS)) >= 0)) {
+  while (!stop_trace_ &&
+      ((poll_val = poll(&pfd, 1, POLL_DELAY_MILLIS)) >= 0)) {
     if (poll_val == 0 && !flush_buffers_) {
       // Poll timed out and we aren't forcing a flush
       continue;
@@ -41,7 +44,7 @@ void CpuTracer::DoTrace() {
 
     int read_bytes = read(trace_fd_, &trace, sizeof(trace));
     if (read_bytes == -1) {
-      // TODO Log with errno
+      PLOG(ERROR) << "Error while reading trace file descriptor";
       break;
     } else if (read_bytes == 0) {
       // TODO Signal buffers are flushed
@@ -50,31 +53,35 @@ void CpuTracer::DoTrace() {
     }
 
     if (trace.magic != (BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION)) {
-      // TODO Log
+      PLOG(ERROR) << "Bad magic number in trace";
       break;
     }
 
     try {
       (trace_handler_)->AddTrace(trace);
-    } catch (...) {
-      // TODO Log
+    } catch (const std::exception &e) {
+      PLOG(ERROR) << "Exception while adding trace" << e.what();
       break;
     }
+    DLOG(INFO) << "Action is 0x"
+      << std::hex << trace.action << std::dec;
 
     if (trace.pdu_len) {
       // Skip over any trailing data
       // TODO Log to see if this ever actually happens
+      DLOG(INFO) << "Skipping trailing data for action 0x"
+                 << std::hex << trace.action << std::dec;
       try {
         SkipNonseekableFD(trace_fd_, trace.pdu_len);
       } catch (...) {
-        // TODO Log
+        LOG(ERROR) << "Error while seeking reading unused payload from trace";
         break;
       }
     }
   }
 
   if (poll_val < 0) {
-    // TODO Log error with errno from poll
+    PLOG(ERROR) << "poll";
   }
 
   // Don't worry about the return value as we aren't writing anything
@@ -88,6 +95,9 @@ void CpuTracer::FlushBuffer() {
 
 void CpuTracer::StopTrace() {
   stop_trace_ = true;
+  if (trace_thread_.joinable()) {
+    trace_thread_.join();
+  }
   // TODO Condition variable
 }
 

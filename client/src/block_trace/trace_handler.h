@@ -14,7 +14,12 @@ class TraceHandler : private boost::noncopyable {
 
  public:
   TraceHandler(std::shared_ptr<UnsyncedSectorTracker> tracker);
-  void AddTrace(const struct blk_io_trace &trace_data);
+  virtual void AddTrace(const struct blk_io_trace &trace_data);
+  virtual ~TraceHandler() { }
+
+ protected:
+  // For derived classes that don't want to use UnsyncedSectorTracker
+  TraceHandler() { }
 
  private:
   std::shared_ptr<UnsyncedSectorTracker> tracker_;

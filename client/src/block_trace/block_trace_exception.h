@@ -6,7 +6,8 @@
 namespace datto_linux_client {
 class BlockTraceException : public std::runtime_error {
  public: 
-  explicit BlockTraceException(std::string &what) : runtime_error(what) {};
+  explicit BlockTraceException(const std::string &what)
+    : runtime_error(what) {};
 };
 }
 
