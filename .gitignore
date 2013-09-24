@@ -1,14 +1,8 @@
 # Executable names
-copydmdevice/copydmdevice
-traceblocks/traceblocks
-rangetree/buildtree
-client/dattod
-client/tracetester
-client/src/tests/table_test
 to_integrate/src/fsparser
 
 # Tool generated code
-client/src/request_listener/protobuf_classes
+client/request_listener/protobuf_classes
 
 # Core dumps
 core
