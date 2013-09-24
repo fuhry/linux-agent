@@ -1,5 +1,6 @@
-#include "block_trace/device_tracer.h"
 #include "block_trace/block_trace_exception.h"
+#include "block_trace/device_tracer.h"
+#include "unsynced_sector_tracker/unsynced_sector_tracker.h"
 
 #include <memory>
 #include <fstream>
@@ -22,6 +23,7 @@ namespace {
 using ::datto_linux_client::DeviceTracer;
 using ::datto_linux_client::BlockTraceException;
 using ::datto_linux_client::TraceHandler;
+using ::datto_linux_client::UnsyncedSectorTracker;
 
 // TODO: This class assumes that there is a /dev/shm and /tmp is the
 // temporary directory. These assumptions should be made more explicit
@@ -44,7 +46,10 @@ class DeviceTracerTest : public ::testing::Test {
     CreateEmptyLoopDevice(TEST_BLOCK_DEVICE_SIZE);
     LOG(INFO) << "Path is: " << loop_dev_path;
 
-    handler = std::shared_ptr<TraceHandler>(new DummyHandler());
+    dummy_handler = std::shared_ptr<TraceHandler>(new DummyHandler());
+
+    sector_tracker = std::shared_ptr<UnsyncedSectorTracker>(new UnsyncedSectorTracker());
+    real_handler = std::shared_ptr<TraceHandler>(new TraceHandler(sector_tracker));
   }
 
   ~DeviceTracerTest() {
@@ -57,7 +62,10 @@ class DeviceTracerTest : public ::testing::Test {
   std::string loop_dev_path;
   int loop_dev_fd;
 
-  std::shared_ptr<TraceHandler> handler;
+  std::shared_ptr<TraceHandler> dummy_handler;
+  std::shared_ptr<TraceHandler> real_handler;
+
+  std::shared_ptr<UnsyncedSectorTracker> sector_tracker;
 
  private:
   void CreateEmptyLoopDevice(uint64_t size_bytes) {
@@ -76,10 +84,25 @@ class DeviceTracerTest : public ::testing::Test {
   }
 };
 
-TEST_F(DeviceTracerTest, BadConstructor) {
+TEST_F(DeviceTracerTest, Constructor) {
   try {
-    DeviceTracer d(loop_dev_path, handler);
-    sleep(10);
+    DeviceTracer d(loop_dev_path, dummy_handler);
+  } catch (const std::exception &e) {
+    FAIL() << e.what();
+  }
+}
+
+TEST_F(DeviceTracerTest, ReadWithoutWrites) {
+  std::shared_ptr<UnsyncedSectorTracker> sector_tracker(new UnsyncedSectorTracker());
+
+  try {
+    DeviceTracer d(loop_dev_path, real_handler);
+
+    // Make sure we are only picking up writes
+    // TODO: Let's not get in the habit of shelling out every other line
+    system(("cat " + loop_dev_path).c_str());
+
+    ASSERT_EQ(0, sector_tracker->UnsyncedSectorCount());
   } catch (const std::exception &e) {
     FAIL() << e.what();
   }
