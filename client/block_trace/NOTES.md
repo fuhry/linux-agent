@@ -28,6 +28,9 @@ relay channel messages (i.e. `blk_io_traces`) which should be checked
 periodically.
 
 ## Poor cleanup on process failure
+*The below seems to be incorrect? Cleaning up after this type of failure still
+proves to be a challenge*
+
 In order to have a good state on process failure (i.e. a process that
 fails to call BLKTRACESTOP and BLKTRACETEARDOWN on exit) it must be 
 recleaned up. This can be done by calling BLKTRACESETUP, BLKTRACESTART,
