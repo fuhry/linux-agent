@@ -96,9 +96,18 @@ TEST_F(DeviceTracerTest, ReadWithoutWrites) {
   try {
     DeviceTracer d(loop_dev_path, real_handler);
 
-    // Make sure we are only picking up writes
-    // TODO: Let's not get in the habit of shelling out every other line
-    system(("cat " + loop_dev_path).c_str());
+    std::ifstream loop_in(loop_dev_path);
+
+    loop_in.seekg(0, std::ios::end);
+    size_t file_size = loop_in.tellg();
+    loop_in.seekg(0, std::ios::beg);
+
+    // Allocate a string the same size as the file
+    std::string file_contents(file_size, '\0');
+
+    loop_in.read(&file_contents[0], file_size);
+    loop_in.close();
+
     sync();
 
     d.FlushBuffers();
