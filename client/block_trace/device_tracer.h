@@ -19,17 +19,22 @@ namespace datto_linux_client {
 
 static const std::string DEBUG_FS_PATH = "/sys/kernel/debug";
 
+// DeviceTracer is responsible for tracing the writes to a block device
+// and handing off those traces to a TraceHandler instance
 class DeviceTracer : private boost::noncopyable {
+  // TODO Move these constants to another location, perhaps a config file
   static const int BLKTRACE_BUFFER_SIZE = 1024;
   static const int BLKTRACE_NUM_SUBBUFFERS = 10;
   static const int BLKTRACE_MASK = BLK_TC_QUEUE;
 
  public:
-  // Don't pass a BlockDevice here as we want our own file descriptor
-  // block_dev_path must be a real path to a block device (not a symlink)
+  // Starts a trace for the device specificed by block_dev_path
+  // Traces will be sent to the TraceHandler instance
   DeviceTracer(const std::string &block_dev_path,
                std::shared_ptr<TraceHandler> handler);
 
+  // Flush the trace buffers. This method returns once the buffers
+  // have finished flushing and have been given to the TraceHandler
   void FlushBuffers();
 
   std::string block_dev_path();
