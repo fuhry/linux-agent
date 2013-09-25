@@ -48,8 +48,10 @@ class DeviceTracerTest : public ::testing::Test {
 
     dummy_handler = std::shared_ptr<TraceHandler>(new DummyHandler());
 
-    sector_tracker = std::shared_ptr<UnsyncedSectorTracker>(new UnsyncedSectorTracker());
-    real_handler = std::shared_ptr<TraceHandler>(new TraceHandler(sector_tracker));
+    sector_tracker =
+      std::shared_ptr<UnsyncedSectorTracker>(new UnsyncedSectorTracker());
+    real_handler =
+      std::shared_ptr<TraceHandler>(new TraceHandler(sector_tracker));
   }
 
   ~DeviceTracerTest() {
@@ -77,7 +79,8 @@ class DeviceTracerTest : public ::testing::Test {
     loop_path_stream.close();
 
     if ((loop_dev_fd = open(loop_dev_path.c_str(), O_WRONLY)) == -1) {
-      PLOG(ERROR) << "Unable to make test loop device. Verify everything is cleaned up with losetup";
+      PLOG(ERROR) << "Unable to make test loop device."
+                  << " Verify everything is cleaned up with losetup";
       unlink(TEST_LOOP_SHARED_MEMORY.c_str());
       FAIL();
     }
