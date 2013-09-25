@@ -47,7 +47,7 @@ void CpuTracer::DoTrace() {
       PLOG(ERROR) << "Error while reading trace file descriptor";
       break;
     } else if (read_bytes == 0) {
-      LOG(INFO) << "Got 0 bytes from read";
+      VLOG(2) << "Got 0 bytes from read";
       flush_buffers_ = false;
       continue;
     }
