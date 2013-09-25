@@ -57,14 +57,12 @@ class DeviceTracerTest : public ::testing::Test {
   }
 
   ~DeviceTracerTest() {
-    close(loop_dev_fd);
     system(("losetup -d " + loop_dev_path).c_str());
     unlink(TEST_LOOP_SHARED_MEMORY);
     system("rm /tmp/test_loop_file.*");
   }
 
   std::string loop_dev_path;
-  int loop_dev_fd;
   size_t loop_dev_block_size;
 
   std::shared_ptr<TraceHandler> dummy_handler;
@@ -74,6 +72,7 @@ class DeviceTracerTest : public ::testing::Test {
 
  private:
   void CreateEmptyLoopDevice(uint64_t size_bytes) {
+    int loop_dev_fd;
     int create_ret = system("./test/make_test_loop_device");
     ASSERT_EQ(0, create_ret);
 
@@ -89,6 +88,9 @@ class DeviceTracerTest : public ::testing::Test {
     }
 
     ioctl(loop_dev_fd, BLKBSZGET, &loop_dev_block_size);
+    if (close(loop_dev_fd)) {
+      PLOG(ERROR) << "Error closing loop device";
+    }
   }
 };
 
