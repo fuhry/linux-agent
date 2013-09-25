@@ -30,6 +30,8 @@ class DeviceTracer : private boost::noncopyable {
   DeviceTracer(const std::string &block_dev_path,
                std::shared_ptr<TraceHandler> handler);
 
+  void FlushBuffers();
+
   std::string block_dev_path();
 
   ~DeviceTracer();

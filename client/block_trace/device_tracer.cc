@@ -56,6 +56,13 @@ DeviceTracer::DeviceTracer(const std::string &block_dev_path,
   }
 }
 
+
+void DeviceTracer::FlushBuffers() {
+  for (auto &cpu_tracer : cpu_tracers_) {
+    cpu_tracer->FlushBuffer();
+  }
+}
+
 std::string DeviceTracer::BeginBlockTrace() {
   struct blk_user_trace_setup blktrace_setup = {};
 
