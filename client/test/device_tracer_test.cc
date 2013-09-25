@@ -119,7 +119,7 @@ TEST_F(DeviceTracerTest, ReadWithoutWrites) {
     sync();
 
     d.FlushBuffers();
-    EXPECT_EQ(0, sector_tracker->UnsyncedSectorCount());
+    EXPECT_EQ(0UL, sector_tracker->UnsyncedSectorCount());
   } catch (const std::exception &e) {
     FAIL() << e.what();
   }
@@ -135,7 +135,7 @@ TEST_F(DeviceTracerTest, WriteAnything) {
     sync();
 
     d.FlushBuffers();
-    EXPECT_NE(0, sector_tracker->UnsyncedSectorCount());
+    EXPECT_NE(0UL, sector_tracker->UnsyncedSectorCount());
   } catch (const std::exception &e) {
     FAIL() << e.what();
   }
@@ -147,7 +147,7 @@ TEST_F(DeviceTracerTest, WriteSpecificLocation) {
 
     std::ofstream loop_out(loop_dev_path);
 
-    int sectors_per_block = loop_dev_block_size / 512;
+    uint64_t sectors_per_block = loop_dev_block_size / 512;
 
     // Write sectors [sectors_per_block * 10, sectors_per_block * 11)
     loop_out.seekp(loop_dev_block_size * 10, std::ios::beg);
