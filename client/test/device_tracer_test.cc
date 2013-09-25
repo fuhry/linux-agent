@@ -20,8 +20,9 @@
 
 namespace {
 
-using ::datto_linux_client::DeviceTracer;
 using ::datto_linux_client::BlockTraceException;
+using ::datto_linux_client::DeviceTracer;
+using ::datto_linux_client::SectorInterval;
 using ::datto_linux_client::TraceHandler;
 using ::datto_linux_client::UnsyncedSectorTracker;
 
@@ -63,6 +64,7 @@ class DeviceTracerTest : public ::testing::Test {
 
   std::string loop_dev_path;
   int loop_dev_fd;
+  size_t loop_dev_block_size;
 
   std::shared_ptr<TraceHandler> dummy_handler;
   std::shared_ptr<TraceHandler> real_handler;
@@ -84,6 +86,8 @@ class DeviceTracerTest : public ::testing::Test {
       unlink(TEST_LOOP_SHARED_MEMORY.c_str());
       FAIL();
     }
+
+    ioctl(loop_dev_fd, BLKBSZGET, &loop_dev_block_size);
   }
 };
 
@@ -114,7 +118,7 @@ TEST_F(DeviceTracerTest, ReadWithoutWrites) {
     sync();
 
     d.FlushBuffers();
-    ASSERT_EQ(0, sector_tracker->UnsyncedSectorCount());
+    EXPECT_EQ(0, sector_tracker->UnsyncedSectorCount());
   } catch (const std::exception &e) {
     FAIL() << e.what();
   }
@@ -130,7 +134,47 @@ TEST_F(DeviceTracerTest, WriteAnything) {
     sync();
 
     d.FlushBuffers();
-    ASSERT_NE(0, sector_tracker->UnsyncedSectorCount());
+    EXPECT_NE(0, sector_tracker->UnsyncedSectorCount());
+  } catch (const std::exception &e) {
+    FAIL() << e.what();
+  }
+}
+
+TEST_F(DeviceTracerTest, WriteSpecificLocation) {
+  try {
+    DeviceTracer d(loop_dev_path, real_handler);
+
+    std::ofstream loop_out(loop_dev_path);
+
+    int sectors_per_block = loop_dev_block_size / 512;
+
+    // Write sectors [sectors_per_block * 10, sectors_per_block * 11)
+    loop_out.seekp(loop_dev_block_size * 10, std::ios::beg);
+    loop_out << "Text to trigger a write trace";
+
+    // Write sectors [sectors_per_block * 11, sectors_per_block * 12)
+    loop_out.seekp(loop_dev_block_size * 11, std::ios::beg);
+    loop_out << "Text to trigger a write trace";
+
+    // Final interval should be
+    // [loop_dev_block_size * 10, loop_dev_block_size * 12)
+    loop_out.close();
+    sync();
+
+    d.FlushBuffers();
+
+    uint64_t unsynced_count = sector_tracker->UnsyncedSectorCount();
+    auto expected_interval = SectorInterval(sectors_per_block * 10,
+                                            sectors_per_block * 12);
+
+    SectorInterval continuous_interval =
+        sector_tracker->GetContinuousUnsyncedSectors();
+
+    EXPECT_EQ(sectors_per_block * 2, unsynced_count);
+
+    EXPECT_EQ(expected_interval.lower(), continuous_interval.lower());
+    EXPECT_EQ(expected_interval.upper(), continuous_interval.upper());
+
   } catch (const std::exception &e) {
     FAIL() << e.what();
   }
