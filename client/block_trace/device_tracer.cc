@@ -104,8 +104,8 @@ std::string DeviceTracer::GetTracePath(int cpu_num) {
 
   // In general this path will be something like
   // /sys/kernel/debug/block/sda1/trace1
-  std::string trace_path = DEBUG_FS_PATH + "/block/" + trace_name_ +
-                           "/trace" + std::to_string(cpu_num);
+  std::string trace_path = std::string(DEBUG_FS_PATH) + "/block/" +
+                           trace_name_ + "/trace" + std::to_string(cpu_num);
 
   struct stat stat_buf;
   if (stat(trace_path.c_str(), &stat_buf) == -1) {

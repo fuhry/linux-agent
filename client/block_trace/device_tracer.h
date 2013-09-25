@@ -17,7 +17,7 @@
 
 namespace datto_linux_client {
 
-static const std::string DEBUG_FS_PATH = "/sys/kernel/debug";
+static const char DEBUG_FS_PATH[] = "/sys/kernel/debug";
 
 // DeviceTracer is responsible for tracing the writes to a block device
 // and handing off those traces to a TraceHandler instance
