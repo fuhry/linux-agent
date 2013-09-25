@@ -1,0 +1,11 @@
+#!/bin/bash
+# This is for Ubuntu 12.04. Things like libboost might require different version numbers depending on the platform,
+# but the primary build platform is 12.04 so all release builds will use these
+
+if ! lsb_release -r | grep -q '^Release.*12\.04'; then
+    echo "This script is only supported on Ubuntu 12.04. " \
+        "Version numbers may not be correct on other versions/distributions" >&2
+    exit 1
+fi
+
+apt-get install build-essential cmake libboost-dev libprotobuf-dev libgoogle-glog-dev blktrace subversion
