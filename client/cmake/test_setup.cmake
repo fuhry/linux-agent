@@ -27,6 +27,7 @@ macro(add_unit_test test_name)
 
     add_test(${test_name} ${test_name})
 
+    add_dependencies(ctest_${test_name} ${test_name})
     add_dependencies(check ctest_${test_name})
 endmacro()
 
