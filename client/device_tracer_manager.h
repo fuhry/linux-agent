@@ -1,5 +1,5 @@
-#ifndef DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACER_MANAGER_H_
-#define DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACER_MANAGER_H_
+#ifndef DATTO_CLIENT_DEVICE_TRACER_MANAGER_H_
+#define DATTO_CLIENT_DEVICE_TRACER_MANAGER_H_
 
 #include <boost/noncopyable.hpp>
 #include <map>
@@ -28,4 +28,4 @@ class DeviceTracerManager : private boost::noncopyable {
 
 }
 
-#endif //  DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACER_MANAGER_H_
+#endif //  DATTO_CLIENT_DEVICE_TRACER_MANAGER_H_
