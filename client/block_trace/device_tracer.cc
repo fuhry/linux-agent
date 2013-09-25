@@ -127,6 +127,7 @@ DeviceTracer::~DeviceTracer() {
     cpu_tracers_.clear();
 
     CleanupBlockTrace();
+    close(block_dev_fd_);
   } catch (const std::exception &e) {
     LOG(ERROR) << "Exception in DeviceTracer destructor" << e.what();
   } catch (...) {
