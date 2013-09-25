@@ -1,5 +1,6 @@
-#include "block_trace/block_trace_exception.h"
 #include "block_trace/device_tracer.h"
+
+#include "block_trace/block_trace_exception.h"
 
 #include <fcntl.h>
 #include <glog/logging.h>
@@ -10,9 +11,9 @@
 
 namespace datto_linux_client {
 
-DeviceTracer::DeviceTracer(const std::string &block_dev_path,
+DeviceTracer::DeviceTracer(const std::string &block_dev_path_arg,
                            std::shared_ptr<TraceHandler> handler)
-    : block_dev_path_(block_dev_path),
+    : block_dev_path_(block_dev_path_arg),
       handler_(handler) {
 
   if ((block_dev_fd_ = open(block_dev_path_.c_str(),
