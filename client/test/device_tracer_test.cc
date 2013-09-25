@@ -29,10 +29,11 @@ using ::datto_linux_client::UnsyncedSectorTracker;
 // TODO: This class assumes that there is a /dev/shm and /tmp is the
 // temporary directory. These assumptions should be made more explicit
 // or removed.
+static const uint64_t TEST_BLOCK_DEVICE_SIZE = 1 * 1024 * 1024 * 1024;
+static const char TEST_LOOP_SHARED_MEMORY[] = "/dev/shm/test_loop_path";
+
 class DeviceTracerTest : public ::testing::Test {
  public:
-  static const uint64_t TEST_BLOCK_DEVICE_SIZE = 1 * 1024 * 1024 * 1024;
-  const std::string TEST_LOOP_SHARED_MEMORY = "/dev/shm/test_loop_path";
 
  protected:
   class DummyHandler : public TraceHandler {
@@ -58,7 +59,7 @@ class DeviceTracerTest : public ::testing::Test {
   ~DeviceTracerTest() {
     close(loop_dev_fd);
     system(("losetup -d " + loop_dev_path).c_str());
-    unlink(TEST_LOOP_SHARED_MEMORY.c_str());
+    unlink(TEST_LOOP_SHARED_MEMORY);
     system("rm /tmp/test_loop_file.*");
   }
 
@@ -83,7 +84,7 @@ class DeviceTracerTest : public ::testing::Test {
     if ((loop_dev_fd = open(loop_dev_path.c_str(), O_WRONLY)) == -1) {
       PLOG(ERROR) << "Unable to make test loop device."
                   << " Verify everything is cleaned up with losetup";
-      unlink(TEST_LOOP_SHARED_MEMORY.c_str());
+      unlink(TEST_LOOP_SHARED_MEMORY);
       FAIL();
     }
 
