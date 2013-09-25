@@ -93,21 +93,36 @@ TEST_F(DeviceTracerTest, Constructor) {
 }
 
 TEST_F(DeviceTracerTest, ReadWithoutWrites) {
-  std::shared_ptr<UnsyncedSectorTracker> sector_tracker(new UnsyncedSectorTracker());
-
   try {
     DeviceTracer d(loop_dev_path, real_handler);
 
     // Make sure we are only picking up writes
     // TODO: Let's not get in the habit of shelling out every other line
     system(("cat " + loop_dev_path).c_str());
+    sync();
 
+    d.FlushBuffers();
     ASSERT_EQ(0, sector_tracker->UnsyncedSectorCount());
   } catch (const std::exception &e) {
     FAIL() << e.what();
   }
 }
 
+TEST_F(DeviceTracerTest, WriteAnything) {
+  try {
+    DeviceTracer d(loop_dev_path, real_handler);
+
+    std::ofstream loop_out(loop_dev_path);
+    loop_out << "Text to trigger a write trace";
+    loop_out.close();
+    sync();
+
+    d.FlushBuffers();
+    ASSERT_NE(0, sector_tracker->UnsyncedSectorCount());
+  } catch (const std::exception &e) {
+    FAIL() << e.what();
+  }
+}
 // Set up fake block device
 // Start tracing that device
 // Write to known locations
