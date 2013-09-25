@@ -17,8 +17,8 @@ CpuTracer::CpuTracer(std::string &trace_path,
   trace_fd_ = open(trace_path.c_str(), O_RDONLY | O_NONBLOCK);
 
   if (trace_fd_ == -1) {
-    // TODO
-    throw "Unable to open trace_path";
+    PLOG(ERROR) << "Unable to open trace_path";
+    throw BlockTraceException("Open trace_path");
   }
 
   trace_thread_ = std::thread(&CpuTracer::DoTrace, this);
@@ -32,7 +32,7 @@ void CpuTracer::DoTrace() {
   pfd.fd = trace_fd_;
   pfd.events = POLLIN;
 
-  int poll_val = -1;
+  int poll_val = 0;
   struct blk_io_trace trace;
 
   while (!stop_trace_ &&
@@ -47,7 +47,7 @@ void CpuTracer::DoTrace() {
       PLOG(ERROR) << "Error while reading trace file descriptor";
       break;
     } else if (read_bytes == 0) {
-      // TODO Signal buffers are flushed
+      LOG(INFO) << "Got 0 bytes from read";
       flush_buffers_ = false;
       continue;
     }
@@ -68,7 +68,6 @@ void CpuTracer::DoTrace() {
 
     if (trace.pdu_len) {
       // Skip over any trailing data
-      // TODO Log to see if this ever actually happens
       VLOG(2) << "Skipping trailing data for action 0x"
               << std::hex << trace.action << std::dec;
       try {
@@ -90,7 +89,10 @@ void CpuTracer::DoTrace() {
 
 void CpuTracer::FlushBuffer() {
   flush_buffers_ = true;
-  // TODO Condition variable
+  // Wait for flush_buffers_ to be marked false
+  LOG(INFO) << "Waiting for buffer to flush";
+  while (flush_buffers_);
+  LOG(INFO) << "Buffer flushed";
 }
 
 void CpuTracer::StopTrace() {
@@ -98,7 +100,6 @@ void CpuTracer::StopTrace() {
   if (trace_thread_.joinable()) {
     trace_thread_.join();
   }
-  // TODO Condition variable
 }
 
 void CpuTracer::SkipNonseekableFD(int fd, int amount_to_skip) {
@@ -111,8 +112,8 @@ void CpuTracer::SkipNonseekableFD(int fd, int amount_to_skip) {
   while (amount_to_skip > 0) {
     read_bytes = read(fd, &buf, std::min(amount_to_skip, 512));
     if (read_bytes == -1) {
-      // TODO: Use errno
-      throw "Unable to read from fd";
+      PLOG(ERROR) << "Unable to read from fd";
+      throw BlockTraceException("Couldn't read file descriptor");
     }
     amount_to_skip -= read_bytes;
   }

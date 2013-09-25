@@ -10,7 +10,9 @@
 #include <thread>
 
 #include <stdint.h>
+
 #include "block_trace/trace_handler.h"
+#include "block_trace/block_trace_exception.h"
 
 namespace datto_linux_client {
 
