@@ -28,12 +28,12 @@ class CpuTracer : private boost::noncopyable {
   // buffer has content. If a backup is about to occur, we need to flush it.
   void FlushBuffer();
 
-  void StopTrace();
-
   ~CpuTracer();
 
  private:
   void DoTrace();
+  void StopTrace();
+
   static void SkipNonseekableFD(int fd, int amount_to_skip);
 
   std::shared_ptr<TraceHandler> trace_handler_;
