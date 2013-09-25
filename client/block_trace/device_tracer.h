@@ -1,0 +1,62 @@
+#ifndef DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACE_H_
+#define DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACE_H_
+
+#include "block_trace/cpu_tracer.h"
+#include "block_trace/interval_queue.h"
+#include "block_trace/trace_handler.h"
+
+#include <linux/fs.h>
+#include <linux/blktrace_api.h>
+
+#include <boost/icl/interval.hpp>
+#include <boost/noncopyable.hpp>
+
+#include <memory>
+#include <string>
+#include <vector>
+
+namespace datto_linux_client {
+
+static const char DEBUG_FS_PATH[] = "/sys/kernel/debug";
+
+// DeviceTracer is responsible for tracing the writes to a block device
+// and handing off those traces to a TraceHandler instance
+class DeviceTracer : private boost::noncopyable {
+  // TODO Move these constants to another location, perhaps a config file
+  static const int BLKTRACE_BUFFER_SIZE = 1024;
+  static const int BLKTRACE_NUM_SUBBUFFERS = 10;
+  static const int BLKTRACE_MASK = BLK_TC_QUEUE;
+
+ public:
+  // Starts a trace for the device specificed by block_dev_path
+  // Traces will be sent to the TraceHandler instance
+  DeviceTracer(const std::string &block_dev_path,
+               std::shared_ptr<TraceHandler> handler);
+
+  // Flush the trace buffers. This method returns once the buffers
+  // have finished flushing and have been given to the TraceHandler
+  void FlushBuffers();
+
+  std::string block_dev_path();
+
+  ~DeviceTracer();
+
+ private:
+  std::string BeginBlockTrace();
+  void CleanupBlockTrace();
+  std::string GetTracePath(int cpu_num);
+
+  std::string block_dev_path_;
+  std::string trace_name_;
+  int block_dev_fd_;
+  int num_cpus_;
+
+  std::shared_ptr<TraceHandler> handler_;
+
+  std::vector<std::unique_ptr<CpuTracer>> cpu_tracers_;
+
+};
+
+}
+
+#endif //  DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACE_H_

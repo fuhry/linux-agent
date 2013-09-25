@@ -1,14 +1,8 @@
 # Executable names
-copydmdevice/copydmdevice
-traceblocks/traceblocks
-rangetree/buildtree
-client/dattod
-client/tracetester
-client/src/tests/table_test
 to_integrate/src/fsparser
 
 # Tool generated code
-client/src/message_queue/protobuf_classes
+client/request_listener/protobuf_classes
 
 # Core dumps
 core
@@ -33,6 +27,13 @@ core
 *.exe
 *.out
 *.app
+
+### CMake ###
+CMakeCache.txt
+CMakeFiles
+# Excluded for now: Makefile
+cmake_install.cmake
+install_manifest.txt
 
 ### Python ###
 *.py[cod]

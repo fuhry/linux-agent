@@ -10,7 +10,6 @@ glog:
 
 libraries:
     glog
-    devmapper
     probably some fs stuff
     protobuf
 
