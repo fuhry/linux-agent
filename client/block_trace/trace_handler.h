@@ -10,15 +10,17 @@
 namespace datto_linux_client {
 
 class TraceHandler : private boost::noncopyable {
- static const int SECTOR_SIZE = 512;
-
  public:
+  // TODO: This needs to be a calculated value
+  static const int SECTOR_SIZE = 512;
+
   TraceHandler(std::shared_ptr<UnsyncedSectorTracker> tracker);
   virtual void AddTrace(const struct blk_io_trace &trace_data);
   virtual ~TraceHandler() { }
 
  protected:
-  // For derived classes that don't want to use UnsyncedSectorTracker
+  // For derived classes (mainly for testing) that don't want to
+  // use UnsyncedSectorTracker
   TraceHandler() { }
 
  private:
