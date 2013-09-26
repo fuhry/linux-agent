@@ -1,0 +1,6 @@
+#!/bin/bash
+echo "Can't produce a binary yet, need to code & integrate components. Try "`dirname $0`"/run_tests"
+exit 1
+mkdir -p build
+cd build
+cmake .. && make && echo "Files built in build/"

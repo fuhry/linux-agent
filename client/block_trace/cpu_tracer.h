@@ -21,7 +21,7 @@ class CpuTracer : private boost::noncopyable {
  static const int POLL_DELAY_MILLIS = 100;
 
  public:
-  CpuTracer(std::string &trace_path,
+  CpuTracer(std::string &trace_path, int cpu_num,
             std::shared_ptr<TraceHandler> trace_handler); 
 
   // We don't always get instant notifications from the kernel that a trace
@@ -32,6 +32,7 @@ class CpuTracer : private boost::noncopyable {
 
  private:
   void DoTrace();
+  void LockOnCPU();
   void StopTrace();
 
   static void SkipNonseekableFD(int fd, int amount_to_skip);
@@ -40,9 +41,10 @@ class CpuTracer : private boost::noncopyable {
   std::thread trace_thread_;
 
   int trace_fd_;
+  int cpu_num_;
 
-  std::atomic_bool flush_buffers_;
   std::atomic_bool stop_trace_;
+  std::atomic_bool flush_buffers_;
 };
 
 }

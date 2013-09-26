@@ -29,10 +29,11 @@ using ::datto_linux_client::UnsyncedSectorTracker;
 // TODO: This class assumes that there is a /dev/shm and /tmp is the
 // temporary directory. These assumptions should be made more explicit
 // or removed.
+static const uint64_t TEST_BLOCK_DEVICE_SIZE = 1 * 1024 * 1024 * 1024;
+static const char TEST_LOOP_SHARED_MEMORY[] = "/dev/shm/test_loop_path";
+
 class DeviceTracerTest : public ::testing::Test {
  public:
-  static const uint64_t TEST_BLOCK_DEVICE_SIZE = 1 * 1024 * 1024 * 1024;
-  const std::string TEST_LOOP_SHARED_MEMORY = "/dev/shm/test_loop_path";
 
  protected:
   class DummyHandler : public TraceHandler {
@@ -56,14 +57,12 @@ class DeviceTracerTest : public ::testing::Test {
   }
 
   ~DeviceTracerTest() {
-    close(loop_dev_fd);
     system(("losetup -d " + loop_dev_path).c_str());
-    unlink(TEST_LOOP_SHARED_MEMORY.c_str());
+    unlink(TEST_LOOP_SHARED_MEMORY);
     system("rm /tmp/test_loop_file.*");
   }
 
   std::string loop_dev_path;
-  int loop_dev_fd;
   size_t loop_dev_block_size;
 
   std::shared_ptr<TraceHandler> dummy_handler;
@@ -73,6 +72,7 @@ class DeviceTracerTest : public ::testing::Test {
 
  private:
   void CreateEmptyLoopDevice(uint64_t size_bytes) {
+    int loop_dev_fd;
     int create_ret = system("./test/make_test_loop_device");
     ASSERT_EQ(0, create_ret);
 
@@ -83,11 +83,14 @@ class DeviceTracerTest : public ::testing::Test {
     if ((loop_dev_fd = open(loop_dev_path.c_str(), O_WRONLY)) == -1) {
       PLOG(ERROR) << "Unable to make test loop device."
                   << " Verify everything is cleaned up with losetup";
-      unlink(TEST_LOOP_SHARED_MEMORY.c_str());
+      unlink(TEST_LOOP_SHARED_MEMORY);
       FAIL();
     }
 
     ioctl(loop_dev_fd, BLKBSZGET, &loop_dev_block_size);
+    if (close(loop_dev_fd)) {
+      PLOG(ERROR) << "Error closing loop device";
+    }
   }
 };
 
@@ -116,9 +119,9 @@ TEST_F(DeviceTracerTest, ReadWithoutWrites) {
     loop_in.close();
 
     sync();
-
     d.FlushBuffers();
-    EXPECT_EQ(0, sector_tracker->UnsyncedSectorCount());
+
+    EXPECT_EQ(0UL, sector_tracker->UnsyncedSectorCount());
   } catch (const std::exception &e) {
     FAIL() << e.what();
   }
@@ -129,12 +132,15 @@ TEST_F(DeviceTracerTest, WriteAnything) {
     DeviceTracer d(loop_dev_path, real_handler);
 
     std::ofstream loop_out(loop_dev_path);
+
     loop_out << "Text to trigger a write trace";
     loop_out.close();
-    sync();
 
+    sync();
     d.FlushBuffers();
-    EXPECT_NE(0, sector_tracker->UnsyncedSectorCount());
+
+    uint64_t unsynced_count = sector_tracker->UnsyncedSectorCount();
+    EXPECT_NE(0UL, unsynced_count);
   } catch (const std::exception &e) {
     FAIL() << e.what();
   }
@@ -146,7 +152,7 @@ TEST_F(DeviceTracerTest, WriteSpecificLocation) {
 
     std::ofstream loop_out(loop_dev_path);
 
-    int sectors_per_block = loop_dev_block_size / 512;
+    uint64_t sectors_per_block = loop_dev_block_size / 512;
 
     // Write sectors [sectors_per_block * 10, sectors_per_block * 11)
     loop_out.seekp(loop_dev_block_size * 10, std::ios::beg);
@@ -158,9 +164,10 @@ TEST_F(DeviceTracerTest, WriteSpecificLocation) {
 
     // Final interval should be
     // [loop_dev_block_size * 10, loop_dev_block_size * 12)
-    loop_out.close();
-    sync();
 
+    loop_out.close();
+
+    sync();
     d.FlushBuffers();
 
     uint64_t unsynced_count = sector_tracker->UnsyncedSectorCount();

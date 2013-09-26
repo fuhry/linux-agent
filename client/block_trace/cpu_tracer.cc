@@ -4,15 +4,19 @@
 #include <glog/logging.h>
 #include <linux/blktrace_api.h>
 #include <poll.h>
+#include <sched.h>
 #include <sys/stat.h>
+#include <sys/sysinfo.h>
 #include <sys/types.h>
 
 namespace datto_linux_client {
 
-CpuTracer::CpuTracer(std::string &trace_path,
+CpuTracer::CpuTracer(std::string &trace_path, int cpu_num,
                      std::shared_ptr<TraceHandler> trace_handler)
-    : trace_handler_(trace_handler),
-      stop_trace_(false) {
+    : trace_handler_(trace_handler) ,
+      cpu_num_(cpu_num),
+      stop_trace_(false),
+      flush_buffers_(false) {
 
   trace_fd_ = open(trace_path.c_str(), O_RDONLY | O_NONBLOCK);
 
@@ -25,9 +29,28 @@ CpuTracer::CpuTracer(std::string &trace_path,
 
 }
 
+// Lock this thread on just the CPU which it is responsible for tracing
+void CpuTracer::LockOnCPU() {
+  int num_cpus = get_nprocs_conf();
+  cpu_set_t *cpu_mask = CPU_ALLOC(num_cpus);
+  size_t size = CPU_ALLOC_SIZE(num_cpus);
+
+  CPU_ZERO_S(size, cpu_mask);
+  CPU_SET_S(cpu_num_, size, cpu_mask);
+  if (sched_setaffinity(0, size, cpu_mask) < 0) {
+    CPU_FREE(cpu_mask);
+    PLOG(ERROR) << "CPU Lock for " << cpu_num_;
+    return;
+  }
+
+  CPU_FREE(cpu_mask);
+}
+
 // As this is the initial function of a thread, this method must not throw an
 // exception or the entire program will go down
 void CpuTracer::DoTrace() {
+  LockOnCPU();
+
   struct pollfd pfd;
   pfd.fd = trace_fd_;
   pfd.events = POLLIN;

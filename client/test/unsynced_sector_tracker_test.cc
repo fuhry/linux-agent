@@ -11,10 +11,10 @@ using ::datto_linux_client::SectorInterval;
 TEST(UnsyncedSectorTrackerTest, DefaultConstructor) {
   const UnsyncedSectorTracker tracker;
 
-  EXPECT_EQ(0, tracker.UnsyncedSectorCount());
+  EXPECT_EQ(0UL, tracker.UnsyncedSectorCount());
 
   const SectorInterval interval = tracker.GetContinuousUnsyncedSectors();
-  EXPECT_EQ(0, boost::icl::length(interval));
+  EXPECT_EQ(0UL, boost::icl::length(interval));
 }
 
 TEST(UnsyncedSectorTrackerTest, AddUnsyncedIntervalTest) {
@@ -23,7 +23,7 @@ TEST(UnsyncedSectorTrackerTest, AddUnsyncedIntervalTest) {
   SectorInterval interval2(5, 20);
 
   tracker.AddUnsyncedInterval(interval1);
-  EXPECT_EQ(9, tracker.UnsyncedSectorCount());
+  EXPECT_EQ(9UL, tracker.UnsyncedSectorCount());
 
   EXPECT_TRUE(interval1 == tracker.GetContinuousUnsyncedSectors());
 
@@ -40,7 +40,7 @@ TEST(UnsyncedSectorTrackerTest, MarkToSyncIntervalTest) {
 
   tracker.MarkToSyncInterval(interval2);
   EXPECT_TRUE(SectorInterval(1, 5) == tracker.GetContinuousUnsyncedSectors());
-  EXPECT_EQ(4, tracker.UnsyncedSectorCount());
+  EXPECT_EQ(4UL, tracker.UnsyncedSectorCount());
 }
 
 } // namespace
