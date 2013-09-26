@@ -119,8 +119,8 @@ TEST_F(DeviceTracerTest, ReadWithoutWrites) {
     loop_in.close();
 
     sync();
-
     d.FlushBuffers();
+
     EXPECT_EQ(0UL, sector_tracker->UnsyncedSectorCount());
   } catch (const std::exception &e) {
     FAIL() << e.what();
@@ -132,12 +132,15 @@ TEST_F(DeviceTracerTest, WriteAnything) {
     DeviceTracer d(loop_dev_path, real_handler);
 
     std::ofstream loop_out(loop_dev_path);
+
     loop_out << "Text to trigger a write trace";
     loop_out.close();
-    sync();
 
+    sync();
     d.FlushBuffers();
-    EXPECT_NE(0UL, sector_tracker->UnsyncedSectorCount());
+
+    uint64_t unsynced_count = sector_tracker->UnsyncedSectorCount();
+    EXPECT_NE(0UL, unsynced_count);
   } catch (const std::exception &e) {
     FAIL() << e.what();
   }
@@ -161,9 +164,10 @@ TEST_F(DeviceTracerTest, WriteSpecificLocation) {
 
     // Final interval should be
     // [loop_dev_block_size * 10, loop_dev_block_size * 12)
-    loop_out.close();
-    sync();
 
+    loop_out.close();
+
+    sync();
     d.FlushBuffers();
 
     uint64_t unsynced_count = sector_tracker->UnsyncedSectorCount();
