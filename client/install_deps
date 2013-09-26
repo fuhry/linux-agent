@@ -8,4 +8,4 @@ if ! lsb_release -r | grep -q '^Release.*12\.04'; then
     exit 1
 fi
 
-apt-get install build-essential cmake libboost-dev libprotobuf-dev libgoogle-glog-dev blktrace subversion
+apt-get install build-essential cmake libboost1.48-dev libprotobuf-dev libgoogle-glog-dev blktrace subversion
