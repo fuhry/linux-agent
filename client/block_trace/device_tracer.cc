@@ -35,7 +35,7 @@ DeviceTracer::DeviceTracer(const std::string &block_dev_path_arg,
       DLOG(INFO) << "trace_path: " << trace_path;
 
       cpu_tracers_[i] = std::unique_ptr<CpuTracer>(
-                          new CpuTracer(trace_path, handler_));
+                          new CpuTracer(trace_path, i, handler_));
     }
   } catch (...) {
 
