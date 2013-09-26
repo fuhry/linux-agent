@@ -3,7 +3,7 @@
 The `install_deps` script will install the appropriate dependancies to build the entire project. However, this script is only supported for Ubuntu 12.04 as that is the architecture that will be producing the release binary. `install_deps` should be easy to adapt to other systems for development purposes.
 
 ## One-step build
-To build the resulting binary, just run `do_build`. Note that there is no binary yet, so this won't actually produce anything.
+To build the resulting binary, just run `do_build`. Note that there is no binary yet, so this won't actually produce anything. When building, everything will be put in a `build/` directory.
 
 ## Modifying the build process
 ### CMake
