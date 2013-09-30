@@ -6,6 +6,8 @@
 #include <memory>
 #include <string>
 
+#include "unsynced_sector_tracker/sector_set.h"
+
 namespace datto_linux_client {
 
 class MountableBlockDevice : public BlockDevice {
