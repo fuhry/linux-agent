@@ -3,11 +3,12 @@
 
 #include <boost/noncopyable.hpp>
 #include <boost/cstdint.hpp>
+#include <memory>
 #include <string>
 
 namespace datto_linux_client {
 
-class MountableBlockDevice : BlockDevice {
+class MountableBlockDevice : public BlockDevice {
 
  public:
   explicit MountableBlockDevice(std::string block_path);
