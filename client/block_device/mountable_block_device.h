@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 
+#include "block_device/block_device.h"
 #include "unsynced_sector_tracker/sector_set.h"
 
 namespace datto_linux_client {
