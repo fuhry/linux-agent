@@ -1,5 +1,5 @@
-#include "XFSPartition.h"
-#include "tools.h"
+#include "fs_parsing/xfs_mountable_block_device.h"
+
 #include <stdbool.h>
 #include <error.h>
 #include <endian.h>
@@ -9,8 +9,12 @@ extern "C" {
 #undef delete
 }
 
+#include "fs_parsing/tools.h"
+
+// TODO consts
 #define MAX_WRITE_BLOCK_LENGTH 0x100000
 #define JOURNAL_LOG_LENGTH 0x100000
+
 namespace datto_linux_client {
 
   typedef struct ag_header { /*because the xfs library is BAD*/
@@ -32,6 +36,10 @@ namespace datto_linux_client {
     struct xfs_btree_block *current_block;
   };
 
+  // TODO Fix statics
+  // TODO Whitespace
+  // TODO Scoping
+  // TODO Line length
   /** Handles an allocation group (ag)'s record data */
   static int xfs_handle_allocation_group_record(int agno,
                                 struct xfs_device_info *devinfo, xfs_daddr_t ag_begin,
@@ -53,7 +61,7 @@ namespace datto_linux_client {
     for (int i = 0; i < num_records; ++i, ++record_ptr) {
         sizeb = XFS_AGB_TO_DADDR(devinfo->mp, agno, be32toh(record_ptr->ar_startblock))
                                                          - ag_begin;
-        to_read = roundup(sizeb << BBSHIFT, devinfo->sector_size);
+        to_read = my_roundup(sizeb << BBSHIFT, devinfo->sector_size);
 
         write_position = (xfs_off_t) ag_begin << BBSHIFT;
         while (to_read > 0) {
@@ -136,7 +144,7 @@ namespace datto_linux_client {
 
     if (ag_begin < ag_end) {
         sizeb = ag_end - ag_begin;
-        to_read = roundup(sizeb << BBSHIFT, devinfo->sector_size);
+        to_read = my_roundup(sizeb << BBSHIFT, devinfo->sector_size);
         write_position = (xfs_off_t) ag_begin << BBSHIFT;
 
         while (to_read > 0) {
@@ -186,7 +194,7 @@ namespace datto_linux_client {
     int journal_log_start = XFS_FSB_TO_DADDR(devinfo->mp,
                                                     devinfo->mp->m_sb.sb_logstart) << BBSHIFT;
 
-    int journal_log_start_pos = rounddown(journal_log_start, (xfs_off_t) JOURNAL_LOG_LENGTH);
+    int journal_log_start_pos = my_rounddown(journal_log_start, (xfs_off_t) JOURNAL_LOG_LENGTH);
 
     if (journal_log_start % JOURNAL_LOG_LENGTH) {
         if (lseek(devinfo->fd, journal_log_start_pos, SEEK_SET) < 0) {
@@ -208,7 +216,7 @@ namespace datto_linux_client {
     int journal_log_end = (XFS_FSB_TO_DADDR(devinfo->mp, devinfo->mp->m_sb.sb_logstart) << BBSHIFT) +
                                                 XFS_FSB_TO_B(devinfo->mp, devinfo->mp->m_sb.sb_logblocks);
 
-    int journal_log_end_pos = rounddown(journal_log_end, (xfs_off_t) JOURNAL_LOG_LENGTH);
+    int journal_log_end_pos = my_rounddown(journal_log_end, (xfs_off_t) JOURNAL_LOG_LENGTH);
 
     if (journal_log_end % JOURNAL_LOG_LENGTH) {
         if (lseek(devinfo->fd, journal_log_end_pos, SEEK_SET) < 0) {
@@ -367,17 +375,17 @@ out:
   }
 
 
-  XFSPartition::XFSPartition() : Partition(NULL) { //TODO: remove this
-  }
+  XfsMountableBlockDevice::XfsMountableBlockDevice(std::string block_path)
+      : MountableBlockDevice(block_path) { }
   
-  std::unique_ptr<const SectorSet> XFSPartition::GetInUseSectors() {
+  std::unique_ptr<const SectorSet> XfsMountableBlockDevice::GetInUseSectors() {
     SectorSet *sectors = new SectorSet();
-    XFSPartition::xfs_iter_blocks(sectors);    
+    XfsMountableBlockDevice::xfs_iter_blocks(sectors);    
     return std::unique_ptr<const SectorSet>(sectors);
   }
   
-  int XFSPartition::xfs_iter_blocks(SectorSet *sectors) {
-    const char *dev = "/dev/sdb1"; //this->GetMountPoint().c_str(); //TODO: Testing
+  int XfsMountableBlockDevice::xfs_iter_blocks(SectorSet *sectors) {
+    const char *dev = BlockDevice::block_path().c_str();
     int rc = 0;
     libxfs_init_t xargs;
     xfs_mount_t *mp;

@@ -1,5 +1,5 @@
-#include "EXTFSPartition.h"
-#include "tools.h"
+#include "fs_parsing/ext_mountable_block_device.h"
+
 #include <error.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -8,18 +8,20 @@ extern "C" {
 #include <ext2fs/ext2_err.h>
 }
 
+#include "fs_parsing/tools.h"
+
 namespace datto_linux_client {
-  EXTFSPartition::EXTFSPartition() : Partition(NULL) { //TODO: remove this
-  }
+  ExtMountableBlockDevice::ExtMountableBlockDevice(std::string block_path)
+      : MountableBlockDevice(block_path) { }
   
-  std::unique_ptr<const SectorSet> EXTFSPartition::GetInUseSectors() {
+  std::unique_ptr<const SectorSet> ExtMountableBlockDevice::GetInUseSectors() {
     SectorSet *sectors = new SectorSet();
-    EXTFSPartition::ext_iter_blocks(sectors);    
+    ExtMountableBlockDevice::ext_iter_blocks(sectors);    
     return std::unique_ptr<const SectorSet>(sectors);
   }
   
-  int EXTFSPartition::ext_iter_blocks(SectorSet *sectors) {
-    const char *dev = "/dev/sdb3"; //this->GetMountPoint().c_str(); //TODO: Testing
+  int ExtMountableBlockDevice::ext_iter_blocks(SectorSet *sectors) {
+    const char *dev = BlockDevice::block_path().c_str();
     int rc = 0;
     int block_size, bitmap_size;
     ext2_filsys fs = NULL;
@@ -48,7 +50,7 @@ namespace datto_linux_client {
     }
 
     block_size = 0x400 << fs->super->s_log_block_size;
-    bitmap_size = roundup(fs->super->s_blocks_per_group, 8) / 8;
+    bitmap_size = my_roundup(fs->super->s_blocks_per_group, 8) / 8;
     block_bitmap = malloc(bitmap_size);
 
     for (int i = 0; i < fs->group_desc_count; ++i) {

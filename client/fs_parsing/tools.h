@@ -17,7 +17,7 @@
 #define betole32(x) (((x >> 24) & 0xff) | ((x << 8) & 0xff0000) | \
                     ((x >> 8) & 0xff00) | ((x << 24) & 0xff000000))
 
-#define roundup(n, m) m * (((n - 1) / m) + 1)
-#define rounddown(n, m) ((n/m) * m)
+#define my_roundup(n, m) m * (((n - 1) / m) + 1)
+#define my_rounddown(n, m) ((n/m) * m)
 
 #endif
