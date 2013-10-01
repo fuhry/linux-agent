@@ -8,7 +8,6 @@ namespace datto_linux_client {
 
 class RemoteBlockDevice : BlockDevice {
  public:
-  virtual void Connect() = 0;
   virtual bool IsConnected() = 0;
   // Disconnect should not return an exception if already disconnected
   virtual void Disconnect() = 0;
