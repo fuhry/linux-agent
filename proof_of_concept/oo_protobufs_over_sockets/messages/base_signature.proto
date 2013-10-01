@@ -1,0 +1,6 @@
+package datto_linux_client;
+
+// BaseSignature is the set of hashes from the source image
+message BaseSignature {
+    // Nothing yet, this feature is not implemented
+}
