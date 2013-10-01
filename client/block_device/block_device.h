@@ -67,16 +67,15 @@ class BlockDevice : private boost::noncopyable {
 
  protected:
   // Use this constructor when the block_path doesn't exist yet
-  // Note that block_path_, major_, and minor_ must be set before the
+  // Note that block_path_ must be set and Init() called before the
   // subclass constructor returns
   BlockDevice() { }
+  std::string block_path_;
 
   //  Do the actual initialization of the object
   void Init();
 
  private:
-
-  std::string block_path_;
   uint32_t major_;
   uint32_t minor_;
 
