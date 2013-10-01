@@ -20,7 +20,7 @@
 
 namespace datto_linux_client {
 
-BlockDevice::BlockDevice(std::string block_path) : block_path_(block_path) {
+BlockDevice::BlockDevice(std::string block_path__) : block_path_(block_path__) {
   Init();
 }
 
