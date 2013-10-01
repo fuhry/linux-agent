@@ -28,32 +28,27 @@ BlockDevice::BlockDevice(std::string block_path) {
 void BlockDevice::Init() {
   struct stat statbuf;
 
-  //  Note:  using lstat() instead of stat() to cause symlinks to block devices to fail
-
-  if (lstat(block_path_.c_str(), &statbuf) < 0) {  // bail with exception if stat() fails
+  // Note: using lstat() instead of stat() to cause symlinks to
+  // block devices to fail
+  if (lstat(block_path_.c_str(), &statbuf) < 0) {
     std::string err = std::string("Error: could not stat() ") + block_path_;
     throw BlockDeviceException(err);
   }
-
-  if (! S_ISBLK(statbuf.st_mode) ) {  // bail with exception if not a block device
-    std::string err = std::string("Error: ") +
-      block_path_ +
-      std::string(" is not a block device");
-    throw BlockDeviceException(err);
+  // bail with exception if not a block device
+  if (! S_ISBLK(statbuf.st_mode) ) {
+    throw BlockDeviceException("Error: " + block_path_ +
+                               " is not a block device");
   }
 
-  major_ = ::major(statbuf.st_rdev);  // Record major and minor numbers
+  major_ = ::major(statbuf.st_rdev);
   minor_ = ::minor(statbuf.st_rdev);
 
   int fd = 0;
-  fd = open(block_path_.c_str(),   //  Open readonly here, just for ioctl() purposes
-      O_RDONLY | O_LARGEFILE);
+  fd = open(block_path_.c_str(), O_RDONLY | O_LARGEFILE);
 
   if (fd < 0) {
-    std::string err = std::string("Error opening ") +
-      block_path_ +
-      std::string(" read-only for ioctl() calls\n");
-    throw BlockDeviceException(err);
+    throw BlockDeviceException("Error opening " + block_path_ +
+                               " read-only for ioctl() calls\n");
   }
 
   ioctl(fd, BLKGETSIZE64, &device_size_bytes_);
@@ -75,9 +70,8 @@ void BlockDevice::Unthrottle() {
 
 int BlockDevice::Open() {
   if (file_descriptor_ != -1) {
-    std::string err = "Error: block device " + block_path_ + 
-      " already open";
-    throw BlockDeviceException(err);
+    throw BlockDeviceException("Error: block device " + block_path_ +
+                               " already open");
   }
 
   int fd = open(block_path_.c_str(),
@@ -85,11 +79,8 @@ int BlockDevice::Open() {
 
   if (fd < 0) {
     char * error_chars = strerror(errno);
-    std::string err = std::string("Error opening ") +
-      block_path_ +
-      std::string("; error: ") +
-      std::string(error_chars);
-    throw BlockDeviceException(err);
+    throw BlockDeviceException("Error opening " + block_path_ + "; error: " +
+                               error_chars);
   }
 
   file_descriptor_ = fd;
