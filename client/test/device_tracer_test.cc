@@ -9,14 +9,13 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glog/logging.h>
-#include <linux/loop.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 namespace {
 
