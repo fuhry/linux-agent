@@ -17,9 +17,6 @@ class BlockDevice : private boost::noncopyable {
   // block_path doesn't exist or isn't the path for a block_device
   explicit BlockDevice(std::string block_path);
 
-  //  Do the actual initialization of the object
-  void Init();
-
   // If a method is lowercase, then it is should be just an accessor and
   // nothing more. See
   // google-styleguide.googlecode.com/svn/trunk/cppguide.xml#Function_Names
@@ -73,6 +70,9 @@ class BlockDevice : private boost::noncopyable {
   // Note that block_path_, major_, and minor_ must be set before the
   // subclass constructor returns
   BlockDevice();
+
+  //  Do the actual initialization of the object
+  void Init();
 
  private:
 
