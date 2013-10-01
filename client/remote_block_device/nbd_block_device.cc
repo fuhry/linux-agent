@@ -1,9 +1,8 @@
-#ifndef DATTO_CLIENT_REMOTE_BLOCK_DEVICE_NBD_BLOCK_DEVICE_H_
-#define DATTO_CLIENT_REMOTE_BLOCK_DEVICE_NBD_BLOCK_DEVICE_H_
-
 #include "remote_block_device/nbd_block_device.h"
+#include "remote_block_device/remote_block_device_exception.h"
 
 #include <glog/logging.h>
+#include <sstream>
 
 namespace datto_linux_client {
 
@@ -11,15 +10,14 @@ namespace datto_linux_client {
 // and start using exec(). As I *think* this is temporary, don't worry about
 // this yet.
 NbdBlockDevice::NbdBlockDevice(std::string remote_host, uint16_t remote_port,
-                               std::string local_block_path)
-    : BlockDevice() {
+                               std::string local_block_path) {
 
   std::ostringstream nbd_command_stream;
 
   nbd_command_stream << "nbd-client " << remote_host << " " << remote_port
                      << " " << local_block_path << " 2>/dev/null 1>&2";
 
-  int ret_val = system(nbd_command_stream.str());
+  int ret_val = system(nbd_command_stream.str().c_str());
 
   switch (ret_val) {
     case 0:
@@ -38,7 +36,7 @@ NbdBlockDevice::NbdBlockDevice(std::string remote_host, uint16_t remote_port,
     default:
       // nbd-client error
       PLOG(ERROR) << nbd_command_stream.str() << " :  nbd-client returned "
-                  << ret;
+                  << ret_val;
       throw RemoteBlockDeviceException("Unable to mount " + local_block_path);
       break;
   }
@@ -48,11 +46,12 @@ NbdBlockDevice::NbdBlockDevice(std::string remote_host, uint16_t remote_port,
   BlockDevice::Init();
 }
 
-bool NbdBlockDevice::IsConnected() {
+bool NbdBlockDevice::IsConnected() const {
   std::ostringstream nbd_command_stream;
 
-  nbd_command_stream << "nbd-client -c " << block_path_ << " 2>/dev/null 1>&2";
-  int ret_val = system(nbd_command_stream.str());
+  nbd_command_stream << "nbd-client -c " << block_path_
+                     << " 2>/dev/null 1>&2";
+  int ret_val = system(nbd_command_stream.str().c_str());
 
   switch (ret_val) {
     case 0:
@@ -72,6 +71,9 @@ bool NbdBlockDevice::IsConnected() {
       throw RemoteBlockDeviceException("Hit unexpected switch branch");
       break;
   }
+
+  // Unreachable
+  return false;
 }
 
 void NbdBlockDevice::Disconnect() {
@@ -79,7 +81,7 @@ void NbdBlockDevice::Disconnect() {
 
   nbd_command_stream << "nbd-client -d " << block_path_ << " 2>/dev/null 1>&2";
 
-  int ret_val = system(nbd_command_stream.str());
+  int ret_val = system(nbd_command_stream.str().c_str());
   if (ret_val == 127) {
     PLOG(ERROR) << "system returned 127";
     throw RemoteBlockDeviceException("Unable to find nbd-client");
@@ -89,5 +91,3 @@ void NbdBlockDevice::Disconnect() {
 }
 
 }
-
-#endif //  DATTO_CLIENT_REMOTE_BLOCK_DEVICE_NBD_BLOCK_DEVICE_H_

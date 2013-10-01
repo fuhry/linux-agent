@@ -8,7 +8,7 @@
 
 namespace datto_linux_client {
 
-class NbdBlockDevice : RemoteBlockDevice {
+class NbdBlockDevice : public RemoteBlockDevice {
  public:
   // local_block_path is the *local* block device (e.g. /dev/nbd0)
   NbdBlockDevice(std::string remote_host, uint16_t remote_port,
@@ -21,7 +21,7 @@ class NbdBlockDevice : RemoteBlockDevice {
   // block devices? Depends on the implementation details
 
   // Parent class calls disconnect
-  ~NbdBlockDevice();
+  ~NbdBlockDevice() { }
 };
 
 }
