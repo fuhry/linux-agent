@@ -1,0 +1,3 @@
+Package: libgoogle-glog0, libgoogle-glog-dev
+Pin: release n=quantal
+Pin-Priority: 900
