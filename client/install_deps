@@ -8,7 +8,7 @@ if ! lsb_release -r | grep -q '^Release.*12\.04'; then
     exit 1
 fi
 
-sudo rsync -r dependency_files/ /
+sudo rsync -r $(dirname $0)/dependency_files/ /
 
 sudo apt-get update
 sudo apt-get install build-essential cmake libboost1.48-dev libprotobuf-dev blktrace subversion libgoogle-glog-dev libgoogle-glog0
