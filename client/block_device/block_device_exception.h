@@ -6,7 +6,7 @@
 namespace datto_linux_client {
 class BlockDeviceException : public std::runtime_error {
  public: 
-  explicit BlockDeviceException(std::string &what) : runtime_error(what) {};
+  explicit BlockDeviceException(std::string &what_) : runtime_error(what_) {};
 };
 }
 
