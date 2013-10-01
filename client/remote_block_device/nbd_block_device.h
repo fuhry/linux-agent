@@ -21,7 +21,7 @@ class NbdBlockDevice : public RemoteBlockDevice {
   // block devices? Depends on the implementation details
 
   // Parent class calls disconnect
-  ~NbdBlockDevice() { }
+  ~NbdBlockDevice();
 };
 
 }

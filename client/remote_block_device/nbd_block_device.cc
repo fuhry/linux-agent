@@ -90,4 +90,12 @@ void NbdBlockDevice::Disconnect() {
   return;
 }
 
+NbdBlockDevice::~NbdBlockDevice() {
+  try {
+    Disconnect();
+  } catch (...) {
+    LOG(ERROR) << "Error during disconnect in destructor";
+  }
+}
+
 }
