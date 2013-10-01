@@ -6,7 +6,8 @@
 namespace datto_linux_client {
 class RemoteBlockDeviceException : public std::runtime_error {
  public: 
-  explicit RemoteBlockDeviceException(std::string const &what_) : runtime_error(what_) {};
+  explicit RemoteBlockDeviceException(const std::string &a_what)
+    : runtime_error(a_what) {};
 };
 }
 
