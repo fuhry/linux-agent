@@ -109,5 +109,19 @@ TEST(NbdBlockDeviceTestNoFixture, CantConnect) {
   }
 }
 
+TEST_F(NbdBlockDeviceTest, CanWrite) {
+  int nbd_fd = nbd_block_device->Open();
+
+  ssize_t bytes = write(nbd_fd, "abc123", 7);
+  EXPECT_EQ(7, bytes);
+
+  lseek(nbd_fd, 0, SEEK_SET);
+
+  char buf[7];
+  bytes = read(nbd_fd, &buf, 7);
+  EXPECT_EQ(7, bytes);
+  EXPECT_STREQ("abc123", buf);
+}
+
 }
 
