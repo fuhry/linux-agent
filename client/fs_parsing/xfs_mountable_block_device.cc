@@ -42,7 +42,8 @@ namespace datto_linux_client {
   // TODO Line length
   /** Handles an allocation group (ag)'s record data */
   static int xfs_handle_allocation_group_record(int agno,
-                                struct xfs_device_info *devinfo, xfs_daddr_t ag_begin,
+                                struct xfs_device_info *devinfo,
+                                xfs_daddr_t ag_begin,
                                 xfs_daddr_t ag_end,
                                 SectorSet *sectors)
   {
@@ -55,12 +56,14 @@ namespace datto_linux_client {
     xfs_off_t write_position;
 
     //Get record pointer for block
-    xfs_alloc_rec_t *record_ptr = XFS_ALLOC_REC_ADDR(devinfo->mp, devinfo->current_block, 1); 
+    xfs_alloc_rec_t *record_ptr = XFS_ALLOC_REC_ADDR(devinfo->mp,
+                                                     devinfo->current_block, 1); 
 
     //Iterate over all records, and read fully with callback
     for (int i = 0; i < num_records; ++i, ++record_ptr) {
-        sizeb = XFS_AGB_TO_DADDR(devinfo->mp, agno, be32toh(record_ptr->ar_startblock))
-                                                         - ag_begin;
+        sizeb = XFS_AGB_TO_DADDR(devinfo->mp, agno, 
+                                 be32toh(record_ptr->ar_startblock)) - ag_begin;
+
         to_read = my_roundup(sizeb << BBSHIFT, devinfo->sector_size);
 
         write_position = (xfs_off_t) ag_begin << BBSHIFT;
@@ -96,7 +99,8 @@ namespace datto_linux_client {
 
   /** Handles an allocation group (ag)'s btree data */
   static int xfs_handle_allocation_group_btree(int agno,
-                                struct xfs_device_info *devinfo, xfs_daddr_t ag_begin,
+                                struct xfs_device_info *devinfo,
+                                xfs_daddr_t ag_begin,
                                 xfs_daddr_t ag_end,
                                 SectorSet *sectors)
   {
@@ -114,9 +118,9 @@ namespace datto_linux_client {
 
     btree_buf_data = malloc(devinfo->block_size);
     // Locate the btree's first block and callback on it
-    xfs_off_t btree_buf_position = (xfs_off_t)XFS_AGB_TO_DADDR(devinfo->mp,
-                                                               agno,
-                                                               be32toh(devinfo->current_block->bb_u.s.bb_rightsib)) << BBSHIFT;
+    xfs_off_t btree_buf_position = (xfs_off_t) XFS_AGB_TO_DADDR(devinfo->mp,
+                                                                agno,
+                                                                be32toh(devinfo->current_block->bb_u.s.bb_rightsib)) << BBSHIFT;
 
     if (lseek(devinfo->fd, btree_buf_position, SEEK_SET) < 0) {
         error(0, errno, "Error seeking %s (btree pos: %ld)", devinfo->dev,
@@ -192,9 +196,11 @@ namespace datto_linux_client {
   {
     int rc = 0;
     int journal_log_start = XFS_FSB_TO_DADDR(devinfo->mp,
-                                                    devinfo->mp->m_sb.sb_logstart) << BBSHIFT;
+                                             devinfo->mp->m_sb.sb_logstart);
+    journal_log_start = journal_log_start << BBSHIFT;
 
-    int journal_log_start_pos = my_rounddown(journal_log_start, (xfs_off_t) JOURNAL_LOG_LENGTH);
+    int journal_log_start_pos = my_rounddown(journal_log_start,
+                                             (xfs_off_t) JOURNAL_LOG_LENGTH);
 
     if (journal_log_start % JOURNAL_LOG_LENGTH) {
         if (lseek(devinfo->fd, journal_log_start_pos, SEEK_SET) < 0) {
@@ -214,9 +220,10 @@ namespace datto_linux_client {
     }
 
     int journal_log_end = (XFS_FSB_TO_DADDR(devinfo->mp, devinfo->mp->m_sb.sb_logstart) << BBSHIFT) +
-                                                XFS_FSB_TO_B(devinfo->mp, devinfo->mp->m_sb.sb_logblocks);
+                           XFS_FSB_TO_B(devinfo->mp, devinfo->mp->m_sb.sb_logblocks);
 
-    int journal_log_end_pos = my_rounddown(journal_log_end, (xfs_off_t) JOURNAL_LOG_LENGTH);
+    int journal_log_end_pos = my_rounddown(journal_log_end,
+                                           (xfs_off_t) JOURNAL_LOG_LENGTH);
 
     if (journal_log_end % JOURNAL_LOG_LENGTH) {
         if (lseek(devinfo->fd, journal_log_end_pos, SEEK_SET) < 0) {
@@ -240,7 +247,8 @@ namespace datto_linux_client {
 
   /** Parses blocks with in an allocation group (records, btree, journal, etc) */
   static int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
-                                xfs_daddr_t ag_end, struct xfs_device_info *devinfo,
+                                xfs_daddr_t ag_end,
+                                struct xfs_device_info *devinfo,
                                 SectorSet *sectors)
   {
 
@@ -322,8 +330,9 @@ namespace datto_linux_client {
     ag_hdr.xfs_agf = (xfs_agf_t*) btree_buf_data;
 
     bno = be32toh(ag_hdr.xfs_agf->agf_roots[XFS_BTNUM_BNOi]);
-    ag_end = XFS_AGB_TO_DADDR(devinfo->mp, agno, be32toh(ag_hdr.xfs_agf->agf_length) - 1) +
-                                                        devinfo->block_size / BBSIZE;
+    ag_end = XFS_AGB_TO_DADDR(devinfo->mp, agno,
+                              be32toh(ag_hdr.xfs_agf->agf_length) - 1) +
+                                devinfo->block_size / BBSIZE;
 
     for (uint32_t current_level = 1;; ++current_level) {
         uint16_t bb_level;
@@ -352,7 +361,7 @@ namespace datto_linux_client {
         }
 
         ptr = XFS_ALLOC_PTR_ADDR(devinfo->mp, devinfo->current_block, 1,
-                                                         devinfo->mp->m_alloc_mxr[1]);
+                                 devinfo->mp->m_alloc_mxr[1]);
 
         bno = be32toh(ptr[0]);
     }
@@ -421,7 +430,8 @@ out:
     mp = libxfs_mount(&mbuf, super, xargs.ddev, xargs.logdev, xargs.rtdev, 1);
 
     if (!mp || mp->m_sb.sb_inprogress
-                                    || !mp->m_sb.sb_logstart || mp->m_sb.sb_rextents) {
+            || !mp->m_sb.sb_logstart
+            || mp->m_sb.sb_rextents) {
         error(0, errno, "Failed to initialize %s", dev);
         goto out;
     }
