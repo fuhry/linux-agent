@@ -93,5 +93,17 @@ TEST_F(NbdBlockDeviceTest, CanConnect) {
   EXPECT_TRUE(nbd_block_device->IsConnected());
 }
 
+TEST(NbdBlockDeviceTestNoFixture, CantConnect) {
+  try {
+    auto nbd_block_device = std::unique_ptr<NbdBlockDevice>(
+        new NbdBlockDevice(LOCAL_TEST_HOST, LOCAL_TEST_PORT,
+          LOCAL_TEST_NBD_PATH));
+    // Shouldn't get here
+    FAIL();
+  } catch (...) {
+
+  }
+}
+
 }
 
