@@ -98,10 +98,14 @@ TEST(NbdBlockDeviceTestNoFixture, CantConnect) {
     auto nbd_block_device = std::unique_ptr<NbdBlockDevice>(
         new NbdBlockDevice(LOCAL_TEST_HOST, LOCAL_TEST_PORT,
           LOCAL_TEST_NBD_PATH));
-    // Shouldn't get here
+    // Shouldn't get here as we didn't setup a server so the block device
+    // should throw an exception
     FAIL();
+  } catch (const std::runtime_error &e) {
+    // Good
   } catch (...) {
-
+    // Shouldn't be catching non-exceptions
+    FAIL();
   }
 }
 
