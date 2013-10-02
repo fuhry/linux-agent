@@ -1,4 +1,4 @@
-#include "fs_parsing/xfs_mountable_block_device.h"
+#include "xfs_mountable_block_device.h"
 
 #include <stdbool.h>
 #include <error.h>
@@ -11,11 +11,9 @@ extern "C" {
 
 #include "fs_parsing/tools.h"
 
-// TODO consts
-#define MAX_WRITE_BLOCK_LENGTH 0x100000
-#define JOURNAL_LOG_LENGTH 0x100000
-
-namespace datto_linux_client {
+namespace { /* Private namespace */
+  const int MAX_WRITE_BLOCK_LENGTH = 0x100000;
+  const int JOURNAL_LOG_LENGTH = 0x100000;
 
   typedef struct ag_header { /*because the xfs library is BAD*/
     xfs_dsb_t *xfs_sb;
@@ -36,16 +34,12 @@ namespace datto_linux_client {
     struct xfs_btree_block *current_block;
   };
 
-  // TODO Fix statics
-  // TODO Whitespace
-  // TODO Scoping
-  // TODO Line length
   /** Handles an allocation group (ag)'s record data */
-  static int xfs_handle_allocation_group_record(int agno,
-                                struct xfs_device_info *devinfo,
-                                xfs_daddr_t ag_begin,
-                                xfs_daddr_t ag_end,
-                                SectorSet *sectors)
+  int xfs_handle_allocation_group_record(int agno,
+                                         struct xfs_device_info *devinfo,
+                                         xfs_daddr_t ag_begin,
+                                         xfs_daddr_t ag_end,
+                                         datto_linux_client::SectorSet *sectors)
   {
 
     int rc = 0;
@@ -98,11 +92,11 @@ namespace datto_linux_client {
 
 
   /** Handles an allocation group (ag)'s btree data */
-  static int xfs_handle_allocation_group_btree(int agno,
-                                struct xfs_device_info *devinfo,
-                                xfs_daddr_t ag_begin,
-                                xfs_daddr_t ag_end,
-                                SectorSet *sectors)
+  int xfs_handle_allocation_group_btree(int agno,
+                                        struct xfs_device_info *devinfo,
+                                        xfs_daddr_t ag_begin,
+                                        xfs_daddr_t ag_end,
+                                        datto_linux_client::SectorSet *sectors)
   {
     int rc = 0;
     int write_block_length = 0;
@@ -191,8 +185,8 @@ namespace datto_linux_client {
 
 
   /** Handles an allocation group (ag)'s journal data */
-  static int xfs_handle_allocation_group_journal(struct xfs_device_info *devinfo,
-                                                 SectorSet *sectors)
+  int xfs_handle_allocation_group_journal(struct xfs_device_info *devinfo,
+                                          datto_linux_client::SectorSet *sectors)
   {
     int rc = 0;
     int journal_log_start = XFS_FSB_TO_DADDR(devinfo->mp,
@@ -246,10 +240,10 @@ namespace datto_linux_client {
 
 
   /** Parses blocks with in an allocation group (records, btree, journal, etc) */
-  static int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
-                                xfs_daddr_t ag_end,
-                                struct xfs_device_info *devinfo,
-                                SectorSet *sectors)
+  int xfs_iter_allocation_group_blocks(int agno, xfs_daddr_t ag_begin,
+                                       xfs_daddr_t ag_end,
+                                       struct xfs_device_info *devinfo,
+                                       datto_linux_client::SectorSet *sectors)
   {
 
     int rc = 0;
@@ -277,8 +271,8 @@ namespace datto_linux_client {
 
 
   /** Parse a given allocation group then call function to read the contents */
-  static int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
-                                       SectorSet *sectors)
+  int xfs_iter_allocation_group(int agno, struct xfs_device_info *devinfo,
+                                datto_linux_client::SectorSet *sectors)
   {
     int rc = 0;
     ag_header_t ag_hdr;
@@ -382,7 +376,9 @@ out:
     }
     return rc;
   }
+}
 
+namespace datto_linux_client {
 
   XfsMountableBlockDevice::XfsMountableBlockDevice(std::string block_path)
       : MountableBlockDevice(block_path) { }
