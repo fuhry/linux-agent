@@ -1,4 +1,4 @@
-#include "xfs_mountable_block_device.h"
+#include "fs_parsing/xfs_mountable_block_device.h"
 
 #include <stdbool.h>
 #include <error.h>
