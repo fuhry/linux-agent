@@ -3,6 +3,7 @@
 #include <fstream>
 #include <glog/logging.h>
 #include <linux/limits.h>
+#include <linux/fs.h>
 #include <map>
 #include <string>
 
@@ -61,7 +62,7 @@ std::map<std::string, std::string> GetMountedDevices() {
 
   return mounted_devices;
 }
-}
+} // unnamed namespace
 
 namespace datto_linux_client {
 
@@ -77,4 +78,46 @@ bool MountableBlockDevice::IsMounted() {
   return mounted_devices.find(block_path_) != mounted_devices.end();
 }
 
-} // datto_linux_client
+std::string MountableBlockDevice::GetMountPoint() {
+  auto mounted_devices = GetMountedDevices();
+  auto mount_pair = mounted_devices.find(block_path_);
+  if (mount_pair == mounted_devices.end()) {
+    throw BlockDeviceException("Block device is not mounted");
+  }
+  return mount_pair->second;
+}
+
+void MountableBlockDevice::Freeze() {
+  int mount_fd = OpenMount();
+  int ioctl_ret = ioctl(mount_fd, FIFREEZE, /* ignored */ 0);
+  close(mount_fd);
+
+  if (ioctl_ret) {
+    PLOG(ERROR) << "Error during freeze.";
+    throw BlockDeviceException("FIFREEZE");
+  }
+}
+
+void MountableBlockDevice::Thaw() {
+  int mount_fd = OpenMount();
+  int ioctl_ret = ioctl(mount_fd, FITHAW, /* ignored */ 0);
+  close(mount_fd);
+
+  if (ioctl_ret) {
+    PLOG(ERROR) << "Error during thaw.";
+    throw BlockDeviceException("FITHAW");
+  }
+}
+
+MountableBlockDevice::~MountableBlockDevice() {
+  try {
+    CloseMount();
+    Thaw();
+  } catch (const std::runtime_error &e) {
+    LOG(ERROR) << e.what();
+  } catch (...) {
+    LOG(ERROR) << "Caught non-exception type in destructor";
+  }
+}
+
+} // datto_linux_client namespace
