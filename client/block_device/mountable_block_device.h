@@ -16,9 +16,9 @@ class MountableBlockDevice : public BlockDevice {
  public:
   explicit MountableBlockDevice(std::string block_path);
 
-  bool IsMounted();
+  virtual bool IsMounted();
   // Throw an exception if the partition isn't mounted
-  std::string GetMountPoint();
+  virtual std::string GetMountPoint();
 
   // These should only be overwritten if the underlying filesystem
   // doesn't support the FIFREEZE ioctl
@@ -29,11 +29,11 @@ class MountableBlockDevice : public BlockDevice {
   // the start of the volume
   virtual std::unique_ptr<const SectorSet> GetInUseSectors() = 0;
 
-  // Return a file descriptor for the block device
+  // Return a file descriptor for the mount point
   // Throw an exception if one is already open
   int OpenMount();
 
-  // Close the file descriptor returned
+  // Close the file descriptor returned by OpenMount()
   // Don't throw if one isn't open
   void CloseMount();
 
