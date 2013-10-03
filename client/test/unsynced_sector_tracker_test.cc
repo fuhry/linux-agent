@@ -1,7 +1,7 @@
 #include "unsynced_sector_tracker/unsynced_sector_tracker.h"
 #include "unsynced_sector_tracker/sector_interval.h"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 namespace {
 
