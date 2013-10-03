@@ -3,11 +3,15 @@
 
 #include <boost/noncopyable.hpp>
 #include <boost/cstdint.hpp>
+#include <memory>
 #include <string>
+
+#include "block_device/block_device.h"
+#include "unsynced_sector_tracker/sector_set.h"
 
 namespace datto_linux_client {
 
-class MountableBlockDevice : BlockDevice {
+class MountableBlockDevice : public BlockDevice {
 
  public:
   explicit MountableBlockDevice(std::string block_path);

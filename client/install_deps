@@ -1,11 +1,20 @@
 #!/bin/bash
-# This is for Ubuntu 12.04. Things like libboost might require different version numbers depending on the platform,
-# but the primary build platform is 12.04 so all release builds will use these
+# This is for Ubuntu 12.04. Things like libboost might require different
+# version numbers depending on the platform, but the primary build platform is
+# 12.04 so all release builds will use these
 
 if ! lsb_release -r | grep -q '^Release.*12\.04'; then
-    echo "This script is only supported on Ubuntu 12.04. " \
-        "Version numbers may not be correct on other versions/distributions" >&2
+    echo "This script is only supported on Ubuntu 12.04. Version numbers may" \
+        "not be correct on other versions/distributions. " \
+        "Check script source to see dependencies." >&2
     exit 1
 fi
 
-apt-get install build-essential cmake libboost1.48-dev libprotobuf-dev libgoogle-glog-dev blktrace subversion
+# Move configuration files over to let us get libgoogle-glog-dev and friends
+# from Quantal repos
+sudo rsync -r $(dirname $0)/dependency_files/ /
+
+sudo apt-get update
+sudo apt-get install build-essential cmake libboost1.48-dev libprotobuf-dev \
+    blktrace subversion libgoogle-glog-dev libgoogle-glog0 nbd-client \
+    nbd-server uuid-dev

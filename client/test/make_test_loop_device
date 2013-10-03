@@ -10,10 +10,8 @@ if ! truncate --size=1M "$temp_file"; then
   exit 1
 fi
 
-sleep 1
 echo "Creating test loop device"
 losetup -fv "$temp_file" | tail -n1 | sed -e 's/Loop device is //g' | tr -d '\n' > /dev/shm/test_loop_path
-sleep 1
 
 if [ ! -b $(cat /dev/shm/test_loop_path) ]; then
   echo "Failed to create loop device"
