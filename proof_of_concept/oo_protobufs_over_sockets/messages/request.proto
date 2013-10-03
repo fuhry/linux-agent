@@ -1,0 +1,18 @@
+package datto_linux_client;
+
+import "start_backup_request.proto";
+import "stop_backup_request.proto";
+
+message Request {
+    enum RequestType {
+        START_BACKUP = 1;
+        STOP_BACKUP = 2;
+    }
+
+    required RequestType type = 1;
+
+    optional string mq_reply_path = 2;
+
+    optional StartBackupRequest start_backup_request = 3;
+    optional StopBackupRequest stop_backup_request = 4;
+}

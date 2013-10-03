@@ -1,0 +1,16 @@
+package datto_linux_client;
+
+import "base_signature.proto";
+
+message StartBackupRequest {
+    enum BackupType {
+        FULL_BACKUP = 1;
+        INCREMENTAL_BACKUP = 2;
+        DIFF_BACKUP = 3;
+    }
+
+    required string block_path = 1;
+    required BackupType type = 2;
+
+    optional BaseSignature base_signature = 3;
+}
