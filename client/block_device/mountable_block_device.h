@@ -22,8 +22,9 @@ class MountableBlockDevice : public BlockDevice {
 
   // These should only be overwritten if the underlying filesystem
   // doesn't support the FIFREEZE ioctl
-  // Note that the MountableBlockDevice must not have an open
-  // file descriptor for the mount point.
+  //
+  // Before calling these the MountableBlockDevice must not have an open
+  // file descriptor for the mount point (i.e., call CloseMount() first)
   virtual void Freeze();
   virtual void Thaw();
 
