@@ -1,5 +1,6 @@
 #include "block_device/mountable_block_device.h"
-#include "block_device/block_device_exception.h"
+
+#include <fcntl.h>
 #include <fstream>
 #include <glog/logging.h>
 #include <linux/fs.h>
@@ -7,6 +8,10 @@
 #include <map>
 #include <string>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include "block_device/block_device_exception.h"
 
 namespace {
 // This function returns all device paths that are mounted
@@ -108,6 +113,20 @@ void MountableBlockDevice::Thaw() {
     PLOG(ERROR) << "Error during thaw.";
     throw BlockDeviceException("FITHAW");
   }
+}
+
+int MountableBlockDevice::OpenMount() {
+  std::string mount_point = GetMountPoint();
+  if ((mount_file_descriptor_ = open(mount_point.c_str(), O_RDWR)) == -1) {
+    PLOG(ERROR) << "error opening " << mount_point;
+    throw BlockDeviceException("Opening mountpoint");
+  }
+
+  return mount_file_descriptor_;
+}
+
+void MountableBlockDevice::CloseMount() {
+  close(mount_file_descriptor_);
 }
 
 MountableBlockDevice::~MountableBlockDevice() {

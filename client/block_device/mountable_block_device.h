@@ -33,7 +33,8 @@ class MountableBlockDevice : public BlockDevice {
   virtual std::unique_ptr<const SectorSet> GetInUseSectors() = 0;
 
   // Return a file descriptor for the mount point
-  // Throw an exception if one is already open
+  // Throw an exception if one is already open, or if
+  // it isn't mounted
   int OpenMount();
 
   // Close the file descriptor returned by OpenMount()
