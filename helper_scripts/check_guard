@@ -1,0 +1,81 @@
+#!/usr/bin/perl
+
+  use strict;
+  use warnings;
+
+  use File::Find;
+
+
+  sub check_header {
+
+    my $fullpath = $File::Find::name;
+
+    return unless $fullpath =~ m/\.h$/;
+
+    if (! -r "$fullpath") {
+      warn "$fullpath cannot be read; skipping";
+      return;
+    }
+
+
+
+    open(my $fh, "<", "$fullpath") or
+      warn "Error opening file $fullpath for input: $!", return;
+
+    my $saw_ifndef = 0;
+    # my $saw_define = 0;
+
+    while( my $line = <$fh> ) {
+
+      chomp($line);          # Trim whitespace
+      $line =~ s/^\s+//;
+      $line =~ s/\s+$//;
+
+      next if $line =~ m{^//};      # Ignore comment lines
+      next if $line =~ m/^$/;       # Ignore empty lines
+
+
+      if ($line =~ /^\#ifndef/) {
+        $saw_ifndef = 1;
+        next;
+      } elsif ($line =~ /^\#define/ and $saw_ifndef) {
+        print "  Header file $fullpath passed\n";
+        last;
+      } else {
+        print "* Header file $fullpath failed\n";
+        last;
+      }
+
+    }
+
+    close($fh);
+
+    return;
+  }
+
+######  MAIN   #######
+
+  if (scalar @ARGV < 1) {
+    die "Error: must provide one or more directory/file names as arguments";
+  }
+
+  my %find_opts = (
+    wanted => \&check_header,
+    no_chdir => 1,
+  );
+
+  find(\%find_opts, @ARGV);
+
+
+
+
+
+
+
+  
+ 
+
+    
+
+
+
