@@ -40,6 +40,17 @@ class MockMountableBlockDevice : public MountableBlockDevice {
   std::unique_ptr<const SectorSet> GetInUseSectors();
 };
 
+void mount_device(std::string path, std::string mount_point) {
+  if (system(("mount -t ext2 " + path + " " + mount_point).c_str())) {
+    FAIL() << "Error while mounting device";
+  }
+}
+
+void unmount_device(std::string path) {
+  if (system(("umount " + path).c_str())) {
+    FAIL() << "Error unmounting device";
+  }
+}
 std::unique_ptr<const SectorSet> MockMountableBlockDevice::GetInUseSectors() {
   return nullptr;
 }
@@ -50,17 +61,19 @@ TEST_F(MountableBlockDeviceTest, Constructor) {
 
 TEST_F(MountableBlockDeviceTest, IsMounted) {
   MockMountableBlockDevice bd(loop_device->path());
+
   EXPECT_FALSE(bd.IsMounted());
-
-  if (system(("mount -t ext2 " + loop_device->path() +
-              " " + temp_dir).c_str())) {
-    FAIL() << "Error while mounting loop device";
-  }
+  mount_device(loop_device->path(), temp_dir);
   EXPECT_TRUE(bd.IsMounted());
+  unmount_device(loop_device->path());
+}
 
-  if (system(("umount " + loop_device->path()).c_str())) {
-    FAIL() << "Error unmounting loop device";
-  }
+TEST_F(MountableBlockDeviceTest, GetMountPoint) {
+  MockMountableBlockDevice bd(loop_device->path());
+
+  mount_device(loop_device->path(), temp_dir);
+  EXPECT_EQ(temp_dir, bd.GetMountPoint());
+  unmount_device(loop_device->path());
 }
 
 } // namespace
