@@ -2,10 +2,11 @@
 #include "block_device/block_device_exception.h"
 #include <fstream>
 #include <glog/logging.h>
-#include <linux/limits.h>
 #include <linux/fs.h>
+#include <linux/limits.h>
 #include <map>
 #include <string>
+#include <sys/ioctl.h>
 
 namespace {
 // This function returns all device paths that are mounted
