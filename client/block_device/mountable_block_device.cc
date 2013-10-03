@@ -30,7 +30,7 @@ std::map<std::string, std::string> GetMountedDevices() {
     std::string path = line_str.substr(0, first_space);
     VLOG(2) << "Path is: " << path;
     std::string mount_point =
-        line_str.substr(first_space + 1, second_space);
+        line_str.substr(first_space + 1, second_space - first_space - 1);
 
     std::string real_path;
     char real_path_buf[PATH_MAX];
