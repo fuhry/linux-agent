@@ -51,7 +51,7 @@ void BlockDevice::Init() {
   }
 
   ioctl(fd, BLKGETSIZE64, &device_size_bytes_);
-  ioctl(fd, BLKSSZGET, &block_size_bytes_);
+  ioctl(fd, BLKBSZGET, &block_size_bytes_);
 
   close(fd);
 

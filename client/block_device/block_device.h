@@ -37,7 +37,6 @@ class BlockDevice : private boost::noncopyable {
     return device_size_bytes_;
   }
 
-  // Use BLKSSZGET not BLKBSZGET
   uint64_t BlockSizeBytes() const {
     return block_size_bytes_;
   }
