@@ -1,15 +1,40 @@
 #!/usr/bin/perl
 
   use strict;
-  use warnings;
+  # use warnings;
 
   use File::Find;
+  use Cwd qw{abs_path};
+
+  our $base;      #  Yuck.  Global variable to keep track of the base directory
+                  #  for each iteration
+
+
+  sub base_check {
+
+    my ($string, $fullpath) = @_;
+
+    my $adjpath = $fullpath;
+    $adjpath =~ s{^$base}{};          # Strip base off front
+    my $stringval = uc($adjpath);        # Get uppercase version of it
+    $stringval =~ s{[/\.]}{_}g;           # and change '/' to '_'
+    $stringval .= "_";                # then add one more '_' to the end
+    $stringval = "DATTO_CLIENT_" . $stringval;
+
+    return $string eq $stringval ? "" : "$stringval"; 
+
+  }
+
+
 
 
   sub check_header {
 
-    my $fullpath = $File::Find::name;
+    my $fname = $File::Find::name;
+    my $fullpath = abs_path($fname);
 
+
+    return unless -f "$fullpath";
     return unless $fullpath =~ m/\.h$/;
 
     if (! -r "$fullpath") {
@@ -44,9 +69,18 @@
       } elsif ($line =~ /^\#define/ and $saw_ifndef) {
         ($define_string) = ($line =~ m/\#define\s+(\S+)/);
         if ($ifndef_string eq $define_string) {
-          print "  Header file $fullpath passed\n";
+          my $calculated_string = base_check($define_string, $fullpath);  
+          if (! $calculated_string) {
+            print "  Header file $fullpath passed\n";
+          } else {
+            print "* Header file $fullpath failed.. \n";
+            print "    #define string was $define_string\n";
+            print "    should have been   $calculated_string\n";
+            last;
+          }
         } else {
           print "* Header file $fullpath failed..  string mismatch\n";
+          last;
         }
         last;
       } else {
@@ -72,7 +106,21 @@
     no_chdir => 1,
   );
 
-  find(\%find_opts, @ARGV);
+  for my $tocheck (@ARGV) {
+
+    my $chkpath = abs_path($tocheck);
+
+    $base = $chkpath;
+
+    while (! -d "$base") {         # Strip of ending until it is a directory
+      $base =~ s{/[^/]+$}{};
+    }
+
+    $base .= "/" unless $base =~ m'/$';
+
+    find(\%find_opts, $chkpath);
+
+  }
 
 
 
