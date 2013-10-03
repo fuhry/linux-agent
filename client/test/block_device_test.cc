@@ -1,4 +1,3 @@
-// TODO: Integrate this with Google Test
 #include <block_device/block_device.h>
 
 #include <fcntl.h>
