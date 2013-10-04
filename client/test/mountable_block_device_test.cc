@@ -1,8 +1,11 @@
 #include "block_device/mountable_block_device.h"
 
+#include <atomic>
 #include <fcntl.h>
+#include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <memory>
+#include <thread>
 #include <unistd.h>
 
 #include "test/loop_device.h"
@@ -13,12 +16,22 @@ using ::datto_linux_client::MountableBlockDevice;
 using ::datto_linux_client::SectorSet;
 using ::datto_linux_client_test::LoopDevice;
 
+void mount_device(std::string path, std::string mount_point) {
+  if (system(("mount -t ext3 " + path + " " + mount_point).c_str())) {
+    FAIL() << "Error while mounting device";
+  }
+}
+
+void unmount_device(std::string path) {
+  system(("umount " + path).c_str());
+}
+
 class MountableBlockDeviceTest : public ::testing::Test {
  protected:
   MountableBlockDeviceTest() {
     loop_device = std::unique_ptr<LoopDevice>(new LoopDevice());
     // Make it mountable by putting a FS on it
-    if (system(("mkfs.ext2 " + loop_device->path() +
+    if (system(("mkfs.ext3 " + loop_device->path() +
                 " 2>&1 1>/dev/null").c_str())) {
       throw std::runtime_error("error creating fs");
     }
@@ -28,6 +41,11 @@ class MountableBlockDeviceTest : public ::testing::Test {
       throw std::runtime_error("error creating test_mount directory");
     }
   }
+
+  ~MountableBlockDeviceTest() {
+    unmount_device(loop_device->path());
+  }
+
   std::unique_ptr<LoopDevice> loop_device;
   std::string temp_dir;
 };
@@ -40,17 +58,6 @@ class MockMountableBlockDevice : public MountableBlockDevice {
   std::unique_ptr<const SectorSet> GetInUseSectors();
 };
 
-void mount_device(std::string path, std::string mount_point) {
-  if (system(("mount -t ext2 " + path + " " + mount_point).c_str())) {
-    FAIL() << "Error while mounting device";
-  }
-}
-
-void unmount_device(std::string path) {
-  if (system(("umount " + path).c_str())) {
-    FAIL() << "Error unmounting device";
-  }
-}
 std::unique_ptr<const SectorSet> MockMountableBlockDevice::GetInUseSectors() {
   return nullptr;
 }
@@ -73,6 +80,46 @@ TEST_F(MountableBlockDeviceTest, GetMountPoint) {
 
   mount_device(loop_device->path(), temp_dir);
   EXPECT_EQ(temp_dir, bd.GetMountPoint());
+  unmount_device(loop_device->path());
+}
+
+TEST_F(MountableBlockDeviceTest, FreezeAndThaw) {
+  MockMountableBlockDevice bd(loop_device->path());
+
+  mount_device(loop_device->path(), temp_dir);
+
+  // Freeze the device
+  bd.Freeze();
+
+  std::atomic<bool> is_done(false);
+  // Try to write to it in another thread
+  std::thread write_thread([&, &is_done]() {
+      system(("touch " + temp_dir + "/a_file").c_str());
+      is_done = true;
+  });
+
+  // make sure the thread starts execution
+  sleep(1);
+  ASSERT_TRUE(write_thread.joinable());
+
+  write_thread.detach();
+  // Make sure that thread is blocked
+  EXPECT_FALSE(is_done);
+
+  // Thaw
+  bd.Thaw();
+
+  // 5 seconds should be more than long enough for the write_thread to schedule
+  for (int i = 0; i < 5; ++i) {
+    if (is_done) {
+      break;
+    }
+    sleep(1);
+  }
+  // TODO NBD-client left open after test
+  // Make sure write went through
+  EXPECT_TRUE(is_done);
+
   unmount_device(loop_device->path());
 }
 
