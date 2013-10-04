@@ -75,7 +75,7 @@ TEST_F(DeviceTracerTest, ReadWithoutWrites) {
     loop_in.read(&file_contents[0], file_size);
     loop_in.close();
 
-    sync();
+    loop_dev->Sync();
     d.FlushBuffers();
 
     EXPECT_EQ(0UL, sector_tracker->UnsyncedSectorCount());
@@ -93,7 +93,7 @@ TEST_F(DeviceTracerTest, WriteAnything) {
     loop_out << "Text to trigger a write trace";
     loop_out.close();
 
-    sync();
+    loop_dev->Sync();
     d.FlushBuffers();
 
     uint64_t unsynced_count = sector_tracker->UnsyncedSectorCount();
@@ -124,7 +124,7 @@ TEST_F(DeviceTracerTest, WriteSpecificLocation) {
 
     loop_out.close();
 
-    sync();
+    loop_dev->Sync();
     d.FlushBuffers();
 
     uint64_t unsynced_count = sector_tracker->UnsyncedSectorCount();
