@@ -24,3 +24,8 @@ add_unit_test(nbd_block_device_test
 add_unit_test(block_device_test
               test/loop_device.cc
               block_device/block_device.cc)
+
+add_unit_test(mountable_block_device_test
+              test/loop_device.cc
+              block_device/mountable_block_device.cc
+              block_device/block_device.cc)
