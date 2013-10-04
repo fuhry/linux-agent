@@ -6,7 +6,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-if ! truncate --size=1M "$temp_file"; then
+if ! truncate --size=10M "$temp_file"; then
   exit 1
 fi
 
