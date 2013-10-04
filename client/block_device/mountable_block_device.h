@@ -46,6 +46,7 @@ class MountableBlockDevice : public BlockDevice {
 
  private:
   int mount_file_descriptor_;
+  bool is_frozen;
 };
 
 }

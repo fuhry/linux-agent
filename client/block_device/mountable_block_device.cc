@@ -75,7 +75,9 @@ std::map<std::string, std::string> GetMountedDevices() {
 namespace datto_linux_client {
 
 MountableBlockDevice::MountableBlockDevice(std::string a_block_path)
-    : BlockDevice(a_block_path) { }
+    : BlockDevice(a_block_path),
+      mount_file_descriptor_(-1),
+      is_frozen(false) { }
 
 bool MountableBlockDevice::IsMounted() {
   // TODO These checks should be based on major/minor number, not on path.
@@ -104,6 +106,8 @@ void MountableBlockDevice::Freeze() {
     PLOG(ERROR) << "Error during freeze.";
     throw BlockDeviceException("FIFREEZE");
   }
+
+  is_frozen = true;
 }
 
 void MountableBlockDevice::Thaw() {
@@ -115,6 +119,8 @@ void MountableBlockDevice::Thaw() {
     PLOG(ERROR) << "Error during thaw.";
     throw BlockDeviceException("FITHAW");
   }
+
+  is_frozen = false;
 }
 
 int MountableBlockDevice::OpenMount() {
@@ -135,7 +141,9 @@ void MountableBlockDevice::CloseMount() {
 MountableBlockDevice::~MountableBlockDevice() {
   try {
     CloseMount();
-    Thaw();
+    if (is_frozen) {
+      Thaw();
+    }
   } catch (const std::runtime_error &e) {
     LOG(ERROR) << e.what();
   } catch (...) {
