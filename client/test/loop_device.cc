@@ -44,6 +44,20 @@ LoopDevice::LoopDevice() {
   }
 }
 
+void LoopDevice::Sync() {
+  int fd;
+  if ((fd = open(path_.c_str(), O_RDWR)) == -1) {
+    throw std::runtime_error("Unable to open loop device");
+  }
+
+  int ioctl_ret = ioctl(fd, BLKFLSBUF, 0);
+  close(fd);
+
+  if (ioctl_ret) {
+    throw std::runtime_error("Unable to flush block device");
+  }
+}
+
 LoopDevice::~LoopDevice() {
   sync();
   system(("losetup -d " + path_).c_str());

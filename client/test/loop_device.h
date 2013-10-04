@@ -13,6 +13,8 @@ class LoopDevice {
  public:
   LoopDevice();
 
+  void Sync();
+
   ~LoopDevice();
 
   std::string path() const {
