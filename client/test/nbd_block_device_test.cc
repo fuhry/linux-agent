@@ -25,16 +25,14 @@ class NbdBlockDeviceTest : public ::testing::Test {
   class NbdServer {
    public:
     NbdServer(std::string file_to_serve) {
-      // null_fd is for redirecting below
-      int null_fd = open("/dev/null", O_RDWR);
       pid_t fork_ret = fork();
-      switch (fork_ret) {
-        case -1:
+      if (fork_ret == -1) {
           PLOG(ERROR) << "fork";
           throw std::runtime_error("fork failed");
-          break;
-        case 0:
+      }
+      else if(fork_ret == 0) {
           // This is the same as 2>&1 1>/dev/null
+          int null_fd = open("/dev/null", O_RDWR);
           dup2(null_fd, 1);
           dup2(null_fd, 2);
           close(null_fd);
@@ -49,12 +47,11 @@ class NbdBlockDeviceTest : public ::testing::Test {
           // If we get here then exec failed
           PLOG(ERROR) << "execl";
           _exit(127);
-          break;
-        default:
+      }
+      else {
           nbd_server_pid = fork_ret;
           // Let the nbd_server start
           sleep(1);
-          break;
       }
     }
 
