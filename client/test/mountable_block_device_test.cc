@@ -116,7 +116,6 @@ TEST_F(MountableBlockDeviceTest, FreezeAndThaw) {
     }
     sleep(1);
   }
-  // TODO NBD-client left open after test
   // Make sure write went through
   EXPECT_TRUE(is_done);
 
