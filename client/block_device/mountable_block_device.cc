@@ -119,7 +119,8 @@ void MountableBlockDevice::Thaw() {
 
 int MountableBlockDevice::OpenMount() {
   std::string mount_point = GetMountPoint();
-  if ((mount_file_descriptor_ = open(mount_point.c_str(), O_RDWR)) == -1) {
+  if ((mount_file_descriptor_ = open(mount_point.c_str(),
+                                     O_DIRECTORY | O_RDONLY)) == -1) {
     PLOG(ERROR) << "error opening " << mount_point;
     throw BlockDeviceException("Opening mountpoint");
   }
