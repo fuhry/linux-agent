@@ -74,8 +74,8 @@ std::map<std::string, std::string> GetMountedDevices() {
 
 namespace datto_linux_client {
 
-MountableBlockDevice::MountableBlockDevice(std::string block_path)
-    : BlockDevice(block_path) { }
+MountableBlockDevice::MountableBlockDevice(std::string a_block_path)
+    : BlockDevice(a_block_path) { }
 
 bool MountableBlockDevice::IsMounted() {
   // TODO These checks should be based on major/minor number, not on path.
