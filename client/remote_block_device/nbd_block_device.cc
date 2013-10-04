@@ -73,24 +73,19 @@ bool NbdBlockDevice::IsConnected() const {
   switch (ret_val) {
     case 0:
       return true;
-      break;
     case 1:
       return false;
-      break;
     case 2:
       PLOG(ERROR) << nbd_command_stream.str();
       throw RemoteBlockDeviceException("Error while checking nbd connection");
-      break;
     case 127:
       PLOG(ERROR) << "system returned 127";
       PLOG(ERROR) << nbd_command_stream.str();
       throw RemoteBlockDeviceException("Unable to find nbd-client");
-      break;
     default:
       PLOG(ERROR) << "system returned " << ret_val;
       PLOG(ERROR) << nbd_command_stream.str();
       throw RemoteBlockDeviceException("Hit unexpected switch branch");
-      break;
   }
 
   // Unreachable
