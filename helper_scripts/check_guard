@@ -4,7 +4,8 @@
   # use warnings;
 
   use File::Find;
-  use Cwd qw{abs_path};
+  use Cwd qw{abs_path getcwd};
+  use Getopt::Long;
 
   our $base;      #  Yuck.  Global variable to keep track of the base directory
                   #  for each iteration
@@ -96,6 +97,18 @@
   }
 
 ######  MAIN   #######
+
+
+  GetOptions("base=s" => \$base);
+
+  $base = "";
+  unless ($base) {        # If no base specified, use current working directory
+    $base = getcwd();
+    $base = abs_path($base);
+    $base =~ s{/[^/]+$}{/};
+  }
+  print "Using base $base\n\n";
+
 
   if (scalar @ARGV < 1) {
     die "Error: must provide one or more directory/file names as arguments";
