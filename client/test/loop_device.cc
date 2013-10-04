@@ -24,7 +24,7 @@ LoopDevice::LoopDevice() {
   std::getline(loop_path_stream, path_);
   loop_path_stream.close();
 
-  if ((fd = open(path_.c_str(), O_WRONLY)) == -1) {
+  if ((fd = open(path_.c_str(), O_RDONLY)) == -1) {
     PLOG(ERROR) << "Unable to make test loop device."
       << " Verify everything is cleaned up with losetup";
     unlink(TEST_LOOP_SHARED_MEMORY);
@@ -46,7 +46,7 @@ LoopDevice::LoopDevice() {
 
 void LoopDevice::Sync() {
   int fd;
-  if ((fd = open(path_.c_str(), O_RDWR)) == -1) {
+  if ((fd = open(path_.c_str(), O_RDONLY)) == -1) {
     throw std::runtime_error("Unable to open loop device");
   }
 
