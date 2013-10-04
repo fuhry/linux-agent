@@ -125,7 +125,7 @@ TEST_F(MountableBlockDeviceTest, FreezeAndThaw) {
 
   std::atomic<bool> is_done(false);
   // Try to write to it in another thread
-  std::thread write_thread([&, &is_done]() {
+  std::thread write_thread([&]() {
       system(("touch " + temp_dir + "/a_file").c_str());
       is_done = true;
   });
