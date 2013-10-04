@@ -3,6 +3,7 @@
 
 #include <string>
 #include <stdint.h>
+#include <unistd.h>
 
 #include "remote_block_device/remote_block_device.h"
 
@@ -22,6 +23,8 @@ class NbdBlockDevice : public RemoteBlockDevice {
 
   // Parent class calls disconnect
   ~NbdBlockDevice();
+ private:
+  pid_t nbd_client_pid_;
 };
 
 }
