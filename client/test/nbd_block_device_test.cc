@@ -27,7 +27,7 @@ class NbdBlockDeviceTest : public ::testing::Test {
     NbdServer(std::string file_to_serve) {
       // null_fd is for redirecting below
       int null_fd = open("/dev/null", O_RDWR);
-      pid_t fork_ret = vfork();
+      pid_t fork_ret = fork();
       switch (fork_ret) {
         case -1:
           PLOG(ERROR) << "fork";
