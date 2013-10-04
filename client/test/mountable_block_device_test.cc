@@ -83,6 +83,38 @@ TEST_F(MountableBlockDeviceTest, GetMountPoint) {
   unmount_device(loop_device->path());
 }
 
+TEST_F(MountableBlockDeviceTest, OpenMount) {
+  mount_device(loop_device->path(), temp_dir);
+
+  // Scope this so things are cleaned up before unmounted
+  {
+    MockMountableBlockDevice bd(loop_device->path());
+    int mount_fd = bd.OpenMount();
+
+    EXPECT_GE(mount_fd, 0);
+  }
+
+  unmount_device(loop_device->path());
+}
+
+TEST_F(MountableBlockDeviceTest, CloseMount) {
+  mount_device(loop_device->path(), temp_dir);
+
+  // Scope this so things are cleaned up before unmounted
+  {
+    MockMountableBlockDevice bd(loop_device->path());
+    int mount_fd = bd.OpenMount();
+    bd.CloseMount();
+
+    int fcntl_ret = fcntl(mount_fd, F_GETFD);
+
+    // Should have been an error as we closed it
+    EXPECT_EQ(-1, fcntl_ret);
+  }
+
+  unmount_device(loop_device->path());
+}
+
 TEST_F(MountableBlockDeviceTest, FreezeAndThaw) {
   MockMountableBlockDevice bd(loop_device->path());
 
