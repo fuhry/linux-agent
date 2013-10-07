@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$#" -ne 2 ]; then
-    echo "usage: $0 block_dev {ext2,ext3,ext4,xfs}"
+    echo "usage: $0 block_dev ext2|ext3|ext4|xfs"
     exit 1
 fi
 
