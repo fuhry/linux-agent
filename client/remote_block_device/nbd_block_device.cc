@@ -14,52 +14,12 @@ namespace datto_linux_client {
 // TODO: If this ends up making it to prod, we should stop using system
 // and start using exec(). As I *think* this is temporary, don't worry about
 // this yet.
-NbdBlockDevice::NbdBlockDevice(std::string remote_host, uint16_t remote_port,
-                               std::string local_block_path) {
+NbdBlockDevice::NbdBlockDevice(std::string remote_host, uint16_t remote_port)
+    : RemoteBlockDevice() {
+  nbd_client_ = std::unique_ptr<NbdClient>(new NbdClient(remote_host,
+                                                         remote_port));
 
-  pid_t fork_ret = fork();
-
-  if (fork_ret == 0) {
-    int null_fd = open("/dev/null", O_RDWR);
-    dup2(null_fd, 0);
-    dup2(null_fd, 1);
-    dup2(null_fd, 2);
-    close(null_fd);
-    execlp("nbd-client", "nbd-client", "-n", remote_host.c_str(),
-           std::to_string(remote_port).c_str(),
-           local_block_path.c_str(), nullptr);
-    PLOG(ERROR) << "execlp returned!";
-    _exit(127);
-  } else if (fork_ret < 0) {
-    PLOG(ERROR) << "fork failed";
-    throw BlockDeviceException("fork");
-  }
-
-  nbd_client_pid_ = fork_ret;
-  block_path_ = local_block_path;
-
-  // Let the client start before continuing
-  sleep(2);
-
-  int status;
-  pid_t result = waitpid(nbd_client_pid_, &status, WNOHANG);
-
-  if (result == -1) { // error from waitpid()
-    PLOG(ERROR) << "waitpid";
-    throw BlockDeviceException("waitpid couldn't check child");
-  } else if (result != 0) { // child isn't running
-    if (WIFEXITED(status)) {
-      LOG(ERROR) << "client returned with status of " << WEXITSTATUS(status);
-      throw BlockDeviceException("child terminated by exit()");
-    } else if (WIFSIGNALED(status)) {
-      LOG(ERROR) << "client received signal number " << WTERMSIG(status);
-      throw BlockDeviceException("child terminated by signal");
-    } else {
-      PLOG(ERROR) << "client died for unknown reason";
-      throw BlockDeviceException("child terminated by unknown");
-    }
-  }
-
+  BlockDevice::block_path_ = (nbd_client_)->nbd_device_path();
   // Setup major_, minor_, etc
   BlockDevice::Init();
 }
@@ -109,8 +69,8 @@ void NbdBlockDevice::Disconnect() {
 NbdBlockDevice::~NbdBlockDevice() {
   try {
     Disconnect();
-  } catch (...) {
-    LOG(ERROR) << "Error during disconnect in destructor";
+  } catch (const std::runtime_error &e) {
+    LOG(ERROR) << "Error during disconnect in destructor: " << e.what();
   }
 }
 
