@@ -25,31 +25,7 @@ NbdBlockDevice::NbdBlockDevice(std::string remote_host, uint16_t remote_port)
 }
 
 bool NbdBlockDevice::IsConnected() const {
-  std::ostringstream nbd_command_stream;
-
-  nbd_command_stream << "nbd-client -c " << block_path_;
-  int ret_val = system(nbd_command_stream.str().c_str());
-
-  switch (ret_val) {
-    case 0:
-      return true;
-    case 1:
-      return false;
-    case 2:
-      PLOG(ERROR) << nbd_command_stream.str();
-      throw RemoteBlockDeviceException("Error while checking nbd connection");
-    case 127:
-      PLOG(ERROR) << "system returned 127";
-      PLOG(ERROR) << nbd_command_stream.str();
-      throw RemoteBlockDeviceException("Unable to find nbd-client");
-    default:
-      PLOG(ERROR) << "system returned " << ret_val;
-      PLOG(ERROR) << nbd_command_stream.str();
-      throw RemoteBlockDeviceException("Hit unexpected switch branch");
-  }
-
-  // Unreachable
-  return false;
+  return nbd_client_->IsConnected();
 }
 
 void NbdBlockDevice::Disconnect() {
@@ -60,7 +36,7 @@ NbdBlockDevice::~NbdBlockDevice() {
   try {
     Disconnect();
   } catch (const std::runtime_error &e) {
-    LOG(ERROR) << "Error during disconnect in destructor: " << e.what();
+    LOG(ERROR) << e.what();
   }
 }
 

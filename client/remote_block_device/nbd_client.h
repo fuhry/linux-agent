@@ -23,6 +23,7 @@ class NbdClient : private boost::noncopyable {
     return nbd_device_path_;
   }
 
+  bool IsConnected();
   void Disconnect();
 
   ~NbdClient();

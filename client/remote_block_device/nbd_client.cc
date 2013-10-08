@@ -193,13 +193,10 @@ NbdClient::NbdClient(std::string a_host, uint16_t a_port)
 
   // Give the ioctl a chance to run
   std::this_thread::yield();
-
-  // TODO Is this right? or should we join in Disconnect()?
-  nbd_do_it_thread_.detach();
 }
 
 void NbdClient::ConfigureNbdDevice() {
-  if (ioctl(nbd_fd_, NBD_SET_BLKSIZE, 4096) < 0) {
+  if (ioctl(nbd_fd_, NBD_SET_BLKSIZE, 4096UL) < 0) {
     throw NbdException("Unable to set block size for NBD device");
   }
 
@@ -210,26 +207,57 @@ void NbdClient::ConfigureNbdDevice() {
   // Don't check these as we don't care if there was no socket
   ioctl(nbd_fd_, NBD_CLEAR_SOCK);
 
-  // Should we set a timeout here?
+  // we use unsigned long because that's how it's defined in the kernel
+  // function __nbd_ioctl
+  if (ioctl(nbd_fd_, NBD_SET_TIMEOUT, 10UL)) {
+    throw NbdException("Unable to set timeout for NBD device");
+  }
 
   if (ioctl(nbd_fd_, NBD_SET_SOCK, sock_) < 0) {
     throw NbdException("Unable to set socket for NBD device");
   }
 }
 
-void NbdClient::Disconnect() {
-  LOG(INFO) << "Disconnecting NbdClient";
-  disconnect_ = true;
-  if (ioctl(nbd_fd_, NBD_DISCONNECT) < 0) {
-    if (errno != EINVAL) {
-      PLOG(ERROR) << "NBD_DISCONNECT";
-      throw NbdException("Unable to disconnect NBD device");
+bool NbdClient::IsConnected() {
+  int last_slash_pos = nbd_device_path_.rfind('/');
+  std::string block_device_name = nbd_device_path_.substr(last_slash_pos + 1);
+
+  std::string pid_path = "/sys/block/" + block_device_name + "/pid";
+
+  LOG(INFO) << "Checking " << pid_path;
+
+  if (access(pid_path.c_str(), F_OK)) {
+    if (errno == ENOENT) {
+      return false;
+    } else {
+      PLOG(ERROR) << "access threw an unexpected error";
+      return false;
     }
   }
+  return true;
+}
 
-  if (ioctl(nbd_fd_, NBD_CLEAR_SOCK) < 0) {
-    PLOG(ERROR) << "NBD_CLEAR_SOCK";
-    throw NbdException("Unable to clear socket of NBD device");
+void NbdClient::Disconnect() {
+  if (!disconnect_) {
+    LOG(INFO) << "Disconnecting NbdClient";
+    disconnect_ = true;
+    if (ioctl(nbd_fd_, NBD_DISCONNECT) < 0) {
+      if (errno != EINVAL) {
+        PLOG(ERROR) << "NBD_DISCONNECT";
+      } else {
+        PLOG(ERROR) << "EINVAL";
+      }
+    }
+
+    if (ioctl(nbd_fd_, NBD_CLEAR_QUE) < 0) {
+      PLOG(ERROR) << "NBD_CLEAR_QUE";
+    }
+
+    if (ioctl(nbd_fd_, NBD_CLEAR_SOCK) < 0) {
+      PLOG(ERROR) << "NBD_CLEAR_SOCK";
+    }
+
+    nbd_do_it_thread_.join();
   }
 }
 
