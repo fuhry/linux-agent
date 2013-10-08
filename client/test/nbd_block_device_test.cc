@@ -13,7 +13,6 @@ using ::datto_linux_client::NbdBlockDevice;
 
 static const uint16_t LOCAL_TEST_PORT = 11235;
 static const char LOCAL_TEST_HOST[] = "localhost";
-static const char LOCAL_TEST_NBD_PATH[] = "/dev/nbd1";
 
 namespace {
 
@@ -30,7 +29,7 @@ class NbdBlockDeviceTest : public ::testing::Test {
           PLOG(ERROR) << "fork";
           throw std::runtime_error("fork failed");
       }
-      else if(fork_ret == 0) {
+      else if (fork_ret == 0) {
           // This is the same as 2>&1 1>/dev/null
           int null_fd = open("/dev/null", O_RDWR);
           dup2(null_fd, 1);
@@ -73,17 +72,14 @@ class NbdBlockDeviceTest : public ::testing::Test {
     nbd_server = std::unique_ptr<NbdServer>(new NbdServer(loop_dev->path()));
 
     nbd_block_device = std::unique_ptr<NbdBlockDevice>(
-        new NbdBlockDevice(LOCAL_TEST_HOST, LOCAL_TEST_PORT,
-                           LOCAL_TEST_NBD_PATH));
+        new NbdBlockDevice(LOCAL_TEST_HOST, LOCAL_TEST_PORT));
   }
 
-  ~NbdBlockDeviceTest() {
-    nbd_block_device->Disconnect();
-  }
+  ~NbdBlockDeviceTest() { }
 
-  std::unique_ptr<NbdBlockDevice> nbd_block_device;
-  std::unique_ptr<NbdServer> nbd_server;
   std::unique_ptr<LoopDevice> loop_dev;
+  std::unique_ptr<NbdServer> nbd_server;
+  std::unique_ptr<NbdBlockDevice> nbd_block_device;
 };
 
 TEST_F(NbdBlockDeviceTest, CanConnect) {
@@ -93,8 +89,7 @@ TEST_F(NbdBlockDeviceTest, CanConnect) {
 TEST(NbdBlockDeviceTestNoFixture, CantConnect) {
   try {
     auto nbd_block_device = std::unique_ptr<NbdBlockDevice>(
-        new NbdBlockDevice(LOCAL_TEST_HOST, LOCAL_TEST_PORT,
-          LOCAL_TEST_NBD_PATH));
+        new NbdBlockDevice(LOCAL_TEST_HOST, LOCAL_TEST_PORT));
     // Shouldn't get here as we didn't setup a server so the block device
     // should throw an exception
     FAIL();
