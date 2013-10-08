@@ -24,6 +24,7 @@ class NbdBlockDeviceTest : public ::testing::Test {
   class NbdServer {
    public:
     NbdServer(std::string file_to_serve) {
+      LOG(INFO) << "Starting nbd-server";
       pid_t fork_ret = fork();
       if (fork_ret == -1) {
           PLOG(ERROR) << "fork";
@@ -55,6 +56,7 @@ class NbdBlockDeviceTest : public ::testing::Test {
     }
 
     ~NbdServer() {
+      LOG(INFO) << "Killing nbd-server";
       if (kill(nbd_server_pid, SIGTERM)) {
         PLOG(ERROR) << "kill failed, check nbd-server was stopped correctly";
       } else {
@@ -77,6 +79,9 @@ class NbdBlockDeviceTest : public ::testing::Test {
 
   ~NbdBlockDeviceTest() { }
 
+  // Order matters here. Lower defined things will be deconstructed last.
+  // This way, the loop device isn't pulled out from under the
+  // nbd_block_device
   std::unique_ptr<LoopDevice> loop_dev;
   std::unique_ptr<NbdServer> nbd_server;
   std::unique_ptr<NbdBlockDevice> nbd_block_device;
@@ -84,6 +89,11 @@ class NbdBlockDeviceTest : public ::testing::Test {
 
 TEST_F(NbdBlockDeviceTest, CanConnect) {
   EXPECT_TRUE(nbd_block_device->IsConnected());
+}
+
+TEST_F(NbdBlockDeviceTest, KnowsWhenDisconnected) {
+  nbd_block_device->Disconnect();
+  EXPECT_FALSE(nbd_block_device->IsConnected());
 }
 
 TEST(NbdBlockDeviceTestNoFixture, CantConnect) {
