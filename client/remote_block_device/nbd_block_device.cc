@@ -53,17 +53,7 @@ bool NbdBlockDevice::IsConnected() const {
 }
 
 void NbdBlockDevice::Disconnect() {
-  std::ostringstream nbd_command_stream;
-
-  nbd_command_stream << "nbd-client -d " << block_path_ << " 2>/dev/null 1>&2";
-
-  int ret_val = system(nbd_command_stream.str().c_str());
-  if (ret_val == 127) {
-    PLOG(ERROR) << "system returned 127";
-    throw RemoteBlockDeviceException("Unable to find nbd-client");
-  }
-
-  return;
+  nbd_client_->Disconnect();
 }
 
 NbdBlockDevice::~NbdBlockDevice() {
