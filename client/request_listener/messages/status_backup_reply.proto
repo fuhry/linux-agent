@@ -1,0 +1,24 @@
+package datto_linux_client;
+
+message StatusBackupReply {
+
+    enum BackupState {
+      RUNNING = 1;
+      PAUSED = 2;
+      COMPLETED = 3;
+      FAILED = 4;
+    }
+
+    
+    required BackupState backup_state = 1;
+    required string block_path = 2;
+
+    repeated int32 return_codes = 3;
+    repeated string messages = 4;;
+
+    optional uint64 completed_blocks = 5;
+    optional uint64 total_blocks = 6;
+
+
+
+}
