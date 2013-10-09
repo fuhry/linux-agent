@@ -23,7 +23,7 @@ void UnsyncedSectorTracker::MarkToSyncInterval(
 SectorInterval UnsyncedSectorTracker::GetContinuousUnsyncedSectors() const {
   std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
 
-  SectorInterval largestInterval;
+  SectorInterval largestInterval(0, 0);
   for (auto interval : unsynced_sector_set_) {
     if (boost::icl::length(interval) > boost::icl::length(largestInterval)) {
       largestInterval = interval;
