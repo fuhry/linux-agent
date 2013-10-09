@@ -19,9 +19,6 @@ class NbdBlockDevice : public RemoteBlockDevice {
   bool IsConnected() const;
   void Disconnect();
 
-  // TODO: Should we override (and disallow?) throttling for remote
-  // block devices? Depends on the implementation details
-
   // Parent class calls disconnect
   ~NbdBlockDevice();
  private:
