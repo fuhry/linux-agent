@@ -2,7 +2,7 @@
 #define DATTO_CLIENT_REQUEST_LISTENER_REPLY_CHANNEL_H_
 
 #include <memory>
-#include <request_listener/protobuf_classes/reply.pb.h>
+#include "reply.pb.h"
 
 namespace datto_linux_client {
 

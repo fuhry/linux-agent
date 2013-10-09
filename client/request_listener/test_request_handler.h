@@ -6,7 +6,7 @@
 #include <memory>
 #include <stdexcept>
 
-#include <protobuf_classes/request.pb.h>
+#include "request.pb.h"
 #include <reply_channel.h>
 #include <request_handler.h>
 

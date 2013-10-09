@@ -5,7 +5,7 @@
 
 #include <memory>
 
-#include <protobuf_classes/request.pb.h>
+#include "request.pb.h"
 #include <reply_channel.h>
 
 namespace datto_linux_client {

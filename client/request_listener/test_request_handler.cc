@@ -1,8 +1,8 @@
 #include <iostream>
 #include <exception>
 #include <test_request_handler.h>
-#include <protobuf_classes/request.pb.h>
-#include <protobuf_classes/reply.pb.h>
+#include "request.pb.h"
+#include "reply.pb.h"
 
 namespace datto_linux_client {
 
