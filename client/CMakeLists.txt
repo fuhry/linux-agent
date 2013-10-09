@@ -4,6 +4,15 @@ set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS "-lglog ${CMAKE_CXX_FLAGS}")
 
 include_directories(.)
+
+# Take care of building the protobuf files first
+find_package(Protobuf REQUIRED)
+include_directories(${PROTOBUF_INCLUDE_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+file (GLOB PROTO_FILES request_listener/messages/*.proto)
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
+
+# Unit tests
 include(cmake/test_setup.cmake)
 
 add_unit_test(unsynced_sector_tracker_test
