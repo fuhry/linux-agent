@@ -13,6 +13,8 @@ class LoopDevice {
  public:
   LoopDevice();
 
+  void FormatAsExt3();
+  
   void Sync();
 
   ~LoopDevice();

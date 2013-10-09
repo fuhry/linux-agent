@@ -44,6 +44,12 @@ LoopDevice::LoopDevice() {
   }
 }
 
+void LoopDevice::FormatAsExt3() {
+  if (system(("mkfs.ext3 " + path_ + " 2>&1 1>/dev/null").c_str())) {
+    throw std::runtime_error("error creating fs");
+  }
+}
+
 void LoopDevice::Sync() {
   int fd;
   if ((fd = open(path_.c_str(), O_RDONLY)) == -1) {

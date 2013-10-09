@@ -31,10 +31,7 @@ class MountableBlockDeviceTest : public ::testing::Test {
   MountableBlockDeviceTest() {
     loop_device = std::unique_ptr<LoopDevice>(new LoopDevice());
     // Make it mountable by putting a FS on it
-    if (system(("mkfs.ext3 " + loop_device->path() +
-                " 2>&1 1>/dev/null").c_str())) {
-      throw std::runtime_error("error creating fs");
-    }
+    loop_device->FormatAsExt3();
 
     temp_dir = "/tmp/test_mount";
     if (system(("mkdir -p " + temp_dir).c_str())) {
