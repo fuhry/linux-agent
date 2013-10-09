@@ -6,6 +6,7 @@ enable_testing()
 add_custom_target(check)
 # usage: add_unit_test(test_name test_sources...)
 # Note that add_unit_test automatically finds test/${test_name}.cc
+# find_library(Protobuf) must have been called before calling this
 macro(add_unit_test test_name)
     add_executable(${test_name} EXCLUDE_FROM_ALL test/${test_name}.cc ${ARGN})
     add_dependencies(${test_name} gtest)
@@ -13,6 +14,7 @@ macro(add_unit_test test_name)
     target_link_libraries(${test_name} glog)
     target_link_libraries(${test_name} ${GTEST_BINARIES}/libgtest.a)
     target_link_libraries(${test_name} ${GTEST_BINARIES}/libgtest_main.a)
+    target_link_libraries(${test_name} ${PROTOBUF_LIBRARIES})
 
     # TODO set_tests_properties should do this so we don't need to do the
     # bash -c hack here, but can't seem to get it to work
