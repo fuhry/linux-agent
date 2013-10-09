@@ -143,13 +143,6 @@ TEST_F(DeviceTracerTest, WriteSpecificLocation) {
     FAIL() << e.what();
   }
 }
-// Set up fake block device
-// Start tracing that device
-// Write to known locations
-// Verify that the TraceHandler got traces for those locations
-// Take down trace
-// Write to known locations
-// Verify the TraceHandler did not get traces for those locations
 
 
 } // namespace
