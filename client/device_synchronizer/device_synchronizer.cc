@@ -4,7 +4,12 @@
 #include <glog/logging.h>
 
 namespace {
-int MAX_SIZE_WORK_LEFT_HISTORY = 3 * 60;
+
+using ::datto_linux_client::DeviceSynchronizerException;
+using ::datto_linux_client::DeviceSynchronizerException;
+
+int SECTOR_SIZE = 512;
+std::vector<uint64_t>::size_type MAX_SIZE_WORK_LEFT_HISTORY = 3 * 60;
 
 // Keep this simple for now
 inline bool should_continue(const std::vector<uint64_t> &work_left_history) {
@@ -15,8 +20,9 @@ inline bool should_continue(const std::vector<uint64_t> &work_left_history) {
   return work_left_history.back() < work_left_history.front();
 }
 
+// It is up to the caller to ensure buf is large enough
 inline void copy_block(int source_fd, int destination_fd,
-                       int block_size_bytes) {
+                       int block_size_bytes, void *buf) {
   ssize_t total_copied = 0;
   // Loop until we copy a full block
   do {
@@ -29,7 +35,7 @@ inline void copy_block(int source_fd, int destination_fd,
       break;
     }
     // Loop until we clear the write buffer
-    ssize_t total_written = 0;
+    ssize_t count_written = 0;
     do {
       ssize_t bytes_written = write(destination_fd, buf, bytes_read);
 
@@ -39,8 +45,8 @@ inline void copy_block(int source_fd, int destination_fd,
       } else if (bytes_written == 0) {
         break;
       }
-      total_written += bytes_written;
-    } while(bytes_written != bytes_read); // clear write buffer
+      count_written += bytes_written;
+    } while(count_written != bytes_read); // clear write buffer
   } while (total_copied != block_size_bytes); // copy full block
 }
 } // unnamed namespace
@@ -48,15 +54,15 @@ inline void copy_block(int source_fd, int destination_fd,
 namespace datto_linux_client {
 
 DeviceSynchronizer::DeviceSynchronizer(
-    std::unique_ptr<MountableBlockDevice> source_device,
+    std::shared_ptr<MountableBlockDevice> source_device,
     std::shared_ptr<UnsyncedSectorTracker> sector_tracker,
-    std::unique_ptr<BlockDevice> destination_device,
+    std::shared_ptr<BlockDevice> destination_device,
     std::shared_ptr<ReplyChannel> reply_channel)
     : should_stop_(false),
       succeeded_(false),
       source_device_(source_device_),
-      destination_device_(destination_device),
       sector_tracker_(sector_tracker),
+      destination_device_(destination_device),
       reply_channel_(reply_channel) {
 
   if (source_device_->major() == destination_device_->major()
@@ -85,7 +91,7 @@ DeviceSynchronizer::DeviceSynchronizer(
   }
 }
 
-DeviceSynchronizer::StartSync() {
+void DeviceSynchronizer::StartSync() {
   // We need to be careful as we are starting a non-trival thread.
   // If it throws an uncaught exception everything goes down
   // without cleaning up (no destructors!), which isn't okay.
@@ -103,7 +109,6 @@ DeviceSynchronizer::StartSync() {
       // after than we can back it up
       std::vector<uint64_t> work_left_history;
 
-      uint64_t total_blocks_copied = 0;
       time_t last_history = 0;
 
       do {
@@ -125,12 +130,12 @@ DeviceSynchronizer::StartSync() {
           sector_tracker_->GetContinuousUnsyncedSectors();
 
         // If the only interval is size zero, we are done
-        if (to_sync_interval.cardinality() == 0) {
+        if (boost::icl::cardinality(to_sync_interval) == 0) {
           succeeded_ = true;
           break;
         }
 
-        off_t seek_pos = to_sync_interval.lower() * SECTOR_SIZE
+        off_t seek_pos = to_sync_interval.lower() * SECTOR_SIZE;
         int seek_ret = lseek(source_fd, seek_pos, SEEK_SET);
 
         if (seek_ret == -1) {
@@ -148,23 +153,23 @@ DeviceSynchronizer::StartSync() {
 
         // Loop until we copy all of the blocks of the sector interval
         for (uint64_t i = 0;
-             i < to_sync_interval.cardinality;
+             i < boost::icl::cardinality(to_sync_interval);
              i += sectors_per_block) {
 
-          copy_block(source_fd, destination_fd, block_size_bytes);
+          copy_block(source_fd, destination_fd, block_size_bytes, buf);
 
           // Get one history entry per second
           time_t now = time(NULL);
           if (now > last_history + 1) {
             if (now > last_history + 2) {
-              LOG(WARN) << "Writing a block took more than a second";
+              LOG(WARNING) << "Writing a block took more than a second";
             }
             uint64_t unsynced = sector_tracker_->UnsyncedSectorCount();
             work_left_history.push_back(unsynced);
             last_history = now;
           }
         } // copy all blocks in interval
-      } while (!should_stop);
+      } while (!should_stop_);
     } catch (const std::runtime_error &e) {
       LOG(ERROR) << "Error while performing sync. Stopping. " << e.what();
     }
