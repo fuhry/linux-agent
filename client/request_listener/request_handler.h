@@ -3,18 +3,29 @@
 
 // TODO: Include the protobuf class
 
-#include <boost/noncopyable.hpp>
 #include <memory>
+
+#include <protobuf_classes/request.pb.h>
+#include <reply_channel.h>
 
 namespace datto_linux_client {
 
-class RequestHandler : private boost::noncopyable {
+using namespace std;
+
+
+class RequestHandler {
  public:
-  RequestHandler();
+
+  //  Make non-copyable the C++ 11 way 
+
+  RequestHandler(const RequestHandler&) = delete;
+  RequestHandler& operator=(const RequestHandler&) = delete;
+
+  RequestHandler(){};
   // For testing, extend this class and make
   // Handle() do something like print information to stdout
-  virtual void Handle(std::shared_ptr<Request> request,
-                      std::shared_ptr<ReplyChannel> reply_channel);
+  virtual void Handle(shared_ptr<Request> request,
+                      shared_ptr<ReplyChannel> reply_channel) {}
   virtual ~RequestHandler() { }
 };
 }

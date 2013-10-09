@@ -1,0 +1,11 @@
+package datto_linux_client;
+
+message StopBackupReply {
+
+    required   bool stopped  = 1;
+    required int32 rc = 2;
+    required string block_path = 3;
+    optional string errmsg = 4;
+
+}
+
