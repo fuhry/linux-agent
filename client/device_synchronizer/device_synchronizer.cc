@@ -22,8 +22,7 @@ inline void copy_block(int source_fd, int destination_fd,
   do {
     ssize_t bytes_read = read(source_fd, buf, block_size_bytes);
     if (bytes_read == -1) {
-      PLOG(ERROR) << "Error while reading from "
-                  << source_device_->block_path();
+      PLOG(ERROR) << "Error while reading from source";
       throw DeviceSynchronizerException("Error reading from source");
     } else if (bytes_read == 0) {
       // TODO No reads means we are done (I think?)
@@ -35,10 +34,8 @@ inline void copy_block(int source_fd, int destination_fd,
       ssize_t bytes_written = write(destination_fd, buf, bytes_read);
 
       if (bytes_written == -1) {
-        PLOG(ERROR) << "Error while writing to "
-                    << (destination_device_)->block_path();
-        throw DeviceSynchronizerException("Error writing to" 
-                                          " destination");
+        PLOG(ERROR) << "Error while writing to destination";
+        throw DeviceSynchronizerException("Error writing to destination");
       } else if (bytes_written == 0) {
         break;
       }
@@ -46,6 +43,7 @@ inline void copy_block(int source_fd, int destination_fd,
     } while(bytes_written != bytes_read); // clear write buffer
   } while (total_copied != block_size_bytes); // copy full block
 }
+} // unnamed namespace
 
 namespace datto_linux_client {
 
@@ -61,36 +59,42 @@ DeviceSynchronizer::DeviceSynchronizer(
       sector_tracker_(sector_tracker),
       reply_channel_(reply_channel) {
 
-  if ((source_device_)->DeviceSizeBytes() !=
-      (destination_device_)->DeviceSizeBytes()) {
+  if (source_device_->major() == destination_device_->major()
+      && source_device_->minor() == destination_device_->minor()) {
+    throw DeviceSynchronizerException("Refusing to synchronize a device"
+                                      " with itself");
+  }
 
-    LOG(ERROR) << "Source size: " << (source_device_)->DeviceSizeBytes();
+  if (source_device_->DeviceSizeBytes() !=
+      destination_device_->DeviceSizeBytes()) {
+    LOG(ERROR) << "Source size: "
+               << source_device_->DeviceSizeBytes();
     LOG(ERROR) << "Destination size: "
-               << (destination_device_)->DeviceSizeBytes();
+               << destination_device_->DeviceSizeBytes();
     throw DeviceSynchronizerException("Source and destination device have"
                                       " different sizes");
   }
 
-  if ((sector_tracker_)->UnsyncedSectorCount() == 0) {
+  if (sector_tracker_->UnsyncedSectorCount() == 0) {
     throw DeviceSynchronizerException("The source device is already synced");
   }
 
-  if (!(reply_channel_)->IsAvailable()) {
+  if (!reply_channel_->IsAvailable()) {
     throw DeviceSynchronizerException("Reply channel is unavailable,"
                                       " stopping");
   }
 }
 
 DeviceSynchronizer::StartSync() {
-  // We need to be careful as we are starting a complicated thread.
+  // We need to be careful as we are starting a non-trival thread.
   // If it throws an uncaught exception everything goes down
-  // without cleaning up.
+  // without cleaning up (no destructors!), which isn't okay.
   sync_thread_ = std::thread([&]() {
     try {
-      int source_fd = (source_device_)->Open();
-      int destination_fd = (destination_device_)->Open();
+      int source_fd = source_device_->Open();
+      int destination_fd = destination_device_->Open();
 
-      int block_size_bytes = (source_device_)->BlockSizeBytes();
+      int block_size_bytes = source_device_->BlockSizeBytes();
       int sectors_per_block = SECTOR_SIZE / block_size_bytes;
 
       char buf[block_size_bytes];
@@ -118,7 +122,7 @@ DeviceSynchronizer::StartSync() {
 
         // to_sync_interval is sectors, not blocks
         SectorInterval to_sync_interval =
-          (sector_tracker_)->GetContinuousUnsyncedSectors();
+          sector_tracker_->GetContinuousUnsyncedSectors();
 
         // If the only interval is size zero, we are done
         if (to_sync_interval.cardinality() == 0) {
@@ -126,8 +130,8 @@ DeviceSynchronizer::StartSync() {
           break;
         }
 
-        int seek_ret = lseek(source_fd,
-                             to_sync_interval.lower() * SECTOR_SIZE, SEEK_SET);
+        off_t seek_pos = to_sync_interval.lower() * SECTOR_SIZE
+        int seek_ret = lseek(source_fd, seek_pos, SEEK_SET);
 
         if (seek_ret == -1) {
           PLOG(ERROR) << "Error while seeking";
@@ -143,7 +147,8 @@ DeviceSynchronizer::StartSync() {
         }
 
         // Loop until we copy all of the blocks of the sector interval
-        for (uint64_t i = 0; i < to_sync_interval.cardinality;
+        for (uint64_t i = 0;
+             i < to_sync_interval.cardinality;
              i += sectors_per_block) {
 
           copy_block(source_fd, destination_fd, block_size_bytes);
@@ -154,7 +159,7 @@ DeviceSynchronizer::StartSync() {
             if (now > last_history + 2) {
               LOG(WARN) << "Writing a block took more than a second";
             }
-            uint64_t unsynced = (sector_tracker_)->UnsyncedSectorCount();
+            uint64_t unsynced = sector_tracker_->UnsyncedSectorCount();
             work_left_history.push_back(unsynced);
             last_history = now;
           }
@@ -163,6 +168,9 @@ DeviceSynchronizer::StartSync() {
     } catch (const std::runtime_error &e) {
       LOG(ERROR) << "Error while performing sync. Stopping. " << e.what();
     }
-  });
+
+    source_device_->Close();
+    destination_device_->Close();
+  }); // end thread
 }
 }
