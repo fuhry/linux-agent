@@ -39,3 +39,11 @@ add_unit_test(mountable_block_device_test
               test/loop_device.cc
               block_device/mountable_block_device.cc
               block_device/block_device.cc)
+
+add_unit_test(device_synchronizer_test
+              test/loop_device.cc
+              block_device/block_device.cc
+              block_device/mountable_block_device.cc
+              unsynced_sector_tracker/unsynced_sector_tracker.cc
+              ${PROTO_SRCS}
+              device_synchronizer/device_synchronizer.cc)
