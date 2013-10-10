@@ -1,3 +1,5 @@
+*This is out of date, in particular the sections on device mapper*
+
 # Linux Agent
 The Linux Agent is client side software that creates and transfers image-based backups of the block devices on a Linux machine. 
 
