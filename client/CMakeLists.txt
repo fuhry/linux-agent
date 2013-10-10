@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.0)
-set(CMAKE_CXX_FLAGS "-Wall -g -Wshadow -pthread ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-Wall -Wshadow -pthread ${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS "-lglog ${CMAKE_CXX_FLAGS}")
 
