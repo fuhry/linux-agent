@@ -26,7 +26,7 @@ LoopDevice::LoopDevice() {
 
   if ((fd = open(path_.c_str(), O_RDONLY)) == -1) {
     PLOG(ERROR) << "Unable to make test loop device."
-      << " Verify everything is cleaned up with losetup";
+                << " Verify everything is cleaned up with losetup";
     unlink(TEST_LOOP_SHARED_MEMORY);
     throw std::runtime_error("Couldn't make loop device");
   }
