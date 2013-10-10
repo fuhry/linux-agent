@@ -3,4 +3,4 @@
 build_type=${1:-release};
 mkdir -p build
 cd build
-cmake -DCMAKE_BUILD_TYPE=${build_type} .. && make -k check
+cmake -DCMAKE_BUILD_TYPE=${build_type} .. && make -j4 -k check
