@@ -60,7 +60,7 @@ DeviceSynchronizer::DeviceSynchronizer(
     std::shared_ptr<ReplyChannel> reply_channel)
     : should_stop_(false),
       succeeded_(false),
-      source_device_(source_device_),
+      source_device_(source_device),
       sector_tracker_(sector_tracker),
       destination_device_(destination_device),
       reply_channel_(reply_channel) {
