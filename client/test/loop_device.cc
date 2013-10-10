@@ -66,9 +66,13 @@ void LoopDevice::Sync() {
 
 LoopDevice::~LoopDevice() {
   sync();
-  system(("losetup -d " + path_).c_str());
+  int suppress_warning1 = system(("losetup -d " + path_).c_str());
+  (void) suppress_warning1;
+
   unlink(TEST_LOOP_SHARED_MEMORY);
-  system("rm /tmp/test_loop_file.* 2>/dev/null");
+
+  int suppress_warning2 = system("rm /tmp/test_loop_file.* 2>/dev/null");
+  (void) suppress_warning2;
 }
 
 }
