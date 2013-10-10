@@ -23,7 +23,8 @@ void mount_device(std::string path, std::string mount_point) {
 }
 
 void unmount_device(std::string path) {
-  system(("umount " + path).c_str());
+  int suppress_warning = system(("umount " + path + " 2>/dev/null").c_str());
+  (void) suppress_warning;
 }
 
 class MountableBlockDeviceTest : public ::testing::Test {
@@ -123,7 +124,8 @@ TEST_F(MountableBlockDeviceTest, FreezeAndThaw) {
   std::atomic<bool> is_done(false);
   // Try to write to it in another thread
   std::thread write_thread([&]() {
-      system(("touch " + temp_dir + "/a_file").c_str());
+      int suppress_warning = system(("touch " + temp_dir + "/a_file").c_str());
+      (void) suppress_warning;
       is_done = true;
   });
 
