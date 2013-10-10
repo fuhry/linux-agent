@@ -65,7 +65,6 @@ void LoopDevice::Sync() {
 }
 
 LoopDevice::~LoopDevice() {
-  sync();
   int suppress_warning1 = system(("losetup -d " + path_).c_str());
   (void) suppress_warning1;
 
