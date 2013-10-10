@@ -11,6 +11,7 @@ using ::datto_linux_client::DeviceSynchronizerException;
 int SECTOR_SIZE = 512;
 std::vector<uint64_t>::size_type MAX_SIZE_WORK_LEFT_HISTORY = 3 * 60;
 
+// TODO Rename
 // Keep this simple for now
 inline bool should_continue(const std::vector<uint64_t> &work_left_history) {
   // If we have less than a minute of data, don't do anything
@@ -22,10 +23,12 @@ inline bool should_continue(const std::vector<uint64_t> &work_left_history) {
 
 // It is up to the caller to ensure buf is large enough
 inline void copy_block(int source_fd, int destination_fd,
-                       int block_size_bytes, void *buf) {
+                       void *buf, int block_size_bytes) {
+  DLOG_EVERY_N(INFO, 1) << "Copying block " << google::COUNTER;
   ssize_t total_copied = 0;
   // Loop until we copy a full block
   do {
+
     ssize_t bytes_read = read(source_fd, buf, block_size_bytes);
     if (bytes_read == -1) {
       PLOG(ERROR) << "Error while reading from source";
@@ -34,11 +37,11 @@ inline void copy_block(int source_fd, int destination_fd,
       // TODO No reads means we are done (I think?)
       break;
     }
+
     // Loop until we clear the write buffer
     ssize_t count_written = 0;
     do {
       ssize_t bytes_written = write(destination_fd, buf, bytes_read);
-
       if (bytes_written == -1) {
         PLOG(ERROR) << "Error while writing to destination";
         throw DeviceSynchronizerException("Error writing to destination");
@@ -47,6 +50,9 @@ inline void copy_block(int source_fd, int destination_fd,
       }
       count_written += bytes_written;
     } while(count_written != bytes_read); // clear write buffer
+
+    total_copied += count_written;
+
   } while (total_copied != block_size_bytes); // copy full block
 }
 } // unnamed namespace
@@ -60,6 +66,7 @@ DeviceSynchronizer::DeviceSynchronizer(
     std::shared_ptr<ReplyChannel> reply_channel)
     : should_stop_(false),
       succeeded_(false),
+      done_(false),
       source_device_(source_device),
       sector_tracker_(sector_tracker),
       destination_device_(destination_device),
@@ -97,11 +104,12 @@ void DeviceSynchronizer::StartSync() {
   // without cleaning up (no destructors!), which isn't okay.
   sync_thread_ = std::thread([&]() {
     try {
+      LOG(INFO) << "Starting sync thread";
       int source_fd = source_device_->Open();
       int destination_fd = destination_device_->Open();
 
       int block_size_bytes = source_device_->BlockSizeBytes();
-      int sectors_per_block = SECTOR_SIZE / block_size_bytes;
+      int sectors_per_block = block_size_bytes / SECTOR_SIZE;
 
       char buf[block_size_bytes];
       // We keep track of how much work is left after we sent it, so that
@@ -109,7 +117,7 @@ void DeviceSynchronizer::StartSync() {
       // after than we can back it up
       std::vector<uint64_t> work_left_history;
 
-      time_t last_history = 0;
+      time_t last_history = time(NULL);
 
       do {
         // Trim history if it gets too big
@@ -127,7 +135,7 @@ void DeviceSynchronizer::StartSync() {
 
         // to_sync_interval is sectors, not blocks
         SectorInterval to_sync_interval =
-          sector_tracker_->GetContinuousUnsyncedSectors();
+            sector_tracker_->GetContinuousUnsyncedSectors();
 
         // If the only interval is size zero, we are done
         if (boost::icl::cardinality(to_sync_interval) == 0) {
@@ -144,19 +152,26 @@ void DeviceSynchronizer::StartSync() {
         }
 
         seek_ret = lseek(destination_fd,
-                         to_sync_interval.lower() * SECTOR_SIZE, SEEK_SET);
+                         to_sync_interval.lower() * SECTOR_SIZE,
+                         SEEK_SET);
 
         if (seek_ret == -1) {
           PLOG(ERROR) << "Error while seeking";
           throw DeviceSynchronizerException("Unable to seek destination");
         }
 
+        DLOG(INFO) << "Marking " << to_sync_interval.lower() << " : "
+                   << to_sync_interval.upper();
+        DLOG(INFO) << "Cardinality is: "
+                   << boost::icl::cardinality(to_sync_interval);
+        DLOG(INFO) << "Sectors per block: " << sectors_per_block;
+        sector_tracker_->MarkToSyncInterval(to_sync_interval);
         // Loop until we copy all of the blocks of the sector interval
         for (uint64_t i = 0;
              i < boost::icl::cardinality(to_sync_interval);
              i += sectors_per_block) {
 
-          copy_block(source_fd, destination_fd, block_size_bytes, buf);
+          copy_block(source_fd, destination_fd, buf, block_size_bytes);
 
           // Get one history entry per second
           time_t now = time(NULL);
@@ -176,6 +191,9 @@ void DeviceSynchronizer::StartSync() {
 
     source_device_->Close();
     destination_device_->Close();
+    done_ = true;
   }); // end thread
+
+  sync_thread_.detach();
 }
 }

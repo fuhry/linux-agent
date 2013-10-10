@@ -22,9 +22,19 @@ class DeviceSynchronizer {
                      std::shared_ptr<ReplyChannel> reply_channel);
   void StartSync();
   void Stop();
+
+  bool done() {
+    return done_;
+  }
+
+  bool succeeded() {
+    return succeeded_;
+  }
+
  private:
   std::atomic<bool> should_stop_;
   std::atomic<bool> succeeded_;
+  std::atomic<bool> done_;
   std::thread sync_thread_;
 
   std::shared_ptr<MountableBlockDevice> source_device_;
