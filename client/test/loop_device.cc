@@ -68,7 +68,7 @@ LoopDevice::~LoopDevice() {
   sync();
   system(("losetup -d " + path_).c_str());
   unlink(TEST_LOOP_SHARED_MEMORY);
-  system("rm /tmp/test_loop_file.*");
+  system("rm /tmp/test_loop_file.* 2>/dev/null");
 }
 
 }
