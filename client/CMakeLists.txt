@@ -47,3 +47,6 @@ add_unit_test(device_synchronizer_test
               unsynced_sector_tracker/unsynced_sector_tracker.cc
               ${PROTO_SRCS}
               device_synchronizer/device_synchronizer.cc)
+
+add_unit_test(config_test
+              configuration/config.cc)
