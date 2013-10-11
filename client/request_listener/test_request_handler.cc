@@ -13,7 +13,7 @@ namespace datto_linux_client {
   }
 
   TestRequestHandler::~TestRequestHandler() {
-    cout << "TestRequestHandler destructor called" << endl;
+     cout << "TestRequestHandler destructor called" << endl;
   }
 
   void TestRequestHandler::Handle(shared_ptr<Request> request,
@@ -29,25 +29,29 @@ namespace datto_linux_client {
     switch (request->type()) {
 
       case Request::START_BACKUP :
-        // Start backup code here
+        handle_start(request, reply_channel);
         break;
 
       case Request::STOP_BACKUP :
-        // Stop backup code here
+        handle_stop(request, reply_channel);
         break;
 
       case Request::STATUS_BACKUP :
-        // Status backup code here
+        handle_status(request, reply_channel);
         break;
 
       case Request::PAUSE_BACKUP :
-        // Pause backup code here
+        handle_pause(request, reply_channel);
         break;
 
       default :
         string err = "Error: undefined RequestType in Request buffer";
         throw TestRequestHandlerException(err);
     }
+
+    cout << "After the call to handle_xxxx in TestRequestHandler, about to return" << endl;
+
+    return;
 
   }
 
