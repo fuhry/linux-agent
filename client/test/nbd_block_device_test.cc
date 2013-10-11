@@ -13,7 +13,6 @@ using ::datto_linux_client::NbdBlockDevice;
 
 static const uint16_t LOCAL_TEST_PORT = 11235;
 static const char LOCAL_TEST_HOST[] = "localhost";
-static const char LOCAL_TEST_NBD_PATH[] = "/dev/nbd1";
 
 namespace {
 
@@ -25,16 +24,15 @@ class NbdBlockDeviceTest : public ::testing::Test {
   class NbdServer {
    public:
     NbdServer(std::string file_to_serve) {
-      // null_fd is for redirecting below
-      int null_fd = open("/dev/null", O_RDWR);
-      pid_t fork_ret = vfork();
-      switch (fork_ret) {
-        case -1:
+      LOG(INFO) << "Starting nbd-server";
+      pid_t fork_ret = fork();
+      if (fork_ret == -1) {
           PLOG(ERROR) << "fork";
           throw std::runtime_error("fork failed");
-          break;
-        case 0:
+      }
+      else if (fork_ret == 0) {
           // This is the same as 2>&1 1>/dev/null
+          int null_fd = open("/dev/null", O_RDWR);
           dup2(null_fd, 1);
           dup2(null_fd, 2);
           close(null_fd);
@@ -49,16 +47,16 @@ class NbdBlockDeviceTest : public ::testing::Test {
           // If we get here then exec failed
           PLOG(ERROR) << "execl";
           _exit(127);
-          break;
-        default:
+      }
+      else {
           nbd_server_pid = fork_ret;
           // Let the nbd_server start
           sleep(1);
-          break;
       }
     }
 
     ~NbdServer() {
+      LOG(INFO) << "Killing nbd-server";
       if (kill(nbd_server_pid, SIGTERM)) {
         PLOG(ERROR) << "kill failed, check nbd-server was stopped correctly";
       } else {
@@ -76,28 +74,32 @@ class NbdBlockDeviceTest : public ::testing::Test {
     nbd_server = std::unique_ptr<NbdServer>(new NbdServer(loop_dev->path()));
 
     nbd_block_device = std::unique_ptr<NbdBlockDevice>(
-        new NbdBlockDevice(LOCAL_TEST_HOST, LOCAL_TEST_PORT,
-                           LOCAL_TEST_NBD_PATH));
+        new NbdBlockDevice(LOCAL_TEST_HOST, LOCAL_TEST_PORT));
   }
 
-  ~NbdBlockDeviceTest() {
-    nbd_block_device->Disconnect();
-  }
+  ~NbdBlockDeviceTest() { }
 
-  std::unique_ptr<NbdBlockDevice> nbd_block_device;
-  std::unique_ptr<NbdServer> nbd_server;
+  // Order matters here. Lower defined things will be deconstructed last.
+  // This way, the loop device isn't pulled out from under the
+  // nbd_block_device
   std::unique_ptr<LoopDevice> loop_dev;
+  std::unique_ptr<NbdServer> nbd_server;
+  std::unique_ptr<NbdBlockDevice> nbd_block_device;
 };
 
 TEST_F(NbdBlockDeviceTest, CanConnect) {
   EXPECT_TRUE(nbd_block_device->IsConnected());
 }
 
+TEST_F(NbdBlockDeviceTest, KnowsWhenDisconnected) {
+  nbd_block_device->Disconnect();
+  EXPECT_FALSE(nbd_block_device->IsConnected());
+}
+
 TEST(NbdBlockDeviceTestNoFixture, CantConnect) {
   try {
     auto nbd_block_device = std::unique_ptr<NbdBlockDevice>(
-        new NbdBlockDevice(LOCAL_TEST_HOST, LOCAL_TEST_PORT,
-          LOCAL_TEST_NBD_PATH));
+        new NbdBlockDevice(LOCAL_TEST_HOST, LOCAL_TEST_PORT));
     // Shouldn't get here as we didn't setup a server so the block device
     // should throw an exception
     FAIL();

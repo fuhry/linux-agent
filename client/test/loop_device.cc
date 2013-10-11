@@ -24,9 +24,9 @@ LoopDevice::LoopDevice() {
   std::getline(loop_path_stream, path_);
   loop_path_stream.close();
 
-  if ((fd = open(path_.c_str(), O_WRONLY)) == -1) {
+  if ((fd = open(path_.c_str(), O_RDONLY)) == -1) {
     PLOG(ERROR) << "Unable to make test loop device."
-      << " Verify everything is cleaned up with losetup";
+                << " Verify everything is cleaned up with losetup";
     unlink(TEST_LOOP_SHARED_MEMORY);
     throw std::runtime_error("Couldn't make loop device");
   }
@@ -44,10 +44,29 @@ LoopDevice::LoopDevice() {
   }
 }
 
+void LoopDevice::FormatAsExt3() {
+  if (system(("mkfs.ext3 " + path_ + " 2>&1 1>/dev/null").c_str())) {
+    throw std::runtime_error("error creating fs");
+  }
+}
+
+void LoopDevice::Sync() {
+  int fd;
+  if ((fd = open(path_.c_str(), O_RDONLY)) == -1) {
+    throw std::runtime_error("Unable to open loop device");
+  }
+
+  int ioctl_ret = ioctl(fd, BLKFLSBUF, 0);
+  close(fd);
+
+  if (ioctl_ret) {
+    throw std::runtime_error("Unable to flush block device");
+  }
+}
+
 LoopDevice::~LoopDevice() {
-  system(("losetup -d " + path_).c_str());
-  unlink(TEST_LOOP_SHARED_MEMORY);
-  system("rm /tmp/test_loop_file.*");
+  int suppress_warning = system(("./test/cleanup_test_loop_device " + path_).c_str());
+  (void) suppress_warning;
 }
 
 }

@@ -1,5 +1,5 @@
-#ifndef DATTO_CLIENT_BLOCK_DEVICE_MOUNTABLEBLOCK_DEVICE_H_
-#define DATTO_CLIENT_BLOCK_DEVICE_MOUNTABLEBLOCK_DEVICE_H_
+#ifndef DATTO_CLIENT_BLOCK_DEVICE_MOUNTABLE_BLOCK_DEVICE_H_
+#define DATTO_CLIENT_BLOCK_DEVICE_MOUNTABLE_BLOCK_DEVICE_H_
 
 #include <boost/noncopyable.hpp>
 #include <boost/cstdint.hpp>
@@ -14,26 +14,30 @@ namespace datto_linux_client {
 class MountableBlockDevice : public BlockDevice {
 
  public:
-  explicit MountableBlockDevice(std::string block_path);
+  explicit MountableBlockDevice(std::string a_block_path);
 
-  bool IsMounted();
+  virtual bool IsMounted();
   // Throw an exception if the partition isn't mounted
-  std::string GetMountPoint();
+  virtual std::string GetMountPoint();
 
   // These should only be overwritten if the underlying filesystem
   // doesn't support the FIFREEZE ioctl
+  //
+  // Before calling these the MountableBlockDevice must not have an open
+  // file descriptor for the mount point (i.e., call CloseMount() first)
   virtual void Freeze();
-  virtual void Unfreeze();
+  virtual void Thaw();
 
   // These will be relative from the start of the partition, not from
   // the start of the volume
   virtual std::unique_ptr<const SectorSet> GetInUseSectors() = 0;
 
-  // Return a file descriptor for the block device
-  // Throw an exception if one is already open
+  // Return a file descriptor for the mount point
+  // Throw an exception if one is already open, or if
+  // it isn't mounted
   int OpenMount();
 
-  // Close the file descriptor returned
+  // Close the file descriptor returned by OpenMount()
   // Don't throw if one isn't open
   void CloseMount();
 
@@ -42,6 +46,7 @@ class MountableBlockDevice : public BlockDevice {
 
  private:
   int mount_file_descriptor_;
+  bool is_frozen_;
 };
 
 }

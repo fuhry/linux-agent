@@ -1,6 +1,3 @@
-# Executable names
-to_integrate/src/fsparser
-
 # Tool generated code
 client/request_listener/protobuf_classes
 

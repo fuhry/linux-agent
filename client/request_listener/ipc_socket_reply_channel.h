@@ -4,7 +4,7 @@
 #include <memory>
 
 #include <reply_channel.h>
-#include <protobuf_classes/reply.pb.h>
+#include "reply.pb.h"
 #include <protosocket.h>
 
 namespace datto_linux_client {

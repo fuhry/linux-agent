@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 loop_path"
+    exit 1
+fi
+
+loop_path="$1"
+loop_file=$(losetup "${loop_path}" | sed -e 's/.*(\(.*\))/\1/g')
+
+losetup -d "${loop_path}"
+rm "${loop_file}"
