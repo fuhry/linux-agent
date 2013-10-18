@@ -4,6 +4,7 @@
 // TODO: Include the protobuf class
 
 #include <memory>
+#include <iostream>
 
 #include "request.pb.h"
 #include <reply_channel.h>
@@ -25,7 +26,7 @@ class RequestHandler {
   // For testing, extend this class and make
   // Handle() do something like print information to stdout
   virtual void Handle(shared_ptr<Request> request,
-                      shared_ptr<ReplyChannel> reply_channel) {}
+                      shared_ptr<ReplyChannel> reply_channel) {cout << "SHOULD NOT SEE THIS" << endl;}
   virtual ~RequestHandler() { }
 };
 }

@@ -56,11 +56,18 @@ class Config {
 
   static std::string GetString(std::string key);
 
+  static void DumpMap();            // For debugging purposes only
+
+
   // Don't worry about GetArray or other data types until we need them
 
  private:
   Config() { };
-  static void ParseConfigFile();
+  // static void ParseConfigFile();
+  static bool is_loaded() {
+   return (key_value_map_ == nullptr) ? false : true;
+  }
+
 
   // This pointer will never be freed and should be initialized in either
   // LoadDefaultConfig or LoadConfigFile. See http://goo.gl/uQG7FR for details

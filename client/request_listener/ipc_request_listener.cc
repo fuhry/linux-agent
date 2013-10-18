@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <iostream>
 #include <memory>
 #include <protosocket.h>
 #include <ipc_request_listener.h>
@@ -73,13 +74,17 @@ namespace datto_linux_client {
 
   shared_ptr<ProtoSocket> IpcSocketRequestListener::GetNewConnection(int wait_time) {
 
+    shared_ptr<ProtoSocket> stps;
+
     if ( ps_->CanRead(wait_time) ) {     //  Wait for a connection to be available
-      unique_ptr<ProtoSocket> utps = ps_->NewConnection();    // Create new ProtoSocket object with connection
-      ProtoSocket *tps = utps.release();
-      shared_ptr<ProtoSocket> stps;
-      stps.reset(tps);
-      return stps;
+      // Create new ProtoSocket object with connection
+      stps = ps_->NewConnection();     
+    } else {
+      stps = nullptr;   //  Return nullptr if times out
     }
+
+    return stps;
+
   }
 
   //  As above, but waits indefinitely for a new connection
@@ -92,30 +97,30 @@ namespace datto_linux_client {
   //  the request, converting it from an array of bytes to a Request protobuffer, 
   //  creating a ReplyChannel object, and making the call to the Handler method.
 
+
   int IpcSocketRequestListener::Handle(shared_ptr<ProtoSocket> conn_proto_socket) {
 
-    unique_ptr<ProtoSocketMessage> psm;
+    shared_ptr<ProtoSocketMessage> psm;
     try {    //  Read a message; pass exception up if an error occurs
       psm = conn_proto_socket->GetMessage();
     }
     catch (ProtoSocketException &e) {
-      string err("Error reading from socket: ");
-      err += e.what();
-      throw IpcSocketRequestListenerException(err);
+      cout << "ProtoSocketException caught:  connection closing" << endl;
+      return 0;
+    }
+
+    if (psm->size == 0) {
+      return 0;
     }
 
     // shared_ptr<Request> req = make_shared<Request>;    //  Parse the data into a Request object
-    Request * treq = new Request;    //  Parse the data into a Request object
-    treq->ParseFromArray((psm->buffer).get(), psm->size);
-    shared_ptr<Request> req;
-    req.reset(treq);
+    Request * req = new Request; 
+    req->ParseFromArray((psm->buffer).get(), psm->size);
 
-
-    psm.release();          // Done with ProtoSocketMessage; release it
-
+    shared_ptr<Request> sp_req(req);
     shared_ptr<ReplyChannel> rc = make_shared<IPCSocketReplyChannel> (conn_proto_socket);
-    
-    rh_->Handle(req, rc);
+
+    rh_->Handle(sp_req, rc);
 
     return 1;
 
