@@ -2,7 +2,8 @@
 #define DATTO_CLIENT_REQUEST_LISTENER_REPLY_CHANNEL_H_
 
 #include <memory>
-#include "reply.pb.h"
+
+#include "request_handler/protobuf_classes/reply.pb.h"
 
 namespace datto_linux_client {
 
@@ -10,13 +11,11 @@ namespace datto_linux_client {
 // passed to the ReplyHandler
 class ReplyChannel {
  public:
-   // Make non-copyable the C++ 11 way
-
   ReplyChannel(const ReplyChannel&) = delete;
-  ReplyChannel & operator=(const ReplyChannel &) = delete;
+  ReplyChannel& operator=(const ReplyChannel&) = delete;
 
-  ReplyChannel() {}
-  virtual void SendReply(std::shared_ptr<Reply> reply) = 0;
+  ReplyChannel() { }
+  virtual void SendReply(const Reply &reply) = 0;
   virtual bool IsAvailable() = 0;
   virtual ~ReplyChannel() { }
 };
