@@ -9,7 +9,7 @@ include_directories(.)
 find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
-file (GLOB PROTO_FILES request_listener/messages/*.proto)
+file (GLOB PROTO_FILES messages/*.proto)
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 
 # Unit tests
