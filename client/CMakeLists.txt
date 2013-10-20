@@ -54,11 +54,11 @@ add_unit_test(extfs_test
               block_device/mountable_block_device.cc
               block_device/block_device.cc)
 
-add_unit_test(xfs_test
-              test/xfs_test.cc
-              fs_parsing/xfs_mountable_block_device.cc
-              block_device/mountable_block_device.cc
-              block_device/block_device.cc)
+#add_unit_test(xfs_test
+#              test/xfs_test.cc
+#              fs_parsing/xfs_mountable_block_device.cc
+#              block_device/mountable_block_device.cc
+#              block_device/block_device.cc)
 
 add_unit_test(config_test
               configuration/config.cc)
