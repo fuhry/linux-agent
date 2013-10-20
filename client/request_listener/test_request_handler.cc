@@ -9,17 +9,14 @@ namespace datto_linux_client {
   using namespace std;
 
   TestRequestHandler::TestRequestHandler() {
-    cout << "TestRequestHandler constructor called" << endl;
   }
 
   TestRequestHandler::~TestRequestHandler() {
-    cout << "TestRequestHandler destructor called" << endl;
   }
 
   void TestRequestHandler::Handle(shared_ptr<Request> request,
                                   shared_ptr<ReplyChannel> reply_channel) {
 
-    cout << "TestRequestHandler::Handle entered" << endl;
 
     if (! request->has_type() ) {     //  No request type set
       string err = "Error: Request buffer received with no RequestType";
@@ -29,25 +26,29 @@ namespace datto_linux_client {
     switch (request->type()) {
 
       case Request::START_BACKUP :
-        // Start backup code here
+        handle_start(request, reply_channel);
         break;
 
       case Request::STOP_BACKUP :
-        // Stop backup code here
+        handle_stop(request, reply_channel);
         break;
 
       case Request::STATUS_BACKUP :
-        // Status backup code here
+        handle_status(request, reply_channel);
         break;
 
       case Request::PAUSE_BACKUP :
-        // Pause backup code here
+        handle_pause(request, reply_channel);
         break;
 
       default :
         string err = "Error: undefined RequestType in Request buffer";
         throw TestRequestHandlerException(err);
     }
+
+    cout << "After the call to handle_xxxx in TestRequestHandler, about to return" << endl;
+
+    return;
 
   }
 
@@ -95,6 +96,20 @@ namespace datto_linux_client {
     cout << "Backup requested for device " <<
             sbr.block_path() << endl;
 
+    //  Send a reply
+
+    shared_ptr<Reply> reply(new Reply);
+
+    reply->set_type(Reply::START_BACKUP);
+    StartBackupReply * subrep = reply->mutable_start_backup_reply();
+    
+    subrep->set_started(true);
+    subrep->set_rc(0);
+    subrep->set_block_path(sbr.block_path());
+    subrep->set_errmsg(string("Success"));
+
+    reply_channel->SendReply(reply);
+
   }
 
   void TestRequestHandler::handle_stop(shared_ptr<Request> request,
@@ -117,6 +132,20 @@ namespace datto_linux_client {
 
     cout << "Stop backup requested for device " <<
             sbr.block_path() << endl;
+
+    //  Send a reply
+
+    shared_ptr<Reply> reply(new Reply);
+
+    reply->set_type(Reply::STOP_BACKUP);
+    StopBackupReply * subrep = reply->mutable_stop_backup_reply();
+    
+    subrep->set_stopped(true);
+    subrep->set_rc(0);
+    subrep->set_block_path(sbr.block_path());
+    subrep->set_errmsg(string("Success"));
+
+    reply_channel->SendReply(reply);
 
   }
 
@@ -142,6 +171,19 @@ namespace datto_linux_client {
     cout << "Pause backup requested for device " <<
             pbr.block_path() << endl;
 
+    //  Send a reply
+
+    shared_ptr<Reply> reply(new Reply);
+
+    reply->set_type(Reply::PAUSE_BACKUP);
+    PauseBackupReply * subrep = reply->mutable_pause_backup_reply();
+    
+    subrep->set_paused(true);
+    subrep->set_rc(0);
+    subrep->set_block_path(pbr.block_path());
+    subrep->set_errmsg(string("Success"));
+
+    reply_channel->SendReply(reply);
   }
 
 
@@ -166,13 +208,29 @@ namespace datto_linux_client {
     cout << "Status backup requested for device " <<
             sbr.block_path() << endl;
 
+    //  Send a reply
+
+    shared_ptr<Reply> reply(new Reply);
+
+    reply->set_type(Reply::STATUS_BACKUP);
+    StatusBackupReply * subrep = reply->mutable_status_backup_reply();
+    
+    subrep->set_backup_state(StatusBackupReply::RUNNING);
+    subrep->set_block_path(sbr.block_path());
+    subrep->add_return_codes(0);
+    subrep->add_messages(string("success"));
+
+    subrep->set_completed_blocks(0);
+    subrep->set_total_blocks(1000000L);
+
+    reply_channel->SendReply(reply);
   }
 
 }  // end of namespace
 
 
 
-    
+  
 
 
 

@@ -9,6 +9,7 @@ namespace datto_linux_client {
   using namespace std;
 
   bool IPCSocketReplyChannel::IsAvailable() {
+
     return true;
   }
 
@@ -20,12 +21,12 @@ namespace datto_linux_client {
 
     reply->SerializeToArray(serialized_reply, reply_size);
 
-    cout << "In SendReply:  would send reply here.  Serialized size is " << reply_size << endl;
+    ps_->SendMessage(reply_size, serialized_reply);
 
   }
    
   IPCSocketReplyChannel::~IPCSocketReplyChannel() {
-    cout << "IPCSocketReplyChannel destructor called" << endl;
+
   }
 
 }
