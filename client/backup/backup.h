@@ -16,16 +16,16 @@ enum BackupStatus {
 }
 
 class Backup : private boost::noncopyable {
-  public:
-    void DoBackup();
-    BackupStatus status();
-    virtual ~Backup();
-  protected:
-    virtual void Prepare() = 0;
-    virtual void Copy() = 0;
-    virtual void Cleanup() = 0;
-  private:
-    BackupStatus status_;
+ public:
+  void DoBackup();
+  BackupStatus status();
+  virtual ~Backup();
+ protected:
+  virtual void Prepare() = 0;
+  virtual void Copy() = 0;
+  virtual void Cleanup() = 0;
+ private:
+  BackupStatus status_;
 }
 
 }
