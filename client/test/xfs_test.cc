@@ -1,6 +1,9 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include "fs_parsing/xfs_mountable_block_device.h"
+#include "block_device/mountable_block_device.h"
+#include "unsynced_sector_tracker/sector_set.h"
+#include <memory>
 
 namespace {
 
@@ -36,11 +39,10 @@ class XFSTest : public ::testing::Test {
   }
 };
 
-TEST_F(EXTFSTest) {
+TEST_F(EXTFSTest, GetInUseSectorsTest) {
+  XFSTest test();
   ExtMountableBlockDevice block_dev("/dev/loop0");
-  std::unique_ptr<const SectorSet> block_dev_data = block_dev.GetInUseSectors();
-  std::unique_ptr<const SectorSet> file_data = parse_file("test/data/filesystems/xfs.map");
-  EXPECT_EQ(block_dev_data, file_data);
+  EXPECT_EQ(block_dev.GetInUseSectors(), parse_file("test/data/filesystems/xfs.map"));
 }
 
 } // namespace
