@@ -50,3 +50,10 @@ add_unit_test(device_synchronizer_test
 
 add_unit_test(config_test
               configuration/config.cc)
+
+add_test(dattocli dattocli)
+add_custom_target(ctest_dattocli
+                  ${CMAKE_CURRENT_SOURCE_DIR}/test/dattocli_test.py
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_dependencies(ctest_dattocli dattocli)
+add_dependencies(check ctest_dattocli)
