@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+
+# dattocli supports three commands. Each is delegated to the dattod binary
+# through a unix socket, and replies are shown on stdout.
+import sys
+
+IPC_SOCKET_PATH = "/var/datto/dattod_ipc"
+
+# Ignore line length here
+usage = "usage: " + sys.argv[0] + " startbackup|stopbackup|progress block_device\n" \
+      + "\n" \
+      + "       " + sys.argv[0] + " startbackup block_device   start a backup to the device in datto.conf\n" \
+      + "       " + sys.argv[0] + " stopbackup block_device    stop an in-progress backup\n" \
+      + "       " + sys.argv[0] + " progress block_device      show the progress of an in-progress backup\n" \
+
+# While arg/optparse were tempting, they seem like overkill for our purposes
+def parse_args(args):
+    message = None
+    if len(args) != 3:
+        print usage
+        exit(1)
+    elif args == 'startbackup':
+        # Build the start backup protobuf message
+        return message
+    elif args == 'stopbackup':
+        # Build the stop backup protobuf message
+        return message
+    elif args == 'progress':
+        # Build the progress protobuf message
+        return message
+    else:
+        print usage
+        exit(1)
+
+# Note that dattocli should not do any validation that block_device is
+# actually a block device before passing it off to dattod. dattod should
+# perform that validation
+def send_to_dattod(message):
+    # check if socket path exists, bail (and exit 1) if not
+    # send message over the socket
+    # wait for replies, show them on stdout
+    # when the socket is closed, return
+    pass
+
+if __name__ == "__main__":
+    # parse_args should only return if it has a message
+    message = parse_args(sys.argv)
+    send_to_dattod(message)

@@ -1,6 +1,0 @@
-package datto_linux_client;
-
-message PauseBackupRequest {
-    required string block_path = 1;
-}
-

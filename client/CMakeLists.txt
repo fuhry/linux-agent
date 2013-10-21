@@ -9,8 +9,23 @@ include_directories(.)
 find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
-file (GLOB PROTO_FILES request_listener/messages/*.proto)
+file (GLOB PROTO_FILES messages/*.proto)
+
+# C++ protobuf files
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
+
+# Python protobuf files
+add_custom_target(protobuf_python)
+add_custom_command(TARGET protobuf_python
+                   COMMAND protoc --python_out=${CMAKE_CURRENT_BINARY_DIR} -I${CMAKE_CURRENT_SOURCE_DIR}/messages
+                   ${PROTO_FILES})
+
+# dattocli 
+add_custom_target(dattocli)
+add_dependencies(dattocli protobuf_python)
+add_custom_command(TARGET dattocli
+                   COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/dattocli/dattocli ${CMAKE_CURRENT_BINARY_DIR})
+
 
 # Unit tests
 include(cmake/test_setup.cmake)
@@ -50,3 +65,13 @@ add_unit_test(device_synchronizer_test
 
 add_unit_test(config_test
               configuration/config.cc)
+
+# dattocli test
+add_test(dattocli_test dattocli_test)
+add_custom_target(ctest_dattocli_test
+                  ${CMAKE_CURRENT_SOURCE_DIR}/test/dattocli_test.py
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+add_dependencies(ctest_dattocli_test dattocli)
+add_dependencies(ctest_dattocli_test dattocli_test)
+add_dependencies(check ctest_dattocli_test)
