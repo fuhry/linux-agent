@@ -1,0 +1,5 @@
+package datto_linux_client;
+
+message StringReply {
+    required string message = 1;
+}
