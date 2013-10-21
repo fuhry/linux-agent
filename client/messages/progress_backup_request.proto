@@ -1,5 +1,5 @@
 package datto_linux_client;
 
-message StatusBackupRequest {
+message ProgressBackupRequest {
     required string block_path = 1;
 }
