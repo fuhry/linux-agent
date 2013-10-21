@@ -38,7 +38,7 @@ class TestDattoCli(unittest.TestCase):
         pass
 
     def test_badcommand(self):
-        process = subprocess.Popen(["dattocli/dattocli", "notacommand"],
+        process = subprocess.Popen(["./dattocli", "notacommand"],
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
         # We are lazy with the pipe buffer, if this ever deadlocks then revisit
