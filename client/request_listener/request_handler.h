@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "request_listener/reply_channel.h"
-#include "request_listener/protobuf_classes/request.pb.h"
+#include "request.pb.h"
 
 namespace datto_linux_client {
 class RequestHandler {
@@ -12,10 +12,10 @@ class RequestHandler {
   RequestHandler(const RequestHandler&) = delete;
   RequestHandler& operator=(const RequestHandler&) = delete;
 
-  RequestHandler() { }
+  RequestHandler();
   void Handle(const Request &request,
               std::shared_ptr<ReplyChannel> reply_channel);
-  ~RequestHandler() { }
+  ~RequestHandler();
 };
 }
 

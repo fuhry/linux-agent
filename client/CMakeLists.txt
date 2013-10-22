@@ -17,14 +17,16 @@ PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 # Python protobuf files
 add_custom_target(protobuf_python)
 add_custom_command(TARGET protobuf_python
-                   COMMAND protoc --python_out=${CMAKE_CURRENT_BINARY_DIR} -I${CMAKE_CURRENT_SOURCE_DIR}/messages
-                   ${PROTO_FILES})
+                   COMMAND protoc --python_out=${CMAKE_CURRENT_BINARY_DIR}
+                           -I${CMAKE_CURRENT_SOURCE_DIR}/messages
+                           ${PROTO_FILES})
 
-# dattocli 
+# dattocli
 add_custom_target(dattocli)
 add_dependencies(dattocli protobuf_python)
 add_custom_command(TARGET dattocli
-                   COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/dattocli/dattocli ${CMAKE_CURRENT_BINARY_DIR})
+                   COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/dattocli/dattocli
+                              ${CMAKE_CURRENT_BINARY_DIR})
 
 
 # Unit tests
