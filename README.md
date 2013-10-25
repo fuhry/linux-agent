@@ -1,4 +1,4 @@
-*This is out of date, in particular the sections on device mapper*
+*This is out of date, in particular the sections on device mapper, it needs to be updated to use FIFREEZE*
 
 # Linux Agent
 The Linux Agent is client side software that creates and transfers image-based backups of the block devices on a Linux machine. 
