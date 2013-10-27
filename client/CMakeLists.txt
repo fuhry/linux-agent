@@ -82,9 +82,6 @@ add_unit_test(extfs_test
 #              block_device/mountable_block_device.cc
 #              block_device/block_device.cc)
 
-add_unit_test(config_test
-              configuration/config.cc)
-
 # dattocli test
 add_test(dattocli_test dattocli_test)
 add_custom_target(ctest_dattocli_test
