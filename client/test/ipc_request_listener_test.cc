@@ -85,7 +85,7 @@ class RequestTestClient {
     std::string message_buf;
     message_buf.resize(reply_size);
 
-    ssize_t bytes_read = recv(sock_fd_, &message_buf[0], reply_size, 
+    ssize_t bytes_read = recv(sock_fd_, &message_buf[0], reply_size,
                               MSG_WAITALL);
 
     if (bytes_read != (int32_t) reply_size) {

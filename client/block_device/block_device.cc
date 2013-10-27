@@ -98,4 +98,4 @@ BlockDevice::~BlockDevice() {
   Unthrottle();
 }
 
-}  //namespace   
+}  //namespace

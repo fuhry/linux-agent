@@ -159,7 +159,7 @@ NbdClient::NbdClient(std::string a_host, uint16_t a_port)
     : host_(a_host),
       port_(a_port),
       disconnect_(false) {
-  
+
   sock_ = OpenNbdSocket(host_, port_);
   NegotiateNbdCommunication(sock_, &block_device_size_);
 

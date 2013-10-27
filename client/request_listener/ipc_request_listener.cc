@@ -29,7 +29,7 @@ int open_socket(std::string ipc_socket_path) {
 
   int sock_fd = socket(AF_UNIX, SOCK_STREAM, 0);
 
-  if (sock_fd < 0) { 
+  if (sock_fd < 0) {
     PLOG(ERROR) << "Unable to open socket";
     throw RequestListenerException("Unable to open socket");
   }
@@ -91,7 +91,7 @@ int get_new_connection(int socket_fd) {
 Request read_protobuf_request(int connection_fd) {
   uint32_t message_length;
   ssize_t bytes_read;
-  
+
   bytes_read = read(connection_fd, &message_length, sizeof(uint32_t));
 
   if (bytes_read != sizeof(uint32_t)) {
@@ -107,11 +107,11 @@ Request read_protobuf_request(int connection_fd) {
     LOG(ERROR) << "Message length: " << message_length;
     throw RequestListenerException("Message was too big");
   }
-  
+
   std::string message_buf;
   message_buf.resize(message_length);
 
-  bytes_read = recv(connection_fd, &message_buf[0], message_length, 
+  bytes_read = recv(connection_fd, &message_buf[0], message_length,
                     MSG_WAITALL);
 
   if (bytes_read != (int32_t)message_length) {
@@ -148,7 +148,7 @@ IpcRequestListener::IpcRequestListener(
           }
           int connection_fd = get_new_connection(socket_fd_);
           auto request = read_protobuf_request(connection_fd);
-          
+
           std::shared_ptr<ReplyChannel> reply_channel(
               new SocketReplyChannel(connection_fd));
 
