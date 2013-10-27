@@ -22,10 +22,8 @@ macro(add_unit_test test_name)
     # set_tests_properties(${test_name} PROPERTIES ENVIRONMENT
     #                      GLOG_minloglevel=2)
     add_custom_target(ctest_${test_name} 
-        bash -c \"GLOG_minloglevel=2
-            \\\"${CMAKE_CURRENT_BINARY_DIR}/${test_name}\\\"
-        \"
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+                      ${CMAKE_CURRENT_BINARY_DIR}/${test_name}
+                      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
     add_test(${test_name} ${test_name})
 
