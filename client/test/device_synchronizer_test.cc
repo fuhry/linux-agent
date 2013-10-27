@@ -42,7 +42,7 @@ class DummyMountableBlockDevice : public MountableBlockDevice {
 class DummyReplyChannel : public ReplyChannel {
  public:
   DummyReplyChannel() : is_available_(true) { }
-  virtual void SendReply(std::shared_ptr<Reply> reply) { }
+  virtual void SendReply(const Reply &reply) { }
   virtual bool IsAvailable() {
     return is_available_;
   }
