@@ -70,18 +70,6 @@ add_unit_test(ipc_request_listener_test
               ${PROTO_SRCS}
               request_listener/ipc_request_listener.cc)
 
-add_unit_test(extfs_test
-              test/extfs_test.cc
-              fs_parsing/ext_mountable_block_device.cc
-              block_device/mountable_block_device.cc
-              block_device/block_device.cc)
-
-#add_unit_test(xfs_test
-#              test/xfs_test.cc
-#              fs_parsing/xfs_mountable_block_device.cc
-#              block_device/mountable_block_device.cc
-#              block_device/block_device.cc)
-
 # dattocli test
 add_test(dattocli_test dattocli_test)
 add_custom_target(ctest_dattocli_test
