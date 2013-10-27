@@ -65,6 +65,11 @@ add_unit_test(device_synchronizer_test
               ${PROTO_SRCS}
               device_synchronizer/device_synchronizer.cc)
 
+add_unit_test(ipc_request_listener_test
+              request_listener/socket_reply_channel.cc
+              ${PROTO_SRCS}
+              request_listener/ipc_request_listener.cc)
+
 add_unit_test(extfs_test
               test/extfs_test.cc
               fs_parsing/ext_mountable_block_device.cc
