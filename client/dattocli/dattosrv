@@ -2,6 +2,7 @@
 
 import os
 import socket
+import struct
 from start_backup_request_pb2 import StartBackupRequest
 from progress_backup_request_pb2 import ProgressBackupRequest
 from stop_backup_request_pb2 import StopBackupRequest
@@ -9,6 +10,9 @@ from request_pb2 import Request
 from string_reply_pb2 import StringReply
 
 IPC_SOCKET_PATH = "/var/datto/dattod_ipc"
+
+def handle_request(request):
+    print request.type
 
 def main():
     print 'Starting test server'
@@ -20,14 +24,19 @@ def main():
     reply = StringReply()
     reply.message = 'Hello World!'
     while True:
-        data = conn.recv(1024)
-        if not data:
+        length = conn.recv(4)
+        if not length:
             break
         else:
-            request = StartBackupRequest() #How do I identify which one?
+            length = struct.unpack('!I', length)[0]
+            data = conn.recv(length)
+            request = Request()
             request.ParseFromString(data)
-            print request
-            conn.send(reply.SerializeToString())
+            handle_request(request)
+
+            reply = reply.SerializeToString()
+            conn.send(struct.pack('!I', len(reply))) # send message over the socket
+            conn.send(reply)
     s.close()
     os.remove(IPC_SOCKET_PATH)
 

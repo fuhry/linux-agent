@@ -5,6 +5,7 @@
 import sys
 import os
 import socket
+import struct
 from start_backup_request_pb2 import StartBackupRequest
 from progress_backup_request_pb2 import ProgressBackupRequest
 from stop_backup_request_pb2 import StopBackupRequest
@@ -56,13 +57,18 @@ def send_to_dattod(message):
 
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     s.connect(IPC_SOCKET_PATH)
-    s.send(message.SerializeToString()) # send message over the socket
+
+    message = message.SerializeToString()
+    s.send(struct.pack('!I', len(message))) # send message over the socket
+    s.send(message)
 
     while True: # wait for replies, show them on stdout
-        data = s.recv(1024)
-        if not data:
+        length = s.recv(4)
+        if not length:
             break
         else:
+            length = struct.unpack('!I', length)[0]
+            data = s.recv(length)
             reply = StringReply()
             reply.ParseFromString(data)
             print reply
