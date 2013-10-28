@@ -3,3 +3,4 @@ This is more of a maintenance TODO more than a feature TODO
 * Check header guards
 * Make sure all classes that should be non-copyable are
 * Add license text
+* Add an exception for filesystem parsing
