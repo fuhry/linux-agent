@@ -19,13 +19,13 @@ def parse_args(args):
     if len(args) != 3:
         print usage
         exit(1)
-    elif args == 'startbackup':
+    elif args[1] == 'startbackup':
         # Build the start backup protobuf message
         return message
-    elif args == 'stopbackup':
+    elif args[1] == 'stopbackup':
         # Build the stop backup protobuf message
         return message
-    elif args == 'progress':
+    elif args[1] == 'progress':
         # Build the progress protobuf message
         return message
     else:
@@ -36,6 +36,7 @@ def parse_args(args):
 # actually a block device before passing it off to dattod. dattod should
 # perform that validation
 def send_to_dattod(message):
+    print message
     # check if socket path exists, bail (and exit 1) if not
     # send message over the socket
     # wait for replies, show them on stdout
