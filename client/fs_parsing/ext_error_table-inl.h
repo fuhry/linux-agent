@@ -1,6 +1,8 @@
 #ifndef DATTO_CLIENT_FS_PARSING_EXT_ERROR_TABLE_H_
 #define DATTO_CLIENT_FS_PARSING_EXT_ERROR_TABLE_H_
 
+#include <string>
+
 extern "C" {
 #include <ext2fs/ext2_err.h>
 }

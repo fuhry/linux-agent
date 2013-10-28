@@ -1,9 +1,11 @@
 #include "fs_parsing/ext_mountable_block_device.h"
 
 #include "fs_parsing/ext_file_system.h"
-#include "fs_parsing/ext_error_table.h"
+#include "fs_parsing/ext_error_table-inl.h"
 
 #include "block_device/block_device_exception.h"
+
+#include "unsynced_sector_tracker/sector_interval.h"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -35,6 +37,9 @@ std::unique_ptr<const SectorSet> ExtMountableBlockDevice::GetInUseSectors() {
 
   std::unique_ptr<char[]> block_bitmap(new char[bitmap_size]);
 
+  // First sector is always included
+  sectors->insert(SectorInterval(0, 512));
+
   for (uint64_t i = 0; i < ext_fs.fs()->group_desc_count; ++i) {
 
     /* Calculate the block offset for the current group */
@@ -62,7 +67,13 @@ std::unique_ptr<const SectorSet> ExtMountableBlockDevice::GetInUseSectors() {
           PLOG(ERROR) << "Failure during seek";
           throw BlockDeviceException("Unable to seek device");
         }
-        sectors->insert(seek_amnt);
+
+        uint64_t sector_location = seek_amnt/block_size;
+        // TODO Use constant for 512
+        uint64_t blocks_per_sector = block_size / 512;
+
+        sectors->insert(SectorInterval(sector_location,
+                                       sector_location + blocks_per_sector));
         rc += block_size;
       }
     }
