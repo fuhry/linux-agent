@@ -13,20 +13,37 @@
 
 namespace datto_linux_client_test {
 
-LoopDevice::LoopDevice() {
-  int fd;
+LoopDevice::LoopDevice() : is_backing_path_(false) {
   int create_ret = system("./test/make_test_loop_device");
   if (create_ret) {
     throw std::runtime_error("Couldn't make loop device");
   }
 
+  Init();
+}
+
+LoopDevice::LoopDevice(std::string backing_file_path)
+    : is_backing_path_(true) {
+  int losetup_ret = system(("losetup -fv " + backing_file_path +
+                            " | sed -e 's/Loop device is //g' > " +
+                            TEST_LOOP_SHARED_MEMORY).c_str());
+  if (losetup_ret) {
+    throw std::runtime_error("Couldn't make loop device");
+  }
+
+  Init();
+}
+
+void LoopDevice::Init() {
   std::ifstream loop_path_stream(TEST_LOOP_SHARED_MEMORY);
   std::getline(loop_path_stream, path_);
   loop_path_stream.close();
 
+  int fd;
   if ((fd = open(path_.c_str(), O_RDONLY)) == -1) {
     PLOG(ERROR) << "Unable to make test loop device."
-                << " Verify everything is cleaned up with losetup";
+                << " Verify everything is cleaned up with losetup."
+                << " path is: " << path_;
     unlink(TEST_LOOP_SHARED_MEMORY);
     throw std::runtime_error("Couldn't make loop device");
   }
@@ -36,6 +53,7 @@ LoopDevice::LoopDevice() {
   block_size_ = 0;
   if (ioctl(fd, BLKBSZGET, &block_size_)) {
     PLOG(ERROR) << "BLKBSZGET";
+    close(fd);
     throw std::runtime_error("Error getting block size");
   }
 
@@ -65,7 +83,14 @@ void LoopDevice::Sync() {
 }
 
 LoopDevice::~LoopDevice() {
-  int suppress_warning = system(("./test/cleanup_test_loop_device " + path_).c_str());
+  int suppress_warning;
+  if (is_backing_path_) {
+    // Sleep gives the kernel a chance to know any open descriptors are closed
+    suppress_warning = system(("sleep .25 && losetup -d " + path_).c_str());
+  } else {
+    suppress_warning =
+      system(("./test/cleanup_test_loop_device " + path_).c_str());
+  }
   (void) suppress_warning;
 }
 
