@@ -16,29 +16,72 @@ import subprocess
 
 class TestDattoCli(unittest.TestCase):
     def setUp(self):
-        # Create the server
+        #TODO: control this better
+        #subprocess.Popen(["../dattocli/dattosrv"])
         pass
 
     def test_startbackup_goodargs(self):
+        process = subprocess.Popen(["../dattocli/dattocli", "startbackup", "/dev/null"],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        # We are lazy with the pipe buffer, if this ever deadlocks then revisit
+        process.wait()
+
+        self.assertEqual(process.returncode, 0)
         pass
 
     def test_startbackup_badargs(self):
+        process = subprocess.Popen(["../dattocli/dattocli", "startbackup", "/dev/null"],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        # We are lazy with the pipe buffer, if this ever deadlocks then revisit
+        process.wait()
+
+        self.assertNotEqual(process.returncode, 0)
         pass
 
     def test_stopbackup_goodargs(self):
+        process = subprocess.Popen(["../dattocli/dattocli", "stopbackup", "/dev/null"],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        # We are lazy with the pipe buffer, if this ever deadlocks then revisit
+        process.wait()
+
+        self.assertEqual(process.returncode, 0)
         pass
 
     def test_stopbackup_badargs(self):
+        process = subprocess.Popen(["../dattocli/dattocli", "stopbackup", "/dev/null"],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        # We are lazy with the pipe buffer, if this ever deadlocks then revisit
+        process.wait()
+
+        self.assertNotEqual(process.returncode, 0)
         pass
 
     def test_progress_goodargs(self):
+        process = subprocess.Popen(["../dattocli/dattocli", "progress", "/dev/null"],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        # We are lazy with the pipe buffer, if this ever deadlocks then revisit
+        process.wait()
+
+        self.assertEqual(process.returncode, 0)
         pass
 
     def test_progress_badargs(self):
+        process = subprocess.Popen(["../dattocli/dattocli", "progress", "/dev/null"],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        # We are lazy with the pipe buffer, if this ever deadlocks then revisit
+        process.wait()
+
+        self.assertNotEqual(process.returncode, 0)
         pass
 
     def test_badcommand(self):
-        process = subprocess.Popen(["./dattocli", "notacommand"],
+        process = subprocess.Popen(["../dattocli/dattocli", "notacommand"],
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
         # We are lazy with the pipe buffer, if this ever deadlocks then revisit
