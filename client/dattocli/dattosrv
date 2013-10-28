@@ -24,13 +24,14 @@ def main():
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     s.bind(IPC_SOCKET_PATH)
     s.listen(1)
-    conn, addr = s.accept()
+
 
     reply = StringReply()
     reply.message = 'DISCONNECT'
     while True:
+        conn, addr = s.accept()
         length = conn.recv(4)
-        if not length:
+        if False:
             break
         else:
             length = struct.unpack('!I', length)[0]
@@ -39,9 +40,9 @@ def main():
             request.ParseFromString(data)
             handle_request(request)
 
-            reply = reply.SerializeToString()
-            conn.send(struct.pack('!I', len(reply))) # send message over the socket
-            conn.send(reply)
+            client_reply = reply.SerializeToString()
+            conn.send(struct.pack('!I', len(client_reply))) # send message over the socket
+            conn.send(client_reply)
     s.close()
     os.remove(IPC_SOCKET_PATH)
 
