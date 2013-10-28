@@ -12,7 +12,12 @@ from string_reply_pb2 import StringReply
 IPC_SOCKET_PATH = "/var/datto/dattod_ipc"
 
 def handle_request(request):
-    print request.type
+    if request.type == Request.START_BACKUP:
+        print 'START', request.start_backup_request
+    elif request.type == Request.STOP_BACKUP:
+        print 'STOP', request.stop_backup_request
+    elif request.type == Request.PROGRESS_BACKUP:
+        print 'PROGRESS', request.progress_backup_request
 
 def main():
     print 'Starting test server'
@@ -22,7 +27,7 @@ def main():
     conn, addr = s.accept()
 
     reply = StringReply()
-    reply.message = 'Hello World!'
+    reply.message = 'DISCONNECT'
     while True:
         length = conn.recv(4)
         if not length:

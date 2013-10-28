@@ -9,6 +9,7 @@ import struct
 from start_backup_request_pb2 import StartBackupRequest
 from progress_backup_request_pb2 import ProgressBackupRequest
 from stop_backup_request_pb2 import StopBackupRequest
+from request_pb2 import Request
 from string_reply_pb2 import StringReply
 
 IPC_SOCKET_PATH = "/var/datto/dattod_ipc"
@@ -22,26 +23,27 @@ usage = "usage: " + sys.argv[0] + " startbackup|stopbackup|progress block_device
 
 # While arg/optparse were tempting, they seem like overkill for our purposes
 def parse_args(args):
+    request = Request()
     message = None
     if len(args) != 3:
         print usage
         exit(1)
     elif args[1] == 'startbackup':
         # Build the start backup protobuf message
-        message = StartBackupRequest()
-        message.block_path = sys.argv[2]
-        message.type = StartBackupRequest.FULL_BACKUP #TODO: args
-        return message
+        request.type = Request.START_BACKUP
+        request.start_backup_request.type = StartBackupRequest.FULL_BACKUP #TODO: args
+        request.start_backup_request.block_path = sys.argv[2]
+        return request
     elif args[1] == 'stopbackup':
         # Build the stop backup protobuf message
-        message = StopBackupRequest()
-        message.block_path = sys.argv[2]
-        return message
+        request.type = Request.STOP_BACKUP
+        request.stop_backup_request.block_path = sys.argv[2]
+        return request
     elif args[1] == 'progress':
         # Build the progress protobuf message
-        message = ProgressBackupRequest()
-        message.block_path = sys.argv[2]
-        return message
+        request.type = Request.PROGRESS_BACKUP
+        request.progress_backup_request.block_path = sys.argv[2]
+        return request
     else:
         print usage
         exit(1)
@@ -63,7 +65,7 @@ def send_to_dattod(message):
     s.send(message)
 
     while True: # wait for replies, show them on stdout
-        length = s.recv(4)
+        length = s.recv(4) #TODO: is there a sizeof?
         if not length:
             break
         else:
@@ -71,7 +73,9 @@ def send_to_dattod(message):
             data = s.recv(length)
             reply = StringReply()
             reply.ParseFromString(data)
-            print reply
+            print reply.message
+            if reply.message == 'DISCONNECT': #TODO: proper disconnect message
+               break
 
     s.close() # when the socket is closed, return    
     pass
