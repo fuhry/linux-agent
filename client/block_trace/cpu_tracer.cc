@@ -1,5 +1,6 @@
 #include "cpu_tracer.h"
 #include <algorithm>
+#include <thread>
 #include <fcntl.h>
 #include <glog/logging.h>
 #include <linux/blktrace_api.h>
@@ -114,7 +115,9 @@ void CpuTracer::FlushBuffer() {
   flush_buffers_ = true;
   // Wait for flush_buffers_ to be marked false
   LOG(INFO) << "Waiting for buffer to flush";
-  while (flush_buffers_);
+  while (flush_buffers_) {
+    std::this_thread::yield();
+  }
   LOG(INFO) << "Buffer flushed";
 }
 
