@@ -14,7 +14,6 @@ macro(add_unit_test test_name)
     target_link_libraries(${test_name} glog)
     target_link_libraries(${test_name} ${GTEST_BINARIES}/libgtest.a)
     target_link_libraries(${test_name} ${GTEST_BINARIES}/libgtest_main.a)
-    target_link_libraries(${test_name} ${PROTOBUF_LIBRARIES})
 
     # TODO set_tests_properties should do this so we don't need to do the
     # bash -c hack here, but can't seem to get it to work
