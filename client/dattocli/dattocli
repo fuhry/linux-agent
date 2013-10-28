@@ -3,6 +3,12 @@
 # dattocli supports three commands. Each is delegated to the dattod binary
 # through a unix socket, and replies are shown on stdout.
 import sys
+import os
+import socket
+from start_backup_request_pb2 import StartBackupRequest
+from progress_backup_request_pb2 import ProgressBackupRequest
+from stop_backup_request_pb2 import StopBackupRequest
+from string_reply_pb2 import StringReply
 
 IPC_SOCKET_PATH = "/var/datto/dattod_ipc"
 
@@ -21,12 +27,19 @@ def parse_args(args):
         exit(1)
     elif args[1] == 'startbackup':
         # Build the start backup protobuf message
+        message = StartBackupRequest()
+        message.block_path = sys.argv[2]
+        message.type = StartBackupRequest.FULL_BACKUP #TODO: args
         return message
     elif args[1] == 'stopbackup':
         # Build the stop backup protobuf message
+        message = StopBackupRequest()
+        message.block_path = sys.argv[2]
         return message
     elif args[1] == 'progress':
         # Build the progress protobuf message
+        message = ProgressBackupRequest()
+        message.block_path = sys.argv[2]
         return message
     else:
         print usage
@@ -36,11 +49,25 @@ def parse_args(args):
 # actually a block device before passing it off to dattod. dattod should
 # perform that validation
 def send_to_dattod(message):
-    print message
     # check if socket path exists, bail (and exit 1) if not
-    # send message over the socket
-    # wait for replies, show them on stdout
-    # when the socket is closed, return
+    if not os.path.exists(IPC_SOCKET_PATH):
+        print 'Abort: Socket does not exist!'
+        exit(1)
+
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.connect(IPC_SOCKET_PATH)
+    s.send(message.SerializeToString()) # send message over the socket
+
+    while True: # wait for replies, show them on stdout
+        data = s.recv(1024)
+        if not data:
+            break
+        else:
+            reply = StringReply()
+            reply.ParseFromString(data)
+            print reply
+
+    s.close() # when the socket is closed, return    
     pass
 
 if __name__ == "__main__":
