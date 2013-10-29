@@ -9,13 +9,13 @@
 namespace datto_linux_client {
 class RequestHandler {
  public:
-  RequestHandler(const RequestHandler&) = delete;
-  RequestHandler& operator=(const RequestHandler&) = delete;
-
   RequestHandler();
   void Handle(const Request &request,
               std::shared_ptr<ReplyChannel> reply_channel);
   ~RequestHandler();
+
+  RequestHandler(const RequestHandler&) = delete;
+  RequestHandler& operator=(const RequestHandler&) = delete;
 };
 }
 
