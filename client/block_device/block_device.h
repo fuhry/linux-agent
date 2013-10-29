@@ -9,6 +9,7 @@
 
 namespace datto_linux_client {
 
+// TODO Make non-copyable using C++11
 class BlockDevice : private boost::noncopyable {
 
  public:
