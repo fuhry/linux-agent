@@ -35,6 +35,13 @@ TEST(UnsyncedSectorTrackerTest, FailsOnAlreadyLocked) {
   }
 }
 
+TEST(UnsyncedSectorTrackerTest, ReleasesInDestructor) {
+  {
+    Flock lock1("/tmp/test_lock");
+  }
+  Flock lock2("/tmp/test_lock");
+}
+
 TEST(UnsyncedSectorTrackerTest, WritePID) {
   Flock lock("/tmp/test_lock");
   lock.WritePid();
