@@ -79,12 +79,14 @@ TEST_F(ExtFSTest, Construct) {
                                          1024);
   SectorSet actual = *bdev.GetInUseSectors();
 
-  for (auto interval : actual) {
-    LOG(INFO) << "a " << interval.lower() << " : " << interval.upper();
-  }
+  if (expected != actual) {
+    for (auto interval : actual) {
+      LOG(INFO) << "a " << interval.lower() << " : " << interval.upper();
+    }
 
-  for (auto interval : expected) {
-    LOG(INFO) << "e " << interval.lower() << " : " << interval.upper();
+    for (auto interval : expected) {
+      LOG(INFO) << "e " << interval.lower() << " : " << interval.upper();
+    }
   }
 
   EXPECT_TRUE(expected == actual);
