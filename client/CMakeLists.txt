@@ -35,6 +35,9 @@ include(cmake/test_setup.cmake)
 add_unit_test(unsynced_sector_tracker_test
               unsynced_sector_tracker/unsynced_sector_tracker.cc)
 
+add_unit_test(flock_test
+              dattod/flock.cc)
+
 add_unit_test(device_tracer_test
               test/loop_device.cc
               block_trace/device_tracer.cc
