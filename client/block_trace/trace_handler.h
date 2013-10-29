@@ -14,7 +14,7 @@ class TraceHandler : private boost::noncopyable {
   // TODO: This needs to be a calculated value
   static const int SECTOR_SIZE = 512;
 
-  TraceHandler(std::shared_ptr<UnsyncedSectorTracker> tracker);
+  explicit TraceHandler(std::shared_ptr<UnsyncedSectorTracker> tracker);
   virtual void AddTrace(const struct blk_io_trace &trace_data);
   virtual ~TraceHandler() { }
 

@@ -12,7 +12,7 @@ namespace datto_linux_client {
 
 class SocketReplyChannel : public ReplyChannel {
  public:
-  SocketReplyChannel(int connection_fd);
+  explicit SocketReplyChannel(int connection_fd);
 
   virtual void SendReply(const Reply &reply);
   virtual bool IsAvailable() { throw std::runtime_error("not implemented"); }

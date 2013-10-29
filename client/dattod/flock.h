@@ -7,7 +7,7 @@ namespace datto_linux_client {
 
 class Flock {
  public:
-  Flock(std::string file_path);
+  explicit Flock(std::string file_path);
   ~Flock();
 
   std::string path() const {
