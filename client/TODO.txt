@@ -1,5 +1,6 @@
 This is more of a maintenance TODO more than a feature TODO
 
+* Class header comments
 * Check header guards
 * Make sure all classes that should be non-copyable are
 * Add license text
