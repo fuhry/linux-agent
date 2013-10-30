@@ -38,6 +38,9 @@ add_unit_test(unsynced_sector_tracker_test
 add_unit_test(flock_test
               dattod/flock.cc)
 
+add_unit_test(signal_handler_test
+              dattod/signal_handler.cc)
+
 add_unit_test(device_tracer_test
               test/loop_device.cc
               block_trace/device_tracer.cc
