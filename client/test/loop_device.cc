@@ -84,12 +84,12 @@ void LoopDevice::Sync() {
 
 LoopDevice::~LoopDevice() {
   int suppress_warning;
+  // Sleep gives the kernel a chance to know any open descriptors are closed
   if (is_backing_path_) {
-    // Sleep gives the kernel a chance to know any open descriptors are closed
     suppress_warning = system(("sleep .25 && losetup -d " + path_).c_str());
   } else {
     suppress_warning =
-      system(("./test/cleanup_test_loop_device " + path_).c_str());
+      system(("sleep .25 && ./test/cleanup_test_loop_device " + path_).c_str());
   }
   (void) suppress_warning;
 }
