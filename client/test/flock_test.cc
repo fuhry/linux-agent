@@ -12,11 +12,11 @@ namespace {
 
 using ::datto_linux_client::Flock;
 
-TEST(UnsyncedSectorTrackerTest, Constructor) {
+TEST(FlockTest, Constructor) {
   Flock lock("/tmp/test_lock");
 }
 
-TEST(UnsyncedSectorTrackerTest, FailsOnBadPath) {
+TEST(FlockTest, FailsOnBadPath) {
   try {
     Flock lock("/dir_doesnt_exist/test_lock");
     FAIL() << "Locking on bad file didn't fail";
@@ -25,7 +25,7 @@ TEST(UnsyncedSectorTrackerTest, FailsOnBadPath) {
   }
 }
 
-TEST(UnsyncedSectorTrackerTest, FailsOnAlreadyLocked) {
+TEST(FlockTest, FailsOnAlreadyLocked) {
   Flock lock1("/tmp/test_lock");
   try {
     Flock lock2("/tmp/test_lock");
@@ -35,14 +35,14 @@ TEST(UnsyncedSectorTrackerTest, FailsOnAlreadyLocked) {
   }
 }
 
-TEST(UnsyncedSectorTrackerTest, ReleasesInDestructor) {
+TEST(FlockTest, ReleasesInDestructor) {
   {
     Flock lock1("/tmp/test_lock");
   }
   Flock lock2("/tmp/test_lock");
 }
 
-TEST(UnsyncedSectorTrackerTest, WritePID) {
+TEST(FlockTest, WritePID) {
   Flock lock("/tmp/test_lock");
   lock.WritePid();
   std::ifstream lock_ifs("/tmp/test_lock");
