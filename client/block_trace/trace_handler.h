@@ -10,6 +10,7 @@
 namespace datto_linux_client {
 
 // TODO: C++11 uncopyable
+// TODO: Can the store be unique_ptr?
 class TraceHandler : private boost::noncopyable {
  public:
   // TODO: This needs to be a calculated value
