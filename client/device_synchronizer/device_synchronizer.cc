@@ -11,7 +11,7 @@ using ::datto_linux_client::DeviceSynchronizerException;
 int SECTOR_SIZE = 512;
 std::vector<uint64_t>::size_type MAX_SIZE_WORK_LEFT_HISTORY = 3 * 60;
 
-// TODO Rename
+// TODO Make this slightly more intelligent
 // Keep this simple for now
 inline bool should_continue(const std::vector<uint64_t> &work_left_history) {
   // If we have less than a minute of data, don't do anything
@@ -34,7 +34,8 @@ inline void copy_block(int source_fd, int destination_fd,
       PLOG(ERROR) << "Error while reading from source";
       throw DeviceSynchronizerException("Error reading from source");
     } else if (bytes_read == 0) {
-      // TODO No reads means we are done (I think?)
+      // No reads means we are done
+      PLOG(INFO) << "No bytes read";
       break;
     }
 
