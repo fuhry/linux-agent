@@ -11,14 +11,13 @@
 
 namespace datto_linux_client {
 
-DeviceTracer::DeviceTracer(const std::string &block_dev_path_arg,
+DeviceTracer::DeviceTracer(const std::string &block_dev_path,
                            std::shared_ptr<TraceHandler> handler)
-    : block_dev_path_(block_dev_path_arg),
-      handler_(handler) {
+    : handler_(handler) {
 
-  if ((block_dev_fd_ = open(block_dev_path_.c_str(),
+  if ((block_dev_fd_ = open(block_dev_path.c_str(),
                             O_RDONLY | O_NONBLOCK)) < 0) {
-    PLOG(ERROR) << "Unable to open " << block_dev_path_;
+    PLOG(ERROR) << "Unable to open " << block_dev_path;
     throw BlockTraceException("Unable to open device for tracing");
   }
 

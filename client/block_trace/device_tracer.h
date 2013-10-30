@@ -40,8 +40,6 @@ class DeviceTracer : private boost::noncopyable {
   // have finished flushing and have been given to the TraceHandler
   void FlushBuffers();
 
-  std::string block_dev_path();
-
   ~DeviceTracer();
 
  private:
