@@ -33,7 +33,7 @@ add_custom_command(TARGET dattocli
 include(cmake/test_setup.cmake)
 
 add_unit_test(unsynced_sector_store_test
-              unsynced_sector_store/unsynced_sector_store.cc)
+              unsynced_sector_manager/unsynced_sector_store.cc)
 
 add_unit_test(flock_test
               dattod/flock.cc)
@@ -46,7 +46,7 @@ add_unit_test(device_tracer_test
               block_trace/device_tracer.cc
               block_trace/cpu_tracer.cc
               block_trace/trace_handler.cc
-              unsynced_sector_store/unsynced_sector_store.cc)
+              unsynced_sector_manager/unsynced_sector_store.cc)
 
 add_unit_test(nbd_block_device_test
               test/loop_device.cc
@@ -67,7 +67,7 @@ add_unit_test(device_synchronizer_test
               test/loop_device.cc
               block_device/block_device.cc
               block_device/mountable_block_device.cc
-              unsynced_sector_store/unsynced_sector_store.cc
+              unsynced_sector_manager/unsynced_sector_store.cc
               ${PROTO_SRCS}
               device_synchronizer/device_synchronizer.cc)
 target_link_libraries(device_synchronizer_test ${PROTOBUF_LIBRARIES})

@@ -1,6 +1,6 @@
 #include "block_trace/block_trace_exception.h"
 #include "block_trace/device_tracer.h"
-#include "unsynced_sector_store/unsynced_sector_store.h"
+#include "unsynced_sector_manager/unsynced_sector_store.h"
 #include "test/loop_device.h"
 
 #include <memory>

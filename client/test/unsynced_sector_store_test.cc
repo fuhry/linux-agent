@@ -1,5 +1,5 @@
-#include "unsynced_sector_store/unsynced_sector_store.h"
-#include "unsynced_sector_store/sector_interval.h"
+#include "unsynced_sector_manager/unsynced_sector_store.h"
+#include "unsynced_sector_manager/sector_interval.h"
 
 #include <gtest/gtest.h>
 

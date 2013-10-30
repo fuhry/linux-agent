@@ -1,8 +1,8 @@
 #ifndef DATTO_CLIENT_UNSYNCED_SECTOR_STORE_UNSYNCED_SECTOR_STORE_H_
 #define DATTO_CLIENT_UNSYNCED_SECTOR_STORE_UNSYNCED_SECTOR_STORE_H_
 
-#include "unsynced_sector_store/sector_interval.h"
-#include "unsynced_sector_store/sector_set.h"
+#include "unsynced_sector_manager/sector_interval.h"
+#include "unsynced_sector_manager/sector_set.h"
 
 #include <mutex>
 #include <stdint.h>

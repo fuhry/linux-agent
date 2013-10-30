@@ -5,7 +5,7 @@
 #include <boost/noncopyable.hpp>
 #include <memory>
 
-#include "unsynced_sector_store/unsynced_sector_store.h"
+#include "unsynced_sector_manager/unsynced_sector_store.h"
 
 namespace datto_linux_client {
 

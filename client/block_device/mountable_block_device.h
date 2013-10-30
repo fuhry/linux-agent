@@ -7,7 +7,7 @@
 #include <string>
 
 #include "block_device/block_device.h"
-#include "unsynced_sector_store/sector_set.h"
+#include "unsynced_sector_manager/sector_set.h"
 
 namespace datto_linux_client {
 

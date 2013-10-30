@@ -1,6 +1,6 @@
 #include "device_synchronizer/device_synchronizer.h"
 #include "device_synchronizer/device_synchronizer_exception.h"
-#include "unsynced_sector_store/sector_interval.h"
+#include "unsynced_sector_manager/sector_interval.h"
 #include <glog/logging.h>
 
 namespace {

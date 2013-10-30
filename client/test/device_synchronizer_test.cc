@@ -2,9 +2,9 @@
 #include "block_device/block_device.h"
 #include "request_listener/reply_channel.h"
 #include "block_device/mountable_block_device.h"
-#include "unsynced_sector_store/unsynced_sector_store.h"
-#include "unsynced_sector_store/sector_interval.h"
-#include "unsynced_sector_store/sector_set.h"
+#include "unsynced_sector_manager/unsynced_sector_store.h"
+#include "unsynced_sector_manager/sector_interval.h"
+#include "unsynced_sector_manager/sector_set.h"
 #include "test/loop_device.h"
 
 #include <memory>
