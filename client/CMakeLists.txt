@@ -72,6 +72,14 @@ add_unit_test(device_synchronizer_test
               device_synchronizer/device_synchronizer.cc)
 target_link_libraries(device_synchronizer_test ${PROTOBUF_LIBRARIES})
 
+add_unit_test(unsynced_sector_manager_test
+              block_trace/device_tracer.cc
+              block_trace/cpu_tracer.cc
+              block_trace/trace_handler.cc
+              test/loop_device.cc
+              unsynced_sector_manager/unsynced_sector_store.cc
+              unsynced_sector_manager/unsynced_sector_manager.cc)
+
 add_unit_test(ipc_request_listener_test
               request_listener/socket_reply_channel.cc
               ${PROTO_SRCS}
