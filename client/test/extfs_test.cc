@@ -4,8 +4,8 @@
 #include <glog/logging.h>
 
 #include "block_device/mountable_block_device.h"
-#include "unsynced_sector_tracker/sector_set.h"
-#include "unsynced_sector_tracker/sector_interval.h"
+#include "unsynced_sector_store/sector_set.h"
+#include "unsynced_sector_store/sector_interval.h"
 #include "test/loop_device.h"
 
 #include <memory>

@@ -10,14 +10,14 @@
 #include "block_device/block_device.h"
 #include "block_device/mountable_block_device.h"
 #include "request_listener/reply_channel.h"
-#include "unsynced_sector_tracker/unsynced_sector_tracker.h"
+#include "unsynced_sector_store/unsynced_sector_store.h"
 
 namespace datto_linux_client {
 
 class DeviceSynchronizer {
  public:
   DeviceSynchronizer(std::shared_ptr<MountableBlockDevice> source_device,
-                     std::shared_ptr<UnsyncedSectorTracker> sector_tracker,
+                     std::shared_ptr<UnsyncedSectorStore> sector_store,
                      std::shared_ptr<BlockDevice> destination_device,
                      std::shared_ptr<ReplyChannel> reply_channel);
   void StartSync();
@@ -38,7 +38,7 @@ class DeviceSynchronizer {
   std::thread sync_thread_;
 
   std::shared_ptr<MountableBlockDevice> source_device_;
-  std::shared_ptr<UnsyncedSectorTracker> sector_tracker_;
+  std::shared_ptr<UnsyncedSectorStore> sector_store_;
   std::shared_ptr<BlockDevice> destination_device_;
   std::shared_ptr<ReplyChannel> reply_channel_;
 };

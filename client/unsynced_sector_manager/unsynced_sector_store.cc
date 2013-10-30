@@ -1,26 +1,26 @@
-#include "unsynced_sector_tracker/unsynced_sector_tracker.h"
+#include "unsynced_sector_store/unsynced_sector_store.h"
 
 namespace datto_linux_client {
 
-UnsyncedSectorTracker::UnsyncedSectorTracker()
+UnsyncedSectorStore::UnsyncedSectorStore()
     : unsynced_sector_set_(),
       sector_set_mutex_() { }
 
-UnsyncedSectorTracker::~UnsyncedSectorTracker() { }
+UnsyncedSectorStore::~UnsyncedSectorStore() { }
 
-void UnsyncedSectorTracker::AddUnsyncedInterval(
+void UnsyncedSectorStore::AddUnsyncedInterval(
     const SectorInterval &sector_interval) {
   std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
   unsynced_sector_set_.add(sector_interval);
 }
 
-void UnsyncedSectorTracker::MarkToSyncInterval(
+void UnsyncedSectorStore::MarkToSyncInterval(
     const SectorInterval &sector_interval) {
   std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
   unsynced_sector_set_.subtract(sector_interval);
 }
 
-SectorInterval UnsyncedSectorTracker::GetContinuousUnsyncedSectors() const {
+SectorInterval UnsyncedSectorStore::GetContinuousUnsyncedSectors() const {
   std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
 
   SectorInterval largestInterval(0, 0);
@@ -33,7 +33,7 @@ SectorInterval UnsyncedSectorTracker::GetContinuousUnsyncedSectors() const {
   return largestInterval;
 }
 
-uint64_t UnsyncedSectorTracker::UnsyncedSectorCount() const {
+uint64_t UnsyncedSectorStore::UnsyncedSectorCount() const {
   std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
 
   return boost::icl::cardinality(unsynced_sector_set_);

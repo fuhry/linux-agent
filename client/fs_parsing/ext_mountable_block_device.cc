@@ -5,8 +5,6 @@
 
 #include "block_device/block_device_exception.h"
 
-#include "unsynced_sector_tracker/sector_interval.h"
-
 #include <fcntl.h>
 #include <unistd.h>
 

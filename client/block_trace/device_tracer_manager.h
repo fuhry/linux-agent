@@ -11,9 +11,9 @@
 
 namespace datto_linux_client {
 
-class DeviceTracerManager : private boost::noncopyable {
+class DeviceTracerManager {
  public:
-  DeviceTracerManager(std::shared_ptr<TraceHandler> trace_handler);
+  DeviceTracerManager();
  
   void StartDeviceTracer(const std::string &block_dev_path);
   void StopDeviceTracer(const std::string &block_dev_path);

@@ -1,6 +1,6 @@
 #include "device_synchronizer/device_synchronizer.h"
 #include "device_synchronizer/device_synchronizer_exception.h"
-#include "unsynced_sector_tracker/sector_interval.h"
+#include "unsynced_sector_store/sector_interval.h"
 #include <glog/logging.h>
 
 namespace {
@@ -61,14 +61,14 @@ namespace datto_linux_client {
 
 DeviceSynchronizer::DeviceSynchronizer(
     std::shared_ptr<MountableBlockDevice> source_device,
-    std::shared_ptr<UnsyncedSectorTracker> sector_tracker,
+    std::shared_ptr<UnsyncedSectorStore> sector_store,
     std::shared_ptr<BlockDevice> destination_device,
     std::shared_ptr<ReplyChannel> reply_channel)
     : should_stop_(false),
       succeeded_(false),
       done_(false),
       source_device_(source_device),
-      sector_tracker_(sector_tracker),
+      sector_store_(sector_store),
       destination_device_(destination_device),
       reply_channel_(reply_channel) {
 
@@ -88,7 +88,7 @@ DeviceSynchronizer::DeviceSynchronizer(
                                       " different sizes");
   }
 
-  if (sector_tracker_->UnsyncedSectorCount() == 0) {
+  if (sector_store_->UnsyncedSectorCount() == 0) {
     throw DeviceSynchronizerException("The source device is already synced");
   }
 
@@ -135,7 +135,7 @@ void DeviceSynchronizer::StartSync() {
 
         // to_sync_interval is sectors, not blocks
         SectorInterval to_sync_interval =
-            sector_tracker_->GetContinuousUnsyncedSectors();
+            sector_store_->GetContinuousUnsyncedSectors();
 
         // If the only interval is size zero, we are done
         if (boost::icl::cardinality(to_sync_interval) == 0) {
@@ -165,7 +165,7 @@ void DeviceSynchronizer::StartSync() {
         DLOG(INFO) << "Cardinality is: "
                    << boost::icl::cardinality(to_sync_interval);
         DLOG(INFO) << "Sectors per block: " << sectors_per_block;
-        sector_tracker_->MarkToSyncInterval(to_sync_interval);
+        sector_store_->MarkToSyncInterval(to_sync_interval);
         // Loop until we copy all of the blocks of the sector interval
         for (uint64_t i = 0;
              i < boost::icl::cardinality(to_sync_interval);
@@ -179,7 +179,7 @@ void DeviceSynchronizer::StartSync() {
             if (now > last_history + 2) {
               LOG(WARNING) << "Writing a block took more than a second";
             }
-            uint64_t unsynced = sector_tracker_->UnsyncedSectorCount();
+            uint64_t unsynced = sector_store_->UnsyncedSectorCount();
             work_left_history.push_back(unsynced);
             last_history = now;
           }

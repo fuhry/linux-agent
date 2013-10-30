@@ -4,6 +4,8 @@
 #include <memory>
 #include "block_device/mountable_block_device.h"
 
+#include "unsynced_sector_manager/sector_set.h"
+
 #include <ext2fs/ext2fs.h>
 
 namespace datto_linux_client {

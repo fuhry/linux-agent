@@ -21,6 +21,7 @@ static const char DEBUG_FS_PATH[] = "/sys/kernel/debug";
 
 // TODO Check for dropped traces
 // TODO Check if switching to mmap is a good idea (performance)
+// TODO C++11 non-copyable
 // DeviceTracer is responsible for tracing the writes to a block device
 // and handing off those traces to a TraceHandler instance
 class DeviceTracer : private boost::noncopyable {

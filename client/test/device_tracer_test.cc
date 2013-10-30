@@ -1,6 +1,6 @@
 #include "block_trace/block_trace_exception.h"
 #include "block_trace/device_tracer.h"
-#include "unsynced_sector_tracker/unsynced_sector_tracker.h"
+#include "unsynced_sector_store/unsynced_sector_store.h"
 #include "test/loop_device.h"
 
 #include <memory>
@@ -20,7 +20,7 @@ using ::datto_linux_client::BlockTraceException;
 using ::datto_linux_client::DeviceTracer;
 using ::datto_linux_client::SectorInterval;
 using ::datto_linux_client::TraceHandler;
-using ::datto_linux_client::UnsyncedSectorTracker;
+using ::datto_linux_client::UnsyncedSectorStore;
 using ::datto_linux_client_test::LoopDevice;
 
 class DeviceTracerTest : public ::testing::Test {
@@ -35,17 +35,17 @@ class DeviceTracerTest : public ::testing::Test {
     loop_dev = std::unique_ptr<LoopDevice>(new LoopDevice());
     LOG(INFO) << "Path is: " << loop_dev->path();
 
-    sector_tracker =
-      std::shared_ptr<UnsyncedSectorTracker>(new UnsyncedSectorTracker());
+    sector_store =
+      std::shared_ptr<UnsyncedSectorStore>(new UnsyncedSectorStore());
     dummy_handler =
       std::shared_ptr<TraceHandler>(new DummyHandler());
     real_handler =
-      std::shared_ptr<TraceHandler>(new TraceHandler(sector_tracker));
+      std::shared_ptr<TraceHandler>(new TraceHandler(sector_store));
   }
 
   std::unique_ptr<LoopDevice> loop_dev;
 
-  std::shared_ptr<UnsyncedSectorTracker> sector_tracker;
+  std::shared_ptr<UnsyncedSectorStore> sector_store;
 
   std::shared_ptr<TraceHandler> dummy_handler;
   std::shared_ptr<TraceHandler> real_handler;
@@ -78,7 +78,7 @@ TEST_F(DeviceTracerTest, ReadWithoutWrites) {
     loop_dev->Sync();
     d.FlushBuffers();
 
-    EXPECT_EQ(0UL, sector_tracker->UnsyncedSectorCount());
+    EXPECT_EQ(0UL, sector_store->UnsyncedSectorCount());
   } catch (const std::exception &e) {
     FAIL() << e.what();
   }
@@ -96,7 +96,7 @@ TEST_F(DeviceTracerTest, WriteAnything) {
     loop_dev->Sync();
     d.FlushBuffers();
 
-    uint64_t unsynced_count = sector_tracker->UnsyncedSectorCount();
+    uint64_t unsynced_count = sector_store->UnsyncedSectorCount();
     EXPECT_NE(0UL, unsynced_count);
   } catch (const std::exception &e) {
     FAIL() << e.what();
@@ -127,12 +127,12 @@ TEST_F(DeviceTracerTest, WriteSpecificLocation) {
     loop_dev->Sync();
     d.FlushBuffers();
 
-    uint64_t unsynced_count = sector_tracker->UnsyncedSectorCount();
+    uint64_t unsynced_count = sector_store->UnsyncedSectorCount();
     auto expected_interval = SectorInterval(sectors_per_block * 10,
                                             sectors_per_block * 12);
 
     SectorInterval continuous_interval =
-        sector_tracker->GetContinuousUnsyncedSectors();
+        sector_store->GetContinuousUnsyncedSectors();
 
     EXPECT_EQ(sectors_per_block * 2, unsynced_count);
 
