@@ -33,6 +33,11 @@ SectorInterval UnsyncedSectorStore::GetContinuousUnsyncedSectors() const {
   return largestInterval;
 }
 
+void UnsyncedSectorStore::Clear() {
+  std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
+  unsynced_sector_set_ = SectorSet();
+}
+
 uint64_t UnsyncedSectorStore::UnsyncedSectorCount() const {
   std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
 

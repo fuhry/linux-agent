@@ -23,6 +23,9 @@ class UnsyncedSectorStore {
   // 3. Mark the, now outdated sector, as synced
   void MarkToSyncInterval(const SectorInterval &sector_interval);
 
+  // Clears the entire Store
+  void Clear();
+
   SectorInterval GetContinuousUnsyncedSectors() const;
 
   uint64_t UnsyncedSectorCount() const;

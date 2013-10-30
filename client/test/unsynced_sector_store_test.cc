@@ -43,4 +43,15 @@ TEST(UnsyncedSectorStoreTest, MarkToSyncIntervalTest) {
   EXPECT_EQ(4UL, store.UnsyncedSectorCount());
 }
 
+TEST(UnsyncedSectorStoreTest, ClearTest) {
+  UnsyncedSectorStore store;
+  SectorInterval interval(1, 20);
+
+  store.AddUnsyncedInterval(interval);
+  EXPECT_NE(0, store.UnsyncedSectorCount());
+
+  store.Clear();
+  EXPECT_EQ(0, store.UnsyncedSectorCount());
+}
+
 } // namespace
