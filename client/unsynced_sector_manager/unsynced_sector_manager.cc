@@ -44,7 +44,15 @@ void UnsyncedSectorManager::StopTracer(const std::string &block_dev_path) {
 }
 
 std::shared_ptr<UnsyncedSectorStore> UnsyncedSectorManager::GetStore(
-      const std::string &block_dev_path) const {
+      const std::string &block_dev_path) {
+  std::lock_guard<std::mutex> lock(maps_mutex_);
+  
+  // Create the store if it doesn't exist
+  if (!device_unsynced_stores_.count(block_dev_path)) {
+    std::shared_ptr<UnsyncedSectorStore> store(new UnsyncedSectorStore());
+    device_unsynced_stores_[block_dev_path] = store;
+  }
+
   return device_unsynced_stores_.at(block_dev_path);
 }
 

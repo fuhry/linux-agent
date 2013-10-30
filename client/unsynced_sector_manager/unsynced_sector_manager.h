@@ -19,7 +19,7 @@ class UnsyncedSectorManager {
   void StopTracer(const std::string &block_dev_path);
 
   std::shared_ptr<UnsyncedSectorStore> GetStore(
-      const std::string &block_dev_path) const;
+      const std::string &block_dev_path);
 
   void StopAllTracers();
 
