@@ -21,7 +21,7 @@ void UnsyncedSectorManager::StartTracer(const std::string &block_dev_path) {
   std::lock_guard<std::mutex> lock(maps_mutex_);
 
   if (device_tracers_.count(block_dev_path)) {
-    PLOG(ERROR) << "Attempt to trace an already traced device: "
+    LOG(ERROR) << "Attempt to trace an already traced device: "
                 << block_dev_path;
     throw UnsyncedTrackingException("Device is already being traced");
   }
