@@ -28,6 +28,7 @@ using ::datto_linux_client::Request;
 using ::datto_linux_client::RequestListenerException;
 using ::datto_linux_client::RequestHandler;
 
+// TODO This will fail sometimes for unknown reasons
 // Test cases redefine handle_func to set behavior for the RequestHandler
 std::function<void(const Request&, std::shared_ptr<ReplyChannel>)> handle_func;
 
