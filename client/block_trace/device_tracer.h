@@ -8,9 +8,6 @@
 #include <linux/fs.h>
 #include <linux/blktrace_api.h>
 
-#include <boost/icl/interval.hpp>
-#include <boost/noncopyable.hpp>
-
 #include <memory>
 #include <string>
 #include <vector>
@@ -21,10 +18,9 @@ static const char DEBUG_FS_PATH[] = "/sys/kernel/debug";
 
 // TODO Check for dropped traces
 // TODO Check if switching to mmap is a good idea (performance)
-// TODO C++11 non-copyable
 // DeviceTracer is responsible for tracing the writes to a block device
 // and handing off those traces to a TraceHandler instance
-class DeviceTracer : private boost::noncopyable {
+class DeviceTracer {
   // TODO Move these constants to another location, perhaps a config file
   static const int BLKTRACE_BUFFER_SIZE = 1024;
   static const int BLKTRACE_NUM_SUBBUFFERS = 10;
@@ -42,6 +38,9 @@ class DeviceTracer : private boost::noncopyable {
 
   ~DeviceTracer();
 
+  DeviceTracer(const DeviceTracer &) = delete;
+  DeviceTracer& operator=(const DeviceTracer &) = delete;
+
  private:
   std::string BeginBlockTrace();
   void CleanupBlockTrace();
@@ -55,7 +54,6 @@ class DeviceTracer : private boost::noncopyable {
   std::shared_ptr<TraceHandler> handler_;
 
   std::vector<std::unique_ptr<CpuTracer>> cpu_tracers_;
-
 };
 
 }

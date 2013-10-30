@@ -1,10 +1,10 @@
 #ifndef DATTO_CLIENT_BLOCK_DEVICE_MOUNTABLE_BLOCK_DEVICE_H_
 #define DATTO_CLIENT_BLOCK_DEVICE_MOUNTABLE_BLOCK_DEVICE_H_
 
-#include <boost/noncopyable.hpp>
-#include <boost/cstdint.hpp>
 #include <memory>
 #include <string>
+
+#include <stdint.h>
 
 #include "block_device/block_device.h"
 #include "unsynced_sector_manager/sector_set.h"

@@ -1,16 +1,14 @@
 #ifndef DATTO_CLIENT_BLOCK_DEVICE_BLOCK_DEVICE_H_
 #define DATTO_CLIENT_BLOCK_DEVICE_BLOCK_DEVICE_H_
 
-#include <boost/noncopyable.hpp>
-#include <boost/cstdint.hpp>
+#include <stdint.h>
 #include <string>
 
 #include "block_device/block_device_exception.h"
 
 namespace datto_linux_client {
 
-// TODO Make non-copyable using C++11
-class BlockDevice : private boost::noncopyable {
+class BlockDevice {
 
  public:
   // Creates a BlockDevice from the given block_path
@@ -64,6 +62,9 @@ class BlockDevice : private boost::noncopyable {
 
   // Should close the file descriptor and Unthrottle
   virtual ~BlockDevice();
+
+  BlockDevice(const BlockDevice &) = delete;
+  BlockDevice& operator=(const BlockDevice &) = delete;
 
  protected:
   // Use this constructor when the block_path doesn't exist yet

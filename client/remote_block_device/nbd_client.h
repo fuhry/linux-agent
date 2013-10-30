@@ -1,7 +1,6 @@
 #ifndef DATTO_CLIENT_REMOTE_BLOCK_DEVICE_NBD_CLIENT_H_
 #define DATTO_CLIENT_REMOTE_BLOCK_DEVICE_NBD_CLIENT_H_
 
-#include <boost/noncopyable.hpp>
 #include <stdint.h>
 #include <atomic>
 #include <string>
@@ -9,7 +8,7 @@
 
 namespace datto_linux_client {
 
-class NbdClient : private boost::noncopyable {
+class NbdClient {
  public:
   NbdClient(std::string host, uint16_t port);
 
@@ -27,6 +26,9 @@ class NbdClient : private boost::noncopyable {
   void Disconnect();
 
   ~NbdClient();
+
+  NbdClient(const NbdClient &);
+  NbdClient& operator=(const NbdClient &);
  private:
   void ConfigureNbdDevice();
 

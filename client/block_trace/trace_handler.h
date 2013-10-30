@@ -2,16 +2,14 @@
 #define DATTO_CLIENT_BLOCK_TRACER_TRACE_HANDLER_H_
 
 #include <linux/blktrace_api.h>
-#include <boost/noncopyable.hpp>
 #include <memory>
 
 #include "unsynced_sector_manager/unsynced_sector_store.h"
 
 namespace datto_linux_client {
 
-// TODO: C++11 uncopyable
 // TODO: Can the store be unique_ptr?
-class TraceHandler : private boost::noncopyable {
+class TraceHandler {
  public:
   // TODO: This needs to be a calculated value
   static const int SECTOR_SIZE = 512;
@@ -20,6 +18,8 @@ class TraceHandler : private boost::noncopyable {
   virtual void AddTrace(const struct blk_io_trace &trace_data);
   virtual ~TraceHandler() { }
 
+  TraceHandler(const TraceHandler &) = delete;
+  TraceHandler& operator=(const TraceHandler &) = delete;
  protected:
   // For derived classes (mainly for testing) that don't want to
   // use UnsyncedSectorStore
@@ -27,7 +27,6 @@ class TraceHandler : private boost::noncopyable {
 
  private:
   std::shared_ptr<UnsyncedSectorStore> store_;
-
 };
 
 }
