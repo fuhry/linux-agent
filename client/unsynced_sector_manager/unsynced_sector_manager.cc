@@ -26,7 +26,6 @@ void UnsyncedSectorManager::StartTracer(const std::string &block_dev_path) {
     throw UnsyncedTrackingException("Device is already being traced");
   }
 
-
   std::shared_ptr<UnsyncedSectorStore> store(new UnsyncedSectorStore());
   std::shared_ptr<TraceHandler> trace_handler(new TraceHandler(store));
 
