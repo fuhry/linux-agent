@@ -14,7 +14,7 @@ namespace datto_linux_client {
 
 CpuTracer::CpuTracer(std::string &trace_path, int cpu_num,
                      std::shared_ptr<TraceHandler> trace_handler)
-    : trace_handler_(trace_handler) ,
+    : trace_handler_(trace_handler),
       cpu_num_(cpu_num),
       stop_trace_(false),
       flush_buffers_(false) {
