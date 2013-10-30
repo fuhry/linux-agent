@@ -9,6 +9,7 @@
 
 namespace datto_linux_client {
 
+// TODO: C++11 uncopyable
 class TraceHandler : private boost::noncopyable {
  public:
   // TODO: This needs to be a calculated value
