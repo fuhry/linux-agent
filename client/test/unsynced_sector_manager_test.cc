@@ -59,7 +59,7 @@ TEST(UnsyncedSectorManagerTest, GetStore) {
 
   std::shared_ptr<UnsyncedSectorStore> store(manager.GetStore("/dev/null"));
 
-  EXPECT_EQ(9UL, store->UnsyncedSectorCount());
+  EXPECT_EQ(10UL, store->UnsyncedSectorCount());
 }
 
 } // namespace
