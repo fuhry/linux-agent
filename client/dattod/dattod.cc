@@ -42,12 +42,14 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+#ifdef NDEBUG
   // daemonize
   // (1, 0) means don't chdir but do release stdin/stdout/stderr
   if (daemon(1, 0)) {
     PLOG(ERROR) << "Unable to daemonize";
     return 1;
   }
+#endif
 
   // Acquire lock (must happen after daemon() as daemon() changes the pid)
   std::unique_ptr<Flock> lock;
