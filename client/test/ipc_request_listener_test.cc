@@ -107,7 +107,7 @@ class RequestTestClient {
 class IpcRequestListenerTest : public ::testing::Test {
  protected:
   IpcRequestListenerTest() {
-    handler_ = std::unique_ptr<RequestHandler>(new RequestHandler());
+    handler_ = std::unique_ptr<RequestHandler>(new RequestHandler(nullptr));
     handle_func = [&](const Request&, std::shared_ptr<ReplyChannel>) {
         return;
     };
@@ -121,8 +121,7 @@ class IpcRequestListenerTest : public ::testing::Test {
 // Define implementation for RequestHandler here
 namespace datto_linux_client {
 
-RequestHandler::RequestHandler() { }
-RequestHandler::~RequestHandler() { }
+RequestHandler::RequestHandler(std::shared_ptr<BackupManager> bm) { }
 
 void RequestHandler::Handle(const Request &request,
                             std::shared_ptr<ReplyChannel> reply_channel) {
