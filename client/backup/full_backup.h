@@ -9,6 +9,7 @@
 namespace datto_linux_client {
 
 class FullBackup : public Backup {
+ public:
   FullBackup(std::shared_ptr<MountableBlockDevice> source_device,
              std::shared_ptr<UnsyncedSectorManager> sector_manager,
              std::shared_ptr<BlockDevice> destination_device,
