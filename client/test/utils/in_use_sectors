@@ -6,7 +6,7 @@ if [ "$#" -ne 2 ]; then
 fi
 
 seen_first=false
-part_out=$(partclone."$2" -D -s "$1" 2>/tmp/partclone_error)
+part_out=$(./partclone."$2" -D -s "$1" 2>/tmp/partclone_error)
 if [ $? -ne 0 ]; then
     cat /tmp/partclone_error
     rm /tmp/partclone_error
