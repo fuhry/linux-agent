@@ -11,19 +11,21 @@ FullBackup::FullBackup(std::shared_ptr<MountableBlockDevice> source_device,
              destination_device,
              reply_channel) {}
 
-FullBackup::Prepare() {
+void FullBackup::Prepare() {
   // Add in-use sectors to the store
-  auto source_in_use = source_device->GetInUseSectors();
-  sector_manager_->GetStore()->AddUnsyncedInterval(*source_in_use);
+  auto in_use_set = source_device_->GetInUseSectors();
+  auto source_store = sector_manager_->GetStore(source_device_->path());
+
+  for (const SectorInterval &interval : *in_use_set) {
+    source_store->AddUnsyncedInterval(interval);
+  }
 
   // Start tracing so we catch writes that occur during the backup
   sector_manager_->StartTracer(source_device_->path());
 }
 
-FullBackup::Cleanup() {
+void FullBackup::Cleanup() {
   // TODO: I think this can be empty
 }
 
 } // datto_linux_client
-
-#endif  // DATTO_CLIENT_BACKUP_H_

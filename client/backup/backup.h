@@ -1,5 +1,5 @@
-#ifndef DATTO_CLIENT_BACKUP_H_
-#define DATTO_CLIENT_BACKUP_H_
+#ifndef DATTO_CLIENT_BACKUP_BACKUP_H_
+#define DATTO_CLIENT_BACKUP_BACKUP_H_
 
 #include <atomic>
 #include <memory>
@@ -55,4 +55,4 @@ class Backup {
 
 } // datto_linux_client
 
-#endif  // DATTO_CLIENT_BACKUP_H_
+#endif  // DATTO_CLIENT_BACKUP_BACKUP_H_
