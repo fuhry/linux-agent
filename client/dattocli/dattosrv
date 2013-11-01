@@ -12,14 +12,6 @@ from string_reply_pb2 import StringReply
 IPC_SOCKET_PATH = "/tmp/dattocli_test"
 
 def handle_request(request):
-    '''
-    if request.type == Request.START_BACKUP:
-        print 'START', request.start_backup_request
-    elif request.type == Request.STOP_BACKUP:
-        print 'STOP', request.stop_backup_request
-    elif request.type == Request.PROGRESS_BACKUP:
-        print 'PROGRESS', request.progress_backup_request
-    '''
     pass
 
 def main():
