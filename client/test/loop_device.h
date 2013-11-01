@@ -11,6 +11,7 @@ static const char TEST_LOOP_SHARED_MEMORY[] = "/dev/shm/test_loop_path";
 class LoopDevice {
  public:
   LoopDevice();
+  explicit LoopDevice(std::string backing_file_path);
 
   void FormatAsExt3();
   
@@ -27,8 +28,10 @@ class LoopDevice {
   }
 
  private:
+  void Init();
   std::string path_;
   size_t block_size_;
+  bool is_backing_path_;
 };
 
 }

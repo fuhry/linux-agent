@@ -16,7 +16,6 @@
 
 #include "request.pb.h"
 
-// TODO freeaddrinfo
 namespace {
 
 using ::datto_linux_client::RequestListenerException;

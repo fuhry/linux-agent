@@ -1,20 +1,20 @@
 #ifndef DATTO_CLIENT_BLOCK_DEVICE_MOUNTABLE_BLOCK_DEVICE_H_
 #define DATTO_CLIENT_BLOCK_DEVICE_MOUNTABLE_BLOCK_DEVICE_H_
 
-#include <boost/noncopyable.hpp>
-#include <boost/cstdint.hpp>
 #include <memory>
 #include <string>
 
+#include <stdint.h>
+
 #include "block_device/block_device.h"
-#include "unsynced_sector_tracker/sector_set.h"
+#include "unsynced_sector_manager/sector_set.h"
 
 namespace datto_linux_client {
 
 class MountableBlockDevice : public BlockDevice {
 
  public:
-  explicit MountableBlockDevice(std::string a_block_path);
+  explicit MountableBlockDevice(std::string a_path);
 
   virtual bool IsMounted();
   // Throw an exception if the partition isn't mounted
@@ -28,8 +28,7 @@ class MountableBlockDevice : public BlockDevice {
   virtual void Freeze();
   virtual void Thaw();
 
-  // These will be relative from the start of the partition, not from
-  // the start of the volume
+  // These will be relative from the start of the partition
   virtual std::unique_ptr<const SectorSet> GetInUseSectors() = 0;
 
   // Return a file descriptor for the mount point

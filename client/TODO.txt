@@ -1,5 +1,9 @@
 This is more of a maintenance TODO more than a feature TODO
 
+* Class header comments
 * Check header guards
 * Make sure all classes that should be non-copyable are
 * Add license text
+* Add an exception for filesystem parsing
+* Some tests aren't cleaning up well/being flaky
+** In particular, make sure destructors are called in the right order

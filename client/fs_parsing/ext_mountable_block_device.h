@@ -4,15 +4,18 @@
 #include <memory>
 #include "block_device/mountable_block_device.h"
 
+#include "unsynced_sector_manager/sector_set.h"
+
+#include <ext2fs/ext2fs.h>
+
 namespace datto_linux_client {
 
 class ExtMountableBlockDevice : public MountableBlockDevice {
  public:
-  explicit ExtMountableBlockDevice(std::string block_path);
+  explicit ExtMountableBlockDevice(std::string path);
   virtual std::unique_ptr<const SectorSet> GetInUseSectors();
- private:
-  int ext_iter_blocks(SectorSet *sectors);
+
 };
 
-}
+} // datto_linux_client
 #endif //  DATTO_CLIENT_FS_PARSING_EXT_MOUNTABLE_BLOCK_DEVICE_H_

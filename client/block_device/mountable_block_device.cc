@@ -74,8 +74,8 @@ std::map<std::string, std::string> GetMountedDevices() {
 
 namespace datto_linux_client {
 
-MountableBlockDevice::MountableBlockDevice(std::string a_block_path)
-    : BlockDevice(a_block_path),
+MountableBlockDevice::MountableBlockDevice(std::string a_path)
+    : BlockDevice(a_path),
       mount_file_descriptor_(-1),
       is_frozen_(false) { }
 
@@ -85,12 +85,12 @@ bool MountableBlockDevice::IsMounted() {
   // file system that all refer to the same block device but don't
   // show up as symbolic links
   auto mounted_devices = GetMountedDevices();
-  return mounted_devices.find(block_path_) != mounted_devices.end();
+  return mounted_devices.find(path_) != mounted_devices.end();
 }
 
 std::string MountableBlockDevice::GetMountPoint() {
   auto mounted_devices = GetMountedDevices();
-  auto mount_pair = mounted_devices.find(block_path_);
+  auto mount_pair = mounted_devices.find(path_);
   if (mount_pair == mounted_devices.end()) {
     throw BlockDeviceException("Block device is not mounted");
   }

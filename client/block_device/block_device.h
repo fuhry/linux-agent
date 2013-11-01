@@ -1,15 +1,14 @@
 #ifndef DATTO_CLIENT_BLOCK_DEVICE_BLOCK_DEVICE_H_
 #define DATTO_CLIENT_BLOCK_DEVICE_BLOCK_DEVICE_H_
 
-#include <boost/noncopyable.hpp>
-#include <boost/cstdint.hpp>
+#include <stdint.h>
 #include <string>
 
 #include "block_device/block_device_exception.h"
 
 namespace datto_linux_client {
 
-class BlockDevice : private boost::noncopyable {
+class BlockDevice {
 
  public:
   // Creates a BlockDevice from the given block_path
@@ -20,8 +19,8 @@ class BlockDevice : private boost::noncopyable {
   // If a method is lowercase, then it is should be just an accessor and
   // nothing more. See
   // google-styleguide.googlecode.com/svn/trunk/cppguide.xml#Function_Names
-  std::string block_path() const {
-    return block_path_;
+  std::string path() const {
+    return path_;
   }
 
   uint32_t major() const {
@@ -64,12 +63,15 @@ class BlockDevice : private boost::noncopyable {
   // Should close the file descriptor and Unthrottle
   virtual ~BlockDevice();
 
+  BlockDevice(const BlockDevice &) = delete;
+  BlockDevice& operator=(const BlockDevice &) = delete;
+
  protected:
   // Use this constructor when the block_path doesn't exist yet
   // Note that block_path_ must be set and Init() called before the
   // subclass constructor returns
   BlockDevice() { }
-  std::string block_path_;
+  std::string path_;
 
   //  Do the actual initialization of the object
   void Init();

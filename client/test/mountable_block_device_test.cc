@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 #include "test/loop_device.h"
-#include "unsynced_sector_tracker/sector_set.h"
+#include "unsynced_sector_manager/sector_set.h"
 
 namespace {
 using ::datto_linux_client::MountableBlockDevice;

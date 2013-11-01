@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include "fs_parsing/xfs_mountable_block_device.h"
 #include "block_device/mountable_block_device.h"
-#include "unsynced_sector_tracker/sector_set.h"
+#include "unsynced_sector_manager/sector_set.h"
 #include <memory>
 
 namespace {

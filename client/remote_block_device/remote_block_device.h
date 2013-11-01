@@ -2,7 +2,6 @@
 #define DATTO_CLIENT_REMOTE_BLOCK_DEVICE_REMOTE_BLOCK_DEVICE_H_
 
 #include "block_device/block_device.h"
-#include <boost/noncopyable.hpp>
 
 namespace datto_linux_client {
 

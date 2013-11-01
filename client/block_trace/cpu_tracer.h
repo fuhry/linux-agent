@@ -2,7 +2,6 @@
 #define DATTO_CLIENT_BLOCK_TRACER_CPU_TRACER_H_
 
 #include <boost/icl/interval.hpp>
-#include <boost/noncopyable.hpp>
 
 #include <atomic>
 #include <memory>
@@ -16,7 +15,7 @@
 
 namespace datto_linux_client {
 
-class CpuTracer : private boost::noncopyable {
+class CpuTracer {
 
  static const int POLL_DELAY_MILLIS = 100;
 
@@ -29,6 +28,9 @@ class CpuTracer : private boost::noncopyable {
   void FlushBuffer();
 
   ~CpuTracer();
+
+  CpuTracer(const CpuTracer &);
+  CpuTracer& operator=(const CpuTracer &);
 
  private:
   void DoTrace();

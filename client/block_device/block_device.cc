@@ -20,7 +20,7 @@
 
 namespace datto_linux_client {
 
-BlockDevice::BlockDevice(std::string a_block_path) : block_path_(a_block_path) {
+BlockDevice::BlockDevice(std::string a_path) : path_(a_path) {
   Init();
 }
 
@@ -29,13 +29,13 @@ void BlockDevice::Init() {
 
   // Note: using lstat() instead of stat() to cause symlinks to
   // block devices to fail
-  if (lstat(block_path_.c_str(), &statbuf) < 0) {
-    std::string err = std::string("Error: could not stat() ") + block_path_;
+  if (lstat(path_.c_str(), &statbuf) < 0) {
+    std::string err = std::string("Error: could not stat() ") + path_;
     throw BlockDeviceException(err);
   }
   // bail with exception if not a block device
   if (! S_ISBLK(statbuf.st_mode) ) {
-    throw BlockDeviceException("Error: " + block_path_ +
+    throw BlockDeviceException("Error: " + path_ +
                                " is not a block device");
   }
 
@@ -43,10 +43,10 @@ void BlockDevice::Init() {
   minor_ = ::minor(statbuf.st_rdev);
 
   int fd = 0;
-  fd = open(block_path_.c_str(), O_RDONLY | O_LARGEFILE);
+  fd = open(path_.c_str(), O_RDONLY | O_LARGEFILE);
 
   if (fd < 0) {
-    throw BlockDeviceException("Error opening " + block_path_ +
+    throw BlockDeviceException("Error opening " + path_ +
                                " read-only for ioctl() calls\n");
   }
 
@@ -69,16 +69,16 @@ void BlockDevice::Unthrottle() {
 
 int BlockDevice::Open() {
   if (file_descriptor_ != -1) {
-    throw BlockDeviceException("Error: block device " + block_path_ +
+    throw BlockDeviceException("Error: block device " + path_ +
                                " already open");
   }
 
-  int fd = open(block_path_.c_str(),
+  int fd = open(path_.c_str(),
       O_RDWR | O_LARGEFILE);
 
   if (fd < 0) {
     char * error_chars = strerror(errno);
-    throw BlockDeviceException("Error opening " + block_path_ + "; error: " +
+    throw BlockDeviceException("Error opening " + path_ + "; error: " +
                                error_chars);
   }
 
