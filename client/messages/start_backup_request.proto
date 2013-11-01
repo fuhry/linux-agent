@@ -12,5 +12,9 @@ message StartBackupRequest {
     required string block_path = 1;
     required BackupType type = 2;
 
-    optional BaseSignature base_signature = 3;
+    required string destination_host = 3;
+    // There is no uint16 so use this
+    required uint32 destination_port = 4;
+    
+    optional BaseSignature base_signature = 5;
 }
