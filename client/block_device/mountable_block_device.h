@@ -28,8 +28,7 @@ class MountableBlockDevice : public BlockDevice {
   virtual void Freeze();
   virtual void Thaw();
 
-  // These will be relative from the start of the partition, not from
-  // the start of the volume
+  // These will be relative from the start of the partition
   virtual std::unique_ptr<const SectorSet> GetInUseSectors() = 0;
 
   // Return a file descriptor for the mount point
