@@ -50,8 +50,10 @@ int main(int argc, char *argv[]) {
   }
 
   // Acquire lock (must happen after daemon() as daemon() changes the pid)
+  std::unique_ptr<Flock> lock;
   try {
-    Flock lock(FLOCK_PATH);
+    lock = std::unique_ptr<Flock>(new Flock(FLOCK_PATH));
+    lock->WritePid();
   } catch (const std::runtime_error &e) {
     LOG(ERROR) << e.what();
     return 1;

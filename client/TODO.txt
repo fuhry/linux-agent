@@ -7,4 +7,3 @@ This is more of a maintenance TODO more than a feature TODO
 * Add an exception for filesystem parsing
 * Some tests aren't cleaning up well/being flaky
 ** In particular, make sure destructors are called in the right order
-* Locking doesn't work
