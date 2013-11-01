@@ -9,7 +9,7 @@ from stop_backup_request_pb2 import StopBackupRequest
 from request_pb2 import Request
 from string_reply_pb2 import StringReply
 
-IPC_SOCKET_PATH = "/var/datto/dattod_ipc"
+IPC_SOCKET_PATH = "/tmp/dattocli_test"
 
 def handle_request(request):
     '''

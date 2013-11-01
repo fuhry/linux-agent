@@ -15,9 +15,9 @@ import os
 import subprocess
 import time
 
-IPC_SOCKET_PATH = '/var/datto/dattod_ipc'
-DATTO_CLI_PATH = '../dattocli/dattocli'
-DATTO_SRV_PATH = '../dattocli/dattosrv'
+IPC_SOCKET_PATH = '/tmp/dattocli_test'
+DATTO_CLI_PATH = 'dattocli/dattocli'
+DATTO_SRV_PATH = 'dattocli/dattosrv'
 
 class TestDattoCli(unittest.TestCase):
     def setUp(self):
