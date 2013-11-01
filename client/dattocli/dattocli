@@ -73,7 +73,7 @@ def send_to_dattod(message):
             data = s.recv(length)
             reply = StringReply()
             reply.ParseFromString(data)
-            print reply.message
+            #print reply.message
             if reply.message == 'DISCONNECT': #TODO: proper disconnect message
                break
 

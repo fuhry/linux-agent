@@ -12,15 +12,18 @@ from string_reply_pb2 import StringReply
 IPC_SOCKET_PATH = "/var/datto/dattod_ipc"
 
 def handle_request(request):
+    '''
     if request.type == Request.START_BACKUP:
         print 'START', request.start_backup_request
     elif request.type == Request.STOP_BACKUP:
         print 'STOP', request.stop_backup_request
     elif request.type == Request.PROGRESS_BACKUP:
         print 'PROGRESS', request.progress_backup_request
+    '''
+    pass
 
 def main():
-    print 'Starting test server'
+    #print 'Starting test server'
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     s.bind(IPC_SOCKET_PATH)
     s.listen(1)
