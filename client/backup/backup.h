@@ -34,7 +34,7 @@ class Backup {
     return status_;
   }
 
-  virtual ~Backup();
+  virtual ~Backup() {}
 
   Backup(const Backup &) = delete;
   Backup& operator=(const Backup &) = delete;
