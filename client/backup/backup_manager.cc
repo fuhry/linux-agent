@@ -77,6 +77,7 @@ void BackupManager::StopBackup(const StopBackupRequest &stop_request) {
 }
 
 void BackupManager::StopTracing(const std::string &source_path) {
+  // TODO: Should probably add a check that a backup isn't in progress
   unsynced_sector_manager_.StopTracer(source_path);
 }
 
