@@ -1,5 +1,8 @@
 #include "dattod/flock.h"
+#include "dattod/signal_handler.h"
+#include "request_listener/ipc_request_listener.h"
 #include "request_listener/request_handler.h"
+#include "backup/backup_manager.h"
 
 #include <glog/logging.h>
 
@@ -16,13 +19,16 @@ const char FLOCK_PATH[] = "/var/datto/dattod.pid";
 namespace {
 using datto_linux_client::Flock;
 using datto_linux_client::RequestHandler;
+using datto_linux_client::SignalHandler;
+using datto_linux_client::BackupManager;
+using datto_linux_client::IpcRequestListener;
 }
 
 int main(int argc, char *argv[]) {
   // Setup logging
   google::InitGoogleLogging(argv[0]);
 
-  // Parse the config file
+  // TODO: Parse the config file
 
   // Make the DATTO_VAR_DIR directory
   // Save any error, we don't care about it unless chdir fails
@@ -51,20 +57,23 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  // Create the request handler
-  RequestHandler handler();
-
   // Block typical death signals
   std::vector<int> signals_to_block { SIGTERM, SIGINT };
   SignalHandler signal_handler(signals_to_block);
   signal_handler.BlockSignals();
 
-  // Start device tracer threads
-  // Start the request listener thread
+  // Create the backup manager
+  std::shared_ptr<BackupManager> backup_manager(new BackupManager());
+  // Create the request handler
+  std::unique_ptr<RequestHandler> request_handler(
+      new RequestHandler(backup_manager));
+  // Create (and start) the request listener
+  IpcRequestListener request_listener("/var/datto/dattod_ipc",
+                                      std::move(request_handler));
 
   // Listen for signals
-  signal_handler.WaitForSignal();
+  signal_handler.WaitForSignal([&](int) {} );
 
-  // Stop everything that needs to be stopped
+  // TODO: Stop everything that needs to be stopped
   return 0;
 }
