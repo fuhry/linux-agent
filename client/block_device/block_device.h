@@ -19,8 +19,8 @@ class BlockDevice {
   // If a method is lowercase, then it is should be just an accessor and
   // nothing more. See
   // google-styleguide.googlecode.com/svn/trunk/cppguide.xml#Function_Names
-  std::string block_path() const {
-    return block_path_;
+  std::string path() const {
+    return path_;
   }
 
   uint32_t major() const {
@@ -71,7 +71,7 @@ class BlockDevice {
   // Note that block_path_ must be set and Init() called before the
   // subclass constructor returns
   BlockDevice() { }
-  std::string block_path_;
+  std::string path_;
 
   //  Do the actual initialization of the object
   void Init();

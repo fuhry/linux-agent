@@ -13,13 +13,13 @@
 
 namespace datto_linux_client {
 
-ExtMountableBlockDevice::ExtMountableBlockDevice(std::string a_block_path)
-    : MountableBlockDevice(a_block_path) { }
+ExtMountableBlockDevice::ExtMountableBlockDevice(std::string a_path)
+    : MountableBlockDevice(a_path) { }
 
 std::unique_ptr<const SectorSet> ExtMountableBlockDevice::GetInUseSectors() {
   std::unique_ptr<SectorSet> sectors(new SectorSet());
   ExtErrorTable error_table;
-  ExtFileSystem ext_fs(BlockDevice::block_path(), error_table);
+  ExtFileSystem ext_fs(BlockDevice::path(), error_table);
 
   int block_size;
   int bitmap_size;

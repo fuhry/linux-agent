@@ -11,7 +11,7 @@ NbdBlockDevice::NbdBlockDevice(std::string remote_host, uint16_t remote_port)
   nbd_client_ = std::unique_ptr<NbdClient>(new NbdClient(remote_host,
                                                          remote_port));
 
-  BlockDevice::block_path_ = (nbd_client_)->nbd_device_path();
+  BlockDevice::path_ = (nbd_client_)->nbd_device_path();
   // Setup major_, minor_, etc
   BlockDevice::Init();
 }

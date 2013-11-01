@@ -36,7 +36,7 @@ TEST(BlockDeviceTestNoFixture, BadConstructor) {
 
 TEST_F(BlockDeviceTest, Path) {
   BlockDevice bd(loop_device->path());
-  EXPECT_EQ(loop_device->path(), bd.block_path());
+  EXPECT_EQ(loop_device->path(), bd.path());
 }
 
 TEST_F(BlockDeviceTest, BlockSizeBytes) {

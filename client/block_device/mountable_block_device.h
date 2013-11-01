@@ -14,7 +14,7 @@ namespace datto_linux_client {
 class MountableBlockDevice : public BlockDevice {
 
  public:
-  explicit MountableBlockDevice(std::string a_block_path);
+  explicit MountableBlockDevice(std::string a_path);
 
   virtual bool IsMounted();
   // Throw an exception if the partition isn't mounted
