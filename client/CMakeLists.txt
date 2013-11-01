@@ -28,6 +28,34 @@ add_custom_command(TARGET dattocli
                    COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/dattocli/dattocli
                               ${CMAKE_CURRENT_BINARY_DIR})
 
+# dattod
+add_executable(dattod
+               backup/backup.cc
+               backup/backup_manager.cc
+               backup/full_backup.cc
+               block_device/block_device.cc
+               block_device/mountable_block_device.cc
+               block_trace/cpu_tracer.cc
+               block_trace/device_tracer.cc
+               block_trace/trace_handler.cc
+               dattod/dattod.cc
+               dattod/dattod.cc
+               dattod/flock.cc
+               dattod/signal_handler.cc
+               device_synchronizer/device_synchronizer.cc
+               fs_parsing/ext_file_system.cc
+               fs_parsing/ext_mountable_block_device.cc
+               remote_block_device/nbd_block_device.cc
+               remote_block_device/nbd_client.cc
+               request_listener/ipc_request_listener.cc
+               request_listener/request_handler.cc
+               request_listener/socket_reply_channel.cc
+               unsynced_sector_manager/unsynced_sector_manager.cc
+               unsynced_sector_manager/unsynced_sector_store.cc
+               ${PROTO_SRCS})
+target_link_libraries(dattod glog)
+target_link_libraries(dattod ext2fs)
+target_link_libraries(dattod ${PROTOBUF_LIBRARIES})
 
 # Unit tests
 include(cmake/test_setup.cmake)
