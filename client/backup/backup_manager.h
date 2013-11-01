@@ -30,7 +30,6 @@ class BackupManager {
 
   ~BackupManager();
 
-
   BackupManager (const BackupManager&) = delete;
   BackupManager& operator=(const BackupManager&) = delete;
 
