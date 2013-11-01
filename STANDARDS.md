@@ -1,7 +1,5 @@
 # Linux Agent Project Standards
 
-In order for a component to get the point where it can be considered 'coding complete', a component needs to meet a certain set of standards. This document describes them.
-
 ## Code architecture and style
 ### Google's C++ Style Guide
 http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml
