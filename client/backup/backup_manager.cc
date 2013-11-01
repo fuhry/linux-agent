@@ -56,7 +56,7 @@ void BackupManager::StartFullBackup(
   // Put it in the map
   in_progress_backups_.insert(
       std::pair<std::string, std::unique_ptr<Backup>>(source_path,
-                                                       std::move(backup)));
+                                                      std::move(backup)));
 }
 
 void BackupManager::StartIncrementalBackup(
