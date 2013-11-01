@@ -16,7 +16,6 @@ class FullBackup : public Backup {
              std::shared_ptr<ReplyChannel> reply_channel);
 
   void Prepare();
-  void Copy();
   void Cleanup();
 };
 
