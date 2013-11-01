@@ -29,6 +29,11 @@ class BackupManager {
   void StopTracing(const std::string &source_path);
 
   ~BackupManager();
+
+
+  BackupManager (const BackupManager&) = delete;
+  BackupManager& operator=(const BackupManager&) = delete;
+
  private:
   UnsyncedSectorManager unsynced_sector_manager_;
 
