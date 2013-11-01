@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+
+import os
+import socket
+import struct
+from start_backup_request_pb2 import StartBackupRequest
+from progress_backup_request_pb2 import ProgressBackupRequest
+from stop_backup_request_pb2 import StopBackupRequest
+from request_pb2 import Request
+from string_reply_pb2 import StringReply
+
+IPC_SOCKET_PATH = "/tmp/dattocli_test"
+
+def handle_request(request):
+    pass
+
+def main():
+    #print 'Starting test server'
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.bind(IPC_SOCKET_PATH)
+    s.listen(1)
+
+
+    reply = StringReply()
+    reply.message = 'DISCONNECT'
+    while True:
+        conn, addr = s.accept()
+        length = conn.recv(4)
+        if False:
+            break
+        else:
+            length = struct.unpack('!I', length)[0]
+            data = conn.recv(length)
+            request = Request()
+            request.ParseFromString(data)
+            handle_request(request)
+
+            client_reply = reply.SerializeToString()
+            conn.send(struct.pack('!I', len(client_reply))) # send message over the socket
+            conn.send(client_reply)
+    s.close()
+    os.remove(IPC_SOCKET_PATH)
+
+if __name__ == "__main__":
+    main()

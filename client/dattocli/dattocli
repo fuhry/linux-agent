@@ -3,8 +3,16 @@
 # dattocli supports three commands. Each is delegated to the dattod binary
 # through a unix socket, and replies are shown on stdout.
 import sys
+import os
+import socket
+import struct
+from start_backup_request_pb2 import StartBackupRequest
+from progress_backup_request_pb2 import ProgressBackupRequest
+from stop_backup_request_pb2 import StopBackupRequest
+from request_pb2 import Request
+from string_reply_pb2 import StringReply
 
-IPC_SOCKET_PATH = "/var/datto/dattod_ipc"
+IPC_SOCKET_PATH = "/tmp/dattocli_test"
 
 # Ignore line length here
 usage = "usage: " + sys.argv[0] + " startbackup|stopbackup|progress block_device\n" \
@@ -15,19 +23,27 @@ usage = "usage: " + sys.argv[0] + " startbackup|stopbackup|progress block_device
 
 # While arg/optparse were tempting, they seem like overkill for our purposes
 def parse_args(args):
+    request = Request()
     message = None
     if len(args) != 3:
         print usage
         exit(1)
-    elif args == 'startbackup':
+    elif args[1] == 'startbackup':
         # Build the start backup protobuf message
-        return message
-    elif args == 'stopbackup':
+        request.type = Request.START_BACKUP
+        request.start_backup_request.type = StartBackupRequest.FULL_BACKUP #TODO: args
+        request.start_backup_request.block_path = sys.argv[2]
+        return request
+    elif args[1] == 'stopbackup':
         # Build the stop backup protobuf message
-        return message
-    elif args == 'progress':
+        request.type = Request.STOP_BACKUP
+        request.stop_backup_request.block_path = sys.argv[2]
+        return request
+    elif args[1] == 'progress':
         # Build the progress protobuf message
-        return message
+        request.type = Request.PROGRESS_BACKUP
+        request.progress_backup_request.block_path = sys.argv[2]
+        return request
     else:
         print usage
         exit(1)
@@ -37,9 +53,31 @@ def parse_args(args):
 # perform that validation
 def send_to_dattod(message):
     # check if socket path exists, bail (and exit 1) if not
-    # send message over the socket
-    # wait for replies, show them on stdout
-    # when the socket is closed, return
+    if not os.path.exists(IPC_SOCKET_PATH):
+        print 'Abort: Socket does not exist!'
+        exit(1)
+
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.connect(IPC_SOCKET_PATH)
+
+    message = message.SerializeToString()
+    s.send(struct.pack('!I', len(message))) # send message over the socket
+    s.send(message)
+
+    while True: # wait for replies, show them on stdout
+        length = s.recv(4) #TODO: is there a sizeof?
+        if not length:
+            break
+        else:
+            length = struct.unpack('!I', length)[0]
+            data = s.recv(length)
+            reply = StringReply()
+            reply.ParseFromString(data)
+            #print reply.message
+            if reply.message == 'DISCONNECT': #TODO: proper disconnect message
+               break
+
+    s.close() # when the socket is closed, return    
     pass
 
 if __name__ == "__main__":

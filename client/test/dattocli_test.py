@@ -13,41 +13,116 @@
 import unittest
 import os
 import subprocess
+import time
+
+IPC_SOCKET_PATH = '/tmp/dattocli_test'
+DATTO_CLI_PATH = 'dattocli/dattocli'
+DATTO_SRV_PATH = 'dattocli/dattosrv'
 
 class TestDattoCli(unittest.TestCase):
     def setUp(self):
-        # Create the server
+        self.dattosrv = subprocess.Popen([DATTO_SRV_PATH])
+        time.sleep(0.33)
         pass
+
+
+    def tearDown(self):
+        self.dattosrv.kill()
+        if os.path.exists(IPC_SOCKET_PATH):
+            os.remove(IPC_SOCKET_PATH)
+        pass
+
 
     def test_startbackup_goodargs(self):
-        pass
-
-    def test_startbackup_badargs(self):
-        pass
-
-    def test_stopbackup_goodargs(self):
-        pass
-
-    def test_stopbackup_badargs(self):
-        pass
-
-    def test_progress_goodargs(self):
-        pass
-
-    def test_progress_badargs(self):
-        pass
-
-    def test_badcommand(self):
-        process = subprocess.Popen(["./dattocli", "notacommand"],
+        process = subprocess.Popen([DATTO_CLI_PATH, 'startbackup', '/dev/null'],
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
-        # We are lazy with the pipe buffer, if this ever deadlocks then revisit
         process.wait()
+        self.assertEqual(process.returncode, 0)
+        pass
 
+
+    def test_startbackup_badargs(self):
+        process = subprocess.Popen([DATTO_CLI_PATH, 'startbackup', '/dev/null', '?'],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        process.wait()
         self.assertNotEqual(process.returncode, 0)
+        pass
 
+
+    def test_startbackup_badargs_2(self):
+        process = subprocess.Popen([DATTO_CLI_PATH, 'startbackup'],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        process.wait()
+        self.assertNotEqual(process.returncode, 0)
+        pass
+
+
+    def test_stopbackup_goodargs(self):
+        process = subprocess.Popen([DATTO_CLI_PATH, 'stopbackup', '/dev/null'],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        process.wait()
+        self.assertEqual(process.returncode, 0)
+        pass
+
+
+    def test_stopbackup_badargs(self):
+        process = subprocess.Popen([DATTO_CLI_PATH, 'stopbackup', '/dev/null', '?'],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        process.wait()
+        self.assertNotEqual(process.returncode, 0)
+        pass
+
+
+    def test_stopbackup_badargs_2(self):
+        process = subprocess.Popen([DATTO_CLI_PATH, 'stopbackup'],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        process.wait()
+        self.assertNotEqual(process.returncode, 0)
+        pass
+
+
+    def test_progress_goodargs(self):
+        process = subprocess.Popen([DATTO_CLI_PATH, 'progress', '/dev/null'],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        process.wait()
+        self.assertEqual(process.returncode, 0)
+        pass
+
+
+    def test_progress_badargs(self):
+        process = subprocess.Popen([DATTO_CLI_PATH, 'progress', '/dev/null', '?'],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        process.wait()
+        self.assertNotEqual(process.returncode, 0)
+        pass
+
+
+    def test_progress_badargs_2(self):
+        process = subprocess.Popen([DATTO_CLI_PATH, 'progress'],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        process.wait()
+        self.assertNotEqual(process.returncode, 0)
+        pass
+
+
+    def test_badcommand(self):
+        process = subprocess.Popen([DATTO_CLI_PATH, 'notacommand'],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        process.wait()
+        self.assertNotEqual(process.returncode, 0)
         line = process.stdout.readline()
-        self.assertNotEqual(line.find("usage"), -1)
+        self.assertNotEqual(line.find('usage'), -1)
+        pass
 
 if __name__ == '__main__':
     unittest.main()
