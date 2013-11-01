@@ -28,9 +28,9 @@ class UnsyncedSectorManager {
 
  private:
   std::map<const std::string, std::shared_ptr<UnsyncedSectorStore>>
-    device_unsynced_stores_;
+      device_unsynced_stores_;
   std::map<const std::string, std::unique_ptr<DeviceTracer>>
-    device_tracers_;
+      device_tracers_;
   // Use this mutex for all structures for now
   mutable std::mutex maps_mutex_;
 };
