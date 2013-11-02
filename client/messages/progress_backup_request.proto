@@ -1,5 +1,5 @@
 package datto_linux_client;
 
 message ProgressBackupRequest {
-    required string block_path = 1;
+    // No contents needed, progress for all backups will be returned
 }
