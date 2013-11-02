@@ -14,6 +14,7 @@
 #include <signal.h>
 
 const char DATTO_VAR_DIR[] = "/var/datto";
+const char DATTO_SOCKET[] = "/var/datto/dattod_ipc";
 const char FLOCK_PATH[] = "/var/datto/dattod.pid";
 
 namespace {
@@ -72,7 +73,7 @@ int main(int argc, char *argv[]) {
   std::unique_ptr<RequestHandler> request_handler(
       new RequestHandler(backup_manager));
   // Create (and start) the request listener
-  IpcRequestListener request_listener("/var/datto/dattod_ipc",
+  IpcRequestListener request_listener(DATTO_SOCKET,
                                       std::move(request_handler));
 
   // Listen for signals
