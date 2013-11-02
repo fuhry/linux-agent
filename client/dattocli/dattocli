@@ -2,6 +2,7 @@
 
 # dattocli supports three commands. Each is delegated to the dattod binary
 # through a unix socket, and replies are shown on stdout.
+import argparse
 import sys
 import os
 import socket
@@ -12,41 +13,68 @@ from stop_backup_request_pb2 import StopBackupRequest
 from request_pb2 import Request
 from string_reply_pb2 import StringReply
 
+
 IPC_SOCKET_PATH = "/tmp/dattocli_test"
 
-# Ignore line length here
-usage = "usage: " + sys.argv[0] + " startbackup|stopbackup|progress block_device\n" \
-      + "\n" \
-      + "       " + sys.argv[0] + " startbackup block_device   start a backup to the device in datto.conf\n" \
-      + "       " + sys.argv[0] + " stopbackup block_device    stop an in-progress backup\n" \
-      + "       " + sys.argv[0] + " progress block_device      show the progress of an in-progress backup\n" \
+def startbackup(args):
+    request = Request()
+    request.type = Request.START_BACKUP
+    request.start_backup_request.type = args.backup_type
+    request.start_backup_request.block_path = args.block_device
+    request.start_backup_request.destination_host = args.destination_host
+    request.start_backup_request.destination_port = args.destination_port
+    return request
+
+def stopbackup(args):
+    request = Request()
+    request.type = Request.STOP_BACKUP
+    request.stop_backup_request.block_path = args.block_device
+    return request
+
+def progress(args):
+    request = Request()
+    request.type = Request.PROGRESS
+    request.stop_backup_request.block_path = args.block_device
+    return request
 
 # While arg/optparse were tempting, they seem like overkill for our purposes
 def parse_args(args):
-    request = Request()
-    message = None
-    if len(args) != 3:
-        print usage
-        exit(1)
-    elif args[1] == 'startbackup':
-        # Build the start backup protobuf message
-        request.type = Request.START_BACKUP
-        request.start_backup_request.type = StartBackupRequest.FULL_BACKUP #TODO: args
-        request.start_backup_request.block_path = sys.argv[2]
-        return request
-    elif args[1] == 'stopbackup':
-        # Build the stop backup protobuf message
-        request.type = Request.STOP_BACKUP
-        request.stop_backup_request.block_path = sys.argv[2]
-        return request
-    elif args[1] == 'progress':
-        # Build the progress protobuf message
-        request.type = Request.PROGRESS_BACKUP
-        request.progress_backup_request.block_path = sys.argv[2]
-        return request
-    else:
-        print usage
-        exit(1)
+
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(help="sub-command help")
+
+    start_parser = subparsers.add_parser('startbackup')
+    start_parser.set_defaults(func=startbackup)
+
+    start_parser.add_argument('block_device', help="Block device to backup") 
+
+    start_group = start_parser.add_mutually_exclusive_group(required=True)
+    start_group.add_argument('-f', '--full', dest="backup_type",
+                             action="store_const",
+                             const=StartBackupRequest.FULL_BACKUP,
+                             help="Do an incremental backup")
+    start_group.add_argument('-i', '--incremental', dest="backup_type",
+                             action="store_const",
+                             const=StartBackupRequest.INCREMENTAL_BACKUP,
+                             help="Do an incremental backup")
+
+    start_parser.add_argument('destination_host',
+                              help="Destination NBD server hostname")
+    start_parser.add_argument('destination_port', type=int,
+                              help="Destination NBD server port")
+
+    stop_parser = subparsers.add_parser('stopbackup')
+    stop_parser.set_defaults(func=stopbackup)
+    stop_parser.add_argument('block_device',
+                             help="Block device to stop backing up") 
+
+    parser_progress = subparsers.add_parser('progress')
+    stop_parser.set_defaults(func=progress)
+
+    args = parser.parse_args()
+
+    return args.func(args)
+
 
 # Note that dattocli should not do any validation that block_device is
 # actually a block device before passing it off to dattod. dattod should
