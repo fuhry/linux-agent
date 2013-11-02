@@ -38,7 +38,7 @@ def progress(args):
     return request
 
 # While arg/optparse were tempting, they seem like overkill for our purposes
-def parse_args(args):
+def parse_args():
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(help="sub-command help")
@@ -110,5 +110,5 @@ def send_to_dattod(message):
 
 if __name__ == "__main__":
     # parse_args should only return if it has a message
-    message = parse_args(sys.argv)
+    message = parse_args()
     send_to_dattod(message)
