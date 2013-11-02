@@ -37,7 +37,7 @@ def progress(args):
     request.stop_backup_request.block_path = args.block_device
     return request
 
-# While arg/optparse were tempting, they seem like overkill for our purposes
+# Returns a Request object that should be sent to dattod
 def parse_args():
 
     parser = argparse.ArgumentParser()
@@ -101,12 +101,10 @@ def send_to_dattod(message):
             data = s.recv(length)
             reply = StringReply()
             reply.ParseFromString(data)
-            #print reply.message
             if reply.message == 'DISCONNECT': #TODO: proper disconnect message
                break
 
     s.close() # when the socket is closed, return    
-    pass
 
 if __name__ == "__main__":
     # parse_args should only return if it has a message
