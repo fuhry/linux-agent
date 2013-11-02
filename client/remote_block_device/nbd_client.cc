@@ -200,7 +200,12 @@ void NbdClient::ConfigureNbdDevice() {
     throw NbdException("Unable to set block size for NBD device");
   }
 
-  if (ioctl(nbd_fd_, NBD_SET_SIZE_BLOCKS, block_device_size_) < 0) {
+  // TODO This shouldn't need to be true
+  if (block_device_size_ % 4096 != 0) {
+    throw NbdException("Block device size must be some multiple of 4096");
+  }
+
+  if (ioctl(nbd_fd_, NBD_SET_SIZE_BLOCKS, block_device_size_ / 4096UL) < 0) {
     throw NbdException("Unable to set block size for NBD device");
   }
 
