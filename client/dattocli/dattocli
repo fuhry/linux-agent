@@ -14,7 +14,7 @@ from request_pb2 import Request
 from string_reply_pb2 import StringReply
 
 
-IPC_SOCKET_PATH = "/tmp/dattocli_test"
+IPC_SOCKET_PATH = "/var/datto/dattod_ipc"
 
 def startbackup(args):
     request = Request()
