@@ -5,12 +5,7 @@ if [ "$#" -ne 2 ]; then
     exit 1
 fi
 
-<<<<<<< HEAD
-seen_first=false
-part_out=$(./partclone."$2" -D -s "$1" 2>/tmp/partclone_error)
-=======
 part_out=$(partclone."$2" -D -s "$1" 2>/tmp/partclone_error)
->>>>>>> 9256bfce9a8ce386afe6bf6bbb06418b815834fb
 if [ $? -ne 0 ]; then
     cat /tmp/partclone_error
     rm /tmp/partclone_error
