@@ -17,6 +17,18 @@ class ExtFileSystem {
   ext2_filsys fs() {
     return fs_;
   }
+
+  struct ext2_super_block * super() {
+    return fs_->super;
+  }
+
+  ext2fs_block_bitmap block_map() {
+    return fs_->block_map;
+  }
+
+  dgrp_t group_desc_count() {
+    return fs_->group_desc_count;
+  }
   
   int dev_fd() {
     return dev_fd_;
