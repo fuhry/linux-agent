@@ -80,11 +80,11 @@ TEST_F(ExtFSTest, Construct) {
 
   if (expected != actual) {
     for (auto interval : actual) {
-      LOG(INFO) << "a " << interval.lower() << " : " << interval.upper();
+      LOG(INFO) << "actual " << interval.lower() << " : " << interval.upper();
     }
 
     for (auto interval : expected) {
-      LOG(INFO) << "e " << interval.lower() << " : " << interval.upper();
+      LOG(INFO) << "expect " << interval.lower() << " : " << interval.upper();
     }
   }
 
