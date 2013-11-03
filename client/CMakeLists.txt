@@ -56,6 +56,7 @@ add_executable(dattod
                ${PROTO_SRCS})
 target_link_libraries(dattod glog)
 target_link_libraries(dattod ext2fs)
+target_link_libraries(dattod com_err)
 target_link_libraries(dattod ${PROTOBUF_LIBRARIES})
 
 # Unit tests
