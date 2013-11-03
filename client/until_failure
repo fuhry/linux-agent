@@ -1,0 +1,8 @@
+#!/bin/bash
+# This runs the unit tests until one fails
+# I usually run this before leaving/lunch/etc.
+
+run_loop() { ( ./run_tests &> /tmp/run_loop_out_$(date +%s) ) && run_loop; }
+run_loop
+
+less $(ls -t /tmp/run_loop_out_* | head -n1)
