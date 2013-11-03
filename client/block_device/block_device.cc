@@ -13,14 +13,15 @@
 namespace datto_linux_client {
 
 BlockDevice::BlockDevice(std::string a_path)
-    : path_(a_path),
-      throttle_scalar_(0.0),
-      fd_(-1) {
+    : path_(a_path) {
   // Init() is called by subclasses
   Init();
 }
 
 void BlockDevice::Init() {
+  throttle_scalar_ = 0.0;
+  fd_ = -1;
+
   struct stat statbuf;
 
   // Note: using lstat() instead of stat() to cause symlinks to
