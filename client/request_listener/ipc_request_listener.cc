@@ -18,12 +18,13 @@
 
 namespace {
 
-using ::datto_linux_client::RequestListenerException;
-using ::datto_linux_client::Request;
+using datto_linux_client::RequestListenerException;
+using datto_linux_client::Request;
 
 const int SOCKET_BACKLOG = 5;
 
 int open_socket(std::string ipc_socket_path) {
+  LOG(INFO) << "Opening socket " << ipc_socket_path;
   const char *ipc_path_cstr = ipc_socket_path.c_str();
 
   int sock_fd = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -54,6 +55,8 @@ int open_socket(std::string ipc_socket_path) {
     PLOG(ERROR) << "Unable to listen on socket";
     throw RequestListenerException("Unable to listen on socket");
   }
+
+  LOG(INFO) << "Listening on socket " << ipc_socket_path;
 
   return sock_fd;
 }
@@ -138,6 +141,7 @@ IpcRequestListener::IpcRequestListener(
 
   std::atomic<bool> started(false);
 
+  LOG(INFO) << "Starting IPC listener thread";
   listen_thread_ = std::thread([&]() {
     while (!do_stop_) {
       try {
@@ -158,6 +162,7 @@ IpcRequestListener::IpcRequestListener(
       }
       started = true;
     }
+    LOG(INFO) << "IPC listener thread stopped";
   });
 
   while (!started) {

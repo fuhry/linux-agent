@@ -8,6 +8,8 @@
 #include "fs_parsing/ext_mountable_block_device.h"
 #include "remote_block_device/nbd_block_device.h"
 
+#include <glog/logging.h>
+
 namespace datto_linux_client {
 
 BackupManager::BackupManager()
@@ -20,6 +22,8 @@ void BackupManager::StartFullBackup(
     std::shared_ptr<ReplyChannel> reply_channel) {
 
   std::lock_guard<std::mutex> lock(in_progress_mutex_);
+
+  LOG(INFO) << "Starting full backup";
 
   std::string source_path = start_request.block_path();
 

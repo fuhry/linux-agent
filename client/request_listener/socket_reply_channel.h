@@ -15,7 +15,8 @@ class SocketReplyChannel : public ReplyChannel {
   explicit SocketReplyChannel(int connection_fd);
 
   virtual void SendReply(const Reply &reply);
-  virtual bool IsAvailable() { throw std::runtime_error("not implemented"); }
+  // TODO: Can we do better than this?
+  virtual bool IsAvailable() { return true; }
   virtual ~SocketReplyChannel() { }
 
   SocketReplyChannel(const SocketReplyChannel&) = delete;

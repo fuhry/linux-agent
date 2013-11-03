@@ -27,6 +27,10 @@ using datto_linux_client::IpcRequestListener;
 
 int main(int argc, char *argv[]) {
   // Setup logging
+
+  // Only log to a memory location until a LogSink is written that doesn't
+  // write when the file system is frozen!
+  FLAGS_log_dir = "/dev/shm/";
   google::InitGoogleLogging(argv[0]);
 
   // TODO: Parse the config file

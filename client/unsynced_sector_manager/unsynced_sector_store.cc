@@ -20,6 +20,8 @@ void UnsyncedSectorStore::MarkToSyncInterval(
   unsynced_sector_set_.subtract(sector_interval);
 }
 
+// For now, we just return the largest unsynced interval. If performance
+// becomes an issue, revisit this. Sequential might be quicker
 SectorInterval UnsyncedSectorStore::GetContinuousUnsyncedSectors() const {
   std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
 

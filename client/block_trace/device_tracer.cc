@@ -26,9 +26,9 @@ DeviceTracer::DeviceTracer(const std::string &block_dev_path,
   cpu_tracers_ = std::vector<std::unique_ptr<CpuTracer>>(num_cpus_);
 
   try {
-    // This sets trace_name_
     trace_name_ = BeginBlockTrace();
     DLOG(INFO) << "trace_name_: " << trace_name_;
+
     for (int i = 0; i < num_cpus_; ++i) {
       std::string trace_path = GetTracePath(i);
       DLOG(INFO) << "trace_path: " << trace_path;
@@ -55,7 +55,6 @@ DeviceTracer::DeviceTracer(const std::string &block_dev_path,
     throw;
   }
 }
-
 
 void DeviceTracer::FlushBuffers() {
   for (auto &cpu_tracer : cpu_tracers_) {

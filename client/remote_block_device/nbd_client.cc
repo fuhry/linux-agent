@@ -82,7 +82,8 @@ int OpenNbdSocket(std::string host, uint16_t port) {
   }
 
   bool success = false;
-  for (struct addrinfo *ai_iter = ai; ai_iter != NULL;
+  for (struct addrinfo *ai_iter = ai;
+       ai_iter != NULL;
        ai_iter = ai_iter->ai_next) {
     sock = socket(ai_iter->ai_family, ai_iter->ai_socktype,
                   ai_iter->ai_protocol);
@@ -103,6 +104,8 @@ int OpenNbdSocket(std::string host, uint16_t port) {
     throw NbdException("Unable to open socket");
   }
 
+  DLOG(INFO) << "Opened NBD socket";
+
   return sock;
 }
 
@@ -118,6 +121,7 @@ void NegotiateNbdCommunication(int sock, uint64_t *block_device_size) {
   uint64_t second_magic;
 
   if (read(sock, buf, 8) < 0) {
+    PLOG(ERROR) << "Read magic 1 from sock";
     throw NbdException("Unable to read first magic from socket");
   }
 
@@ -126,19 +130,25 @@ void NegotiateNbdCommunication(int sock, uint64_t *block_device_size) {
   }
 
   if (strcmp(buf, NBD_ACK_MAGIC)) {
+    LOG(ERROR) << "Got bad first NBD magic number 0x"
+               << std::hex << (uint64_t)buf << std::dec;
     throw NbdException("Got bad first magic number");
   }
 
   if (read(sock, &second_magic, sizeof(second_magic)) < 0) {
+    PLOG(ERROR) << "Read magic 2 from sock";
     throw NbdException("Unable to read second magic from socket");
   }
   second_magic = be64toh(second_magic);
 
   if (second_magic != NBD_NEGOTIATE_MAGIC) {
+    LOG(ERROR) << "Got bad second NBD magic number 0x"
+               << std::hex << second_magic << std::dec;
     throw NbdException("Got bad second magic number");
   }
 
   if (read(sock, block_device_size, sizeof(*block_device_size)) < 0) {
+    PLOG(ERROR) << "Read block size from sock";
     throw NbdException("Unable to read block size from socket");
   }
 
@@ -147,6 +157,7 @@ void NegotiateNbdCommunication(int sock, uint64_t *block_device_size) {
   // The server sends 124 bytes of zeros after the 4 byte flag argument.
   // We skip the flag argument as not all kernels support it, so read 128.
   if (read(sock, &buf, 128) < 0) {
+    PLOG(ERROR) << "Read negotiation zeros from sock";
     throw NbdException("Unable to read final negotiation zeros from socket");
   }
 }
@@ -174,7 +185,8 @@ NbdClient::NbdClient(std::string a_host, uint16_t a_port)
   ConfigureNbdDevice();
 
   nbd_do_it_thread_ = std::thread([&](){
-    // If this ioctl returns then something went wrong with NBD
+    // This ioctl blocks indefinitely when things are working properly.
+    // This means if ever return then there was an error
     int ret = ioctl(nbd_fd_, NBD_DO_IT);
     int error = errno;
 
@@ -197,6 +209,7 @@ NbdClient::NbdClient(std::string a_host, uint16_t a_port)
 
 void NbdClient::ConfigureNbdDevice() {
   if (ioctl(nbd_fd_, NBD_SET_BLKSIZE, 4096UL) < 0) {
+    PLOG(ERROR) << "NBD_SET_BLKSIZE";
     throw NbdException("Unable to set block size for NBD device");
   }
 
@@ -206,6 +219,7 @@ void NbdClient::ConfigureNbdDevice() {
   }
 
   if (ioctl(nbd_fd_, NBD_SET_SIZE_BLOCKS, block_device_size_ / 4096UL) < 0) {
+    PLOG(ERROR) << "NBD_SET_SIZE_BLOCKS";
     throw NbdException("Unable to set block size for NBD device");
   }
 
@@ -215,10 +229,12 @@ void NbdClient::ConfigureNbdDevice() {
   // we use unsigned long because that's how it's defined in the kernel
   // function __nbd_ioctl
   if (ioctl(nbd_fd_, NBD_SET_TIMEOUT, 10UL)) {
+    PLOG(ERROR) << "NBD_SET_TIMEOUT";
     throw NbdException("Unable to set timeout for NBD device");
   }
 
   if (ioctl(nbd_fd_, NBD_SET_SOCK, sock_) < 0) {
+    PLOG(ERROR) << "NBD_SET_SOCK";
     throw NbdException("Unable to set socket for NBD device");
   }
 }
@@ -229,7 +245,7 @@ bool NbdClient::IsConnected() {
 
   std::string pid_path = "/sys/block/" + block_device_name + "/pid";
 
-  LOG(INFO) << "Checking " << pid_path;
+  LOG(INFO) << "Checking if " << pid_path << " exists for NBD connectivity";
 
   if (access(pid_path.c_str(), F_OK)) {
     if (errno == ENOENT) {

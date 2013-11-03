@@ -40,7 +40,7 @@ void Backup::DoBackup() {
 
     status_ = BackupStatus::FINISHED;
   } catch (const std::runtime_error &e) {
-    LOG(ERROR) << e.what();
+    LOG(ERROR) << "Error during backup: " << e.what();
     status_ = BackupStatus::FAILED;
     throw;
   }

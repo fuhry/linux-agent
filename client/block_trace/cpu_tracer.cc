@@ -10,6 +10,27 @@
 #include <sys/sysinfo.h>
 #include <sys/types.h>
 
+namespace {
+using datto_linux_client::BlockTraceException;
+
+void SkipNonseekableFD(int fd, int amount_to_skip) {
+  // Can't use sendfile() here because the output isn't a socket
+  // Seems to be no way to avoid copying unneeded data to userspace
+
+  char buf[512];
+  int read_bytes;
+
+  while (amount_to_skip > 0) {
+    read_bytes = read(fd, &buf, std::min(amount_to_skip, 512));
+    if (read_bytes == -1) {
+      PLOG(ERROR) << "Unable to read from fd";
+      throw BlockTraceException("Couldn't read file descriptor");
+    }
+    amount_to_skip -= read_bytes;
+  }
+}
+} // namespace
+
 namespace datto_linux_client {
 
 CpuTracer::CpuTracer(std::string &trace_path, int cpu_num,
@@ -18,6 +39,8 @@ CpuTracer::CpuTracer(std::string &trace_path, int cpu_num,
       cpu_num_(cpu_num),
       stop_trace_(false),
       flush_buffers_(false) {
+
+  DLOG(INFO) << "Opening tracer on path " << trace_path;
 
   trace_fd_ = open(trace_path.c_str(), O_RDONLY | O_NONBLOCK);
 
@@ -31,6 +54,7 @@ CpuTracer::CpuTracer(std::string &trace_path, int cpu_num,
 }
 
 // Lock this thread on just the CPU which it is responsible for tracing
+// This must not throw an exception as it is called directly from DoTrace()
 void CpuTracer::LockOnCPU() {
   int num_cpus = get_nprocs_conf();
   cpu_set_t *cpu_mask = CPU_ALLOC(num_cpus);
@@ -66,6 +90,7 @@ void CpuTracer::DoTrace() {
       continue;
     }
 
+    // Read the trace from the virtual file
     int read_bytes = read(trace_fd_, &trace, sizeof(trace));
     if (read_bytes == -1) {
       PLOG(ERROR) << "Error while reading trace file descriptor";
@@ -76,22 +101,25 @@ void CpuTracer::DoTrace() {
       continue;
     }
 
+    // Sanity check
     if (trace.magic != (BLK_IO_TRACE_MAGIC | BLK_IO_TRACE_VERSION)) {
       PLOG(ERROR) << "Bad magic number in trace";
       break;
     }
 
+    // Hand it off to trace handler
     try {
       (trace_handler_)->AddTrace(trace);
     } catch (const std::exception &e) {
       PLOG(ERROR) << "Exception while adding trace" << e.what();
       break;
     }
+
+    // If the trace had extra data at the end of it, skip over it
+    // Only trace types we don't care about have extra data at the end
     VLOG(2) << "Action is 0x"
             << std::hex << trace.action << std::dec;
-
     if (trace.pdu_len) {
-      // Skip over any trailing data
       VLOG(2) << "Skipping trailing data for action 0x"
               << std::hex << trace.action << std::dec;
       try {
@@ -128,26 +156,8 @@ void CpuTracer::StopTrace() {
   }
 }
 
-void CpuTracer::SkipNonseekableFD(int fd, int amount_to_skip) {
-  // Can't use sendfile() here because the output isn't a socket
-  // Seems to be no way to avoid copying unneeded data to userspace
-
-  char buf[512];
-  int read_bytes;
-
-  while (amount_to_skip > 0) {
-    read_bytes = read(fd, &buf, std::min(amount_to_skip, 512));
-    if (read_bytes == -1) {
-      PLOG(ERROR) << "Unable to read from fd";
-      throw BlockTraceException("Couldn't read file descriptor");
-    }
-    amount_to_skip -= read_bytes;
-  }
-
-}
-
 CpuTracer::~CpuTracer() {
   StopTrace();
 }
 
-}
+} // datto_linux_client

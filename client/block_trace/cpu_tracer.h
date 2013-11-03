@@ -37,8 +37,6 @@ class CpuTracer {
   void LockOnCPU();
   void StopTrace();
 
-  static void SkipNonseekableFD(int fd, int amount_to_skip);
-
   std::shared_ptr<TraceHandler> trace_handler_;
   std::thread trace_thread_;
 

@@ -26,6 +26,7 @@ void UnsyncedSectorManager::StartTracer(const std::string &block_dev_path) {
     throw UnsyncedTrackingException("Device is already being traced");
   }
 
+  LOG(INFO) << "Starting tracing on " << block_dev_path;
   std::shared_ptr<UnsyncedSectorStore> store(new UnsyncedSectorStore());
   std::shared_ptr<TraceHandler> trace_handler(new TraceHandler(store));
 
@@ -38,6 +39,8 @@ void UnsyncedSectorManager::StartTracer(const std::string &block_dev_path) {
 
 void UnsyncedSectorManager::StopTracer(const std::string &block_dev_path) {
   std::lock_guard<std::mutex> lock(maps_mutex_);
+
+  LOG(INFO) << "Stopping tracing on " << block_dev_path;
   // Tracer destructor will stop the tracer from running
   device_tracers_.erase(block_dev_path);
 }
@@ -57,6 +60,7 @@ std::shared_ptr<UnsyncedSectorStore> UnsyncedSectorManager::GetStore(
 
 void UnsyncedSectorManager::StopAllTracers() {
   std::lock_guard<std::mutex> lock(maps_mutex_);
+  LOG(INFO) << "Stopping all tracers";
   // Tracer destructors will stop everything
   device_tracers_.clear();
 }

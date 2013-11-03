@@ -8,12 +8,15 @@ namespace datto_linux_client {
 
 NbdBlockDevice::NbdBlockDevice(std::string remote_host, uint16_t remote_port)
     : RemoteBlockDevice() {
+  DLOG(INFO) << "Creating nbd client for host " << remote_host
+             << " and port " << remote_port;
   nbd_client_ = std::unique_ptr<NbdClient>(new NbdClient(remote_host,
                                                          remote_port));
 
-  BlockDevice::path_ = (nbd_client_)->nbd_device_path();
+  path_ = (nbd_client_)->nbd_device_path();
+  LOG(INFO) << "NBD Path: " << path_;
   // Setup major_, minor_, etc
-  BlockDevice::Init();
+  Init();
 }
 
 bool NbdBlockDevice::IsConnected() const {
@@ -21,6 +24,7 @@ bool NbdBlockDevice::IsConnected() const {
 }
 
 void NbdBlockDevice::Disconnect() {
+  LOG(INFO) << "Disconnecting NbdBlockDevice " << path_;
   nbd_client_->Disconnect();
 }
 

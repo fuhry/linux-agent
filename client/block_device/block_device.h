@@ -85,7 +85,7 @@ class BlockDevice {
 
   double throttle_scalar_;
 
-  int file_descriptor_;
+  int fd_;
 };
 
 }

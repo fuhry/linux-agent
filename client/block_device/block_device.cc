@@ -1,26 +1,22 @@
-//
-//  block_device.cc: implementation of the BlockDevice class
-//
-
 #include "block_device/block_device.h"
 
 #include <string>
-#include <cstdlib>
-#include <cstdio>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <linux/fs.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
+#include <linux/fs.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
 
+#include <glog/logging.h>
 
 namespace datto_linux_client {
 
-BlockDevice::BlockDevice(std::string a_path) : path_(a_path) {
+BlockDevice::BlockDevice(std::string a_path)
+    : path_(a_path),
+      throttle_scalar_(0.0),
+      fd_(-1) {
+  // Init() is called by subclasses
   Init();
 }
 
@@ -30,33 +26,31 @@ void BlockDevice::Init() {
   // Note: using lstat() instead of stat() to cause symlinks to
   // block devices to fail
   if (lstat(path_.c_str(), &statbuf) < 0) {
-    std::string err = std::string("Error: could not stat() ") + path_;
-    throw BlockDeviceException(err);
+    PLOG(ERROR) << "stat() failed";
+    throw BlockDeviceException("Unable to stat path");
   }
   // bail with exception if not a block device
-  if (! S_ISBLK(statbuf.st_mode) ) {
-    throw BlockDeviceException("Error: " + path_ +
-                               " is not a block device");
+  if (!S_ISBLK(statbuf.st_mode)) {
+    PLOG(ERROR) << path_ << " is not a block device";
+    throw BlockDeviceException("Not a block device");
   }
 
+  // Need ::s here so we don't try to access the class methods major & minor()
   major_ = ::major(statbuf.st_rdev);
   minor_ = ::minor(statbuf.st_rdev);
 
-  int fd = 0;
-  fd = open(path_.c_str(), O_RDONLY | O_LARGEFILE);
+  // TODO: Do we need O_LARGEFILE here?
+  int fd = open(path_.c_str(), O_RDONLY | O_LARGEFILE);
 
   if (fd < 0) {
+    PLOG(ERROR) << "Open path: " << path_;
     throw BlockDeviceException("Error opening " + path_ +
                                " read-only for ioctl() calls\n");
   }
 
   ioctl(fd, BLKGETSIZE64, &device_size_bytes_);
   ioctl(fd, BLKBSZGET, &block_size_bytes_);
-
   close(fd);
-
-  throttle_scalar_ = 0.0;
-  file_descriptor_ = -1;
 }
 
 void BlockDevice::Throttle(double scalar) {
@@ -68,29 +62,25 @@ void BlockDevice::Unthrottle() {
 }
 
 int BlockDevice::Open() {
-  if (file_descriptor_ != -1) {
-    throw BlockDeviceException("Error: block device " + path_ +
-                               " already open");
+  if (fd_ != -1) {
+    throw BlockDeviceException("Error: block device already open");
   }
 
-  int fd = open(path_.c_str(),
-      O_RDWR | O_LARGEFILE);
+  fd_ = open(path_.c_str(), O_RDWR | O_LARGEFILE);
 
-  if (fd < 0) {
-    char * error_chars = strerror(errno);
-    throw BlockDeviceException("Error opening " + path_ + "; error: " +
-                               error_chars);
+  if (fd_ < 0) {
+    PLOG(ERROR) << "Error opening " << path_;
+    throw BlockDeviceException("Error opening block device");
   }
 
-  file_descriptor_ = fd;
-  return fd;
+  return fd_;
 }
 
 void BlockDevice::Close() {
-  if (file_descriptor_ > -1) {
-    close(file_descriptor_);
+  if (fd_ > -1) {
+    close(fd_);
   }
-  file_descriptor_ = -1;
+  fd_ = -1;
 }
 
 BlockDevice::~BlockDevice() {

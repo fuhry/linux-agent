@@ -11,13 +11,15 @@
 namespace datto_linux_client {
 
 Flock::Flock(std::string file_path) : path_(file_path) {
-  path_fd_ = open(path_.c_str(),
-                  O_RDWR | O_CREAT,
-                  S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+  LOG(INFO) << "Attempting to flock " << file_path;
+
+  path_fd_ = open(path_.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+
   if (path_fd_ < 0) {
     PLOG(ERROR) << "Unable to open " << path_ << " for locking";
     throw DattodException("Unable to lock file");
   }
+
   if (flock(path_fd_, LOCK_EX | LOCK_NB)) {
     if (errno == EWOULDBLOCK) {
       LOG(ERROR) << "\"" << path_ << "\" is already locked!";
@@ -29,6 +31,7 @@ Flock::Flock(std::string file_path) : path_(file_path) {
 }
 
 void Flock::WritePid() {
+  DLOG(INFO) << "Writing PID to lock file";
   char buf[512];
   int pid_length = sprintf(buf, "%ld", (long)getpid());
   if (pid_length < 0) {
