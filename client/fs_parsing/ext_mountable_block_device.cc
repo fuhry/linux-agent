@@ -28,8 +28,8 @@ std::unique_ptr<const SectorSet> ExtMountableBlockDevice::GetInUseSectors() {
 
   std::unique_ptr<char[]> block_bitmap(new char[bitmap_size]);
 
-  // First sector (sector 0) is always included as it isn't managed by the fs
-  sectors->insert(SectorInterval(0, 1));
+  // First two sectors (sector 0, 1) are always included as it isn't managed by the fs
+  sectors->insert(SectorInterval(0, 2));
 
   // Iterates over every group in the file system
   for (uint64_t i = 0; i < ext_fs.group_desc_count(); ++i) {
