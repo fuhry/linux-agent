@@ -29,9 +29,13 @@ class LoopDevice {
 
  private:
   void Init();
+  void SetRandNum();
+  std::string GetSharedMemoryPath();
+
   std::string path_;
   size_t block_size_;
   bool is_backing_path_;
+  int rand_num_;
 };
 
 }

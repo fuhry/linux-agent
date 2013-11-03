@@ -1,5 +1,6 @@
 #include "test/loop_device.h"
 
+#include <stdlib.h>
 #include <errno.h>
 #include <linux/fs.h>
 #include <fcntl.h>
@@ -14,7 +15,9 @@
 namespace datto_linux_client_test {
 
 LoopDevice::LoopDevice() : is_backing_path_(false) {
-  int create_ret = system("./test/make_test_loop_device");
+  SetRandNum();
+  int create_ret = system(("./test/make_test_loop_device " +
+                           GetSharedMemoryPath()).c_str());
   if (create_ret) {
     throw std::runtime_error("Couldn't make loop device");
   }
@@ -24,9 +27,10 @@ LoopDevice::LoopDevice() : is_backing_path_(false) {
 
 LoopDevice::LoopDevice(std::string backing_file_path)
     : is_backing_path_(true) {
+  SetRandNum();
   int losetup_ret = system(("losetup -fv " + backing_file_path +
                             " | sed -e 's/Loop device is //g' > " +
-                            TEST_LOOP_SHARED_MEMORY).c_str());
+                            GetSharedMemoryPath()).c_str());
   if (losetup_ret) {
     throw std::runtime_error("Couldn't make loop device");
   }
@@ -34,8 +38,19 @@ LoopDevice::LoopDevice(std::string backing_file_path)
   Init();
 }
 
+// Use the address of this object in memory to seed the random number generator
+void LoopDevice::SetRandNum() {
+  auto unique = this;
+  rand_num_ = rand_r((unsigned int *)&unique);
+}
+
+std::string LoopDevice::GetSharedMemoryPath() {
+  return std::string(TEST_LOOP_SHARED_MEMORY) + "." +
+         std::to_string(rand_num_);
+}
+
 void LoopDevice::Init() {
-  std::ifstream loop_path_stream(TEST_LOOP_SHARED_MEMORY);
+  std::ifstream loop_path_stream(GetSharedMemoryPath());
   std::getline(loop_path_stream, path_);
   loop_path_stream.close();
 
@@ -44,7 +59,6 @@ void LoopDevice::Init() {
     PLOG(ERROR) << "Unable to make test loop device."
                 << " Verify everything is cleaned up with losetup."
                 << " path is: " << path_;
-    unlink(TEST_LOOP_SHARED_MEMORY);
     throw std::runtime_error("Couldn't make loop device");
   }
 

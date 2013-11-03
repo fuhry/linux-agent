@@ -2,7 +2,9 @@
 
 temp_file=$(mktemp /tmp/test_loop_file.XXXXXXXXX)
 
-if [ $? -ne 0 ]; then
+if [ $# -ne 1 ]; then
+  echo "$0: Need one argument"
+  echo "$0: $@"
   exit 1
 fi
 
@@ -11,10 +13,10 @@ if ! truncate --size=10M "$temp_file"; then
 fi
 
 echo "Creating test loop device"
-losetup -fv "$temp_file" | tail -n1 | sed -e 's/Loop device is //g' | tr -d '\n' > /dev/shm/test_loop_path
+losetup -fv "$temp_file" | tail -n1 | sed -e 's/Loop device is //g' | tr -d '\n' > "$1"
 
-if [ ! -b $(cat /dev/shm/test_loop_path) ]; then
-  echo "Failed to create loop device"
+if [ ! -b $(cat "$1") ]; then
+  echo "$0: Failed to create loop device"
   exit 1
 fi
 
