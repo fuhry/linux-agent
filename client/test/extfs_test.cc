@@ -32,7 +32,7 @@ void decompress_image(std::string compressed_path,
   }
 }
 
-SectorSet map_to_sector_set(std::string map_path, uint64_t block_size) {
+SectorSet map_to_sector_set(std::string map_path) {
   std::ifstream map_stream(map_path);
   std::string line;
 
@@ -47,11 +47,11 @@ SectorSet map_to_sector_set(std::string map_path, uint64_t block_size) {
     line_stream >> std::hex >> start_value;
     line_stream >> std::hex >> length;
 
-    start_value /= block_size;
-    length /= block_size;
+    start_value /= 512;
+    length /= 512;
 
     // Add 1 as the end bound is exclusive
-    sector_set.add(SectorInterval(start_value, start_value + length + 1));
+    sector_set.add(SectorInterval(start_value, start_value + length));
   }
 
   return sector_set;
@@ -75,8 +75,7 @@ TEST_F(ExtFSTest, Construct) {
 
   ExtMountableBlockDevice bdev(loop_dev.path());
 
-  SectorSet expected = map_to_sector_set("test/data/filesystems/ext2fs.map",
-                                         1024);
+  SectorSet expected = map_to_sector_set("test/data/filesystems/ext2fs.map");
   SectorSet actual = *bdev.GetInUseSectors();
 
   if (expected != actual) {
@@ -89,7 +88,7 @@ TEST_F(ExtFSTest, Construct) {
     }
   }
 
-  EXPECT_TRUE(expected == actual);
+  EXPECT_TRUE(actual == expected);
 
 }
 
