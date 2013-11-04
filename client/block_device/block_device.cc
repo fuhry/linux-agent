@@ -40,8 +40,7 @@ void BlockDevice::Init() {
   major_ = ::major(statbuf.st_rdev);
   minor_ = ::minor(statbuf.st_rdev);
 
-  // TODO: Do we need O_LARGEFILE here?
-  int fd = open(path_.c_str(), O_RDONLY | O_LARGEFILE);
+  int fd = open(path_.c_str(), O_RDONLY);
 
   if (fd < 0) {
     PLOG(ERROR) << "Open path: " << path_;
