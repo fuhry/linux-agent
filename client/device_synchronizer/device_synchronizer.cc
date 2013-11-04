@@ -143,6 +143,7 @@ void DeviceSynchronizer::StartSync() {
         if (freeze_time && (time(NULL) - freeze_time > 2)) {
           source_device_->Thaw();
           freeze_time = 0;
+          PLOG(WARNING) << "Unfreezing due to time";
         }
 
         // Trim history if it gets too big
