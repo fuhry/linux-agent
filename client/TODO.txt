@@ -8,4 +8,4 @@ This is more of a maintenance TODO more than a feature TODO
 * Some tests aren't cleaning up well/being flaky
 ** In particular, make sure destructors are called in the right order
 * Move dattosrv out of dattocli and into a test directory
-* Freeze & flush before finishing synchronization
+* Speed up tracer flushing as this seems to be the slowest part at the end of a backup
