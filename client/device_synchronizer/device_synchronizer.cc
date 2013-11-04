@@ -172,6 +172,7 @@ void DeviceSynchronizer::StartSync() {
           if (!freeze_time) {
             source_device_->Freeze();
             freeze_time = time(NULL);
+            source_device_->Flush();
             source_unsynced_manager_->FlushTracer();
             continue;
           }
