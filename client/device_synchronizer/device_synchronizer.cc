@@ -161,19 +161,18 @@ void DeviceSynchronizer::StartSync() {
         }
 
         off_t seek_pos = to_sync_interval.lower() * SECTOR_SIZE;
-        int seek_ret = lseek(source_fd, seek_pos, SEEK_SET);
+
+        off_t seek_ret = lseek(source_fd, seek_pos, SEEK_SET);
 
         if (seek_ret == -1) {
-          PLOG(ERROR) << "Error while seeking source";
+          PLOG(ERROR) << "Error while seeking source to " << seek_pos;
           throw DeviceSynchronizerException("Unable to seek source");
         }
 
-        seek_ret = lseek(destination_fd,
-                         to_sync_interval.lower() * SECTOR_SIZE,
-                         SEEK_SET);
+        seek_ret = lseek(destination_fd, seek_pos, SEEK_SET);
 
         if (seek_ret == -1) {
-          PLOG(ERROR) << "Error while seeking destination";
+          PLOG(ERROR) << "Error while seeking destination to " << seek_pos;
           throw DeviceSynchronizerException("Unable to seek destination");
         }
 
