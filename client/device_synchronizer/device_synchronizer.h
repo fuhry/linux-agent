@@ -16,10 +16,14 @@ namespace datto_linux_client {
 
 class DeviceSynchronizer {
  public:
-  DeviceSynchronizer(std::shared_ptr<MountableBlockDevice> source_device,
-                     std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager,
-                     std::shared_ptr<BlockDevice> destination_device,
-                     std::shared_ptr<ReplyChannel> reply_channel);
+  DeviceSynchronizer(
+      std::shared_ptr<MountableBlockDevice> source_device,
+      std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager,
+      std::shared_ptr<BlockDevice> destination_device,
+      std::shared_ptr<ReplyChannel> reply_channel);
+
+  // Precondition to running this is source_device must be both traced and
+  // mounted
   void StartSync();
   void Stop();
 
