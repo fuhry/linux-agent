@@ -2,7 +2,6 @@
 #include "block_device/block_device.h"
 #include "request_listener/reply_channel.h"
 #include "block_device/mountable_block_device.h"
-#include "unsynced_sector_manager/unsynced_sector_store.h"
 #include "unsynced_sector_manager/sector_interval.h"
 #include "unsynced_sector_manager/sector_set.h"
 #include "test/loop_device.h"
@@ -26,7 +25,7 @@ using ::datto_linux_client::Reply;
 using ::datto_linux_client::ReplyChannel;
 using ::datto_linux_client::SectorInterval;
 using ::datto_linux_client::SectorSet;
-using ::datto_linux_client::UnsyncedSectorStore;
+using ::datto_linux_client::UnsyncedSectorManager;
 using ::datto_linux_client_test::LoopDevice;
 
 class DummyMountableBlockDevice : public MountableBlockDevice {
@@ -37,6 +36,9 @@ class DummyMountableBlockDevice : public MountableBlockDevice {
   std::unique_ptr<const SectorSet> GetInUseSectors() {
     return nullptr;
   }
+
+  void Freeze() { }
+  void Thaw() { }
 };
 
 class DummyReplyChannel : public ReplyChannel {
@@ -60,6 +62,8 @@ class DeviceSynchronizerTest : public ::testing::Test {
  protected:
   DeviceSynchronizerTest() {
     source_loop = std::make_shared<LoopDevice>();
+    source_loop->FormatAsExt3();
+
     destination_loop = std::make_shared<LoopDevice>();
 
     source_device = std::make_shared<DummyMountableBlockDevice>(
@@ -68,27 +72,30 @@ class DeviceSynchronizerTest : public ::testing::Test {
     destination_device = std::make_shared<DummyMountableBlockDevice>(
                             destination_loop->path());
 
-    sector_store = std::make_shared<UnsyncedSectorStore>();
+    source_manager = std::make_shared<UnsyncedSectorManager>(
+                          source_loop->path());
 
     reply_channel = std::make_shared<DummyReplyChannel>();
   }
 
   void ConstructSynchronizer() {
+    source_manager->StartTracer();
     device_synchronizer = std::make_shared<DeviceSynchronizer>(
                               source_device,
-                              sector_store,
+                              source_manager,
                               destination_device,
                               reply_channel);
+
   }
 
   ~DeviceSynchronizerTest() { }
 
   // Order matters here, things will be destructed in opposite order
   // of declaration
-  std::shared_ptr<UnsyncedSectorStore> sector_store;
 
   std::shared_ptr<LoopDevice> source_loop;
   std::shared_ptr<MountableBlockDevice> source_device;
+  std::shared_ptr<UnsyncedSectorManager> source_manager;
 
   std::shared_ptr<LoopDevice> destination_loop;
   std::shared_ptr<MountableBlockDevice> destination_device;
@@ -102,7 +109,7 @@ class DeviceSynchronizerTest : public ::testing::Test {
 
 TEST_F(DeviceSynchronizerTest, CanConstruct) {
   // Make sure there is something to sync
-  sector_store->AddUnsyncedInterval(SectorInterval(0, 1));
+  source_manager->store()->AddUnsyncedInterval(SectorInterval(0, 1));
   ConstructSynchronizer();
   EXPECT_NE(nullptr, device_synchronizer);
 }
@@ -117,7 +124,7 @@ TEST_F(DeviceSynchronizerTest, ConstructFailure1) {
 }
 
 TEST_F(DeviceSynchronizerTest, ConstructFailure2) {
-  sector_store->AddUnsyncedInterval(SectorInterval(0, 1));
+  source_manager->store()->AddUnsyncedInterval(SectorInterval(0, 1));
   source_device = destination_device;
 
   try {
@@ -144,7 +151,7 @@ TEST_F(DeviceSynchronizerTest, BasicSyncTest) {
 
   destination_device->Close();
 
-  sector_store->AddUnsyncedInterval(SectorInterval(0, 8));
+  source_manager->store()->AddUnsyncedInterval(SectorInterval(0, 8));
 
   ConstructSynchronizer();
 
@@ -154,7 +161,7 @@ TEST_F(DeviceSynchronizerTest, BasicSyncTest) {
   while (!device_synchronizer->done()) {
     sleep(1);
     wait_secs++;
-    if (wait_secs > 3) {
+    if (wait_secs > 10) {
       FAIL() << "Took way too long to sync a 4k block";
     }
   }
@@ -184,7 +191,7 @@ TEST_F(DeviceSynchronizerTest, SyncTest) {
     }
     // Only mark every other block to sync
     if (i % 2 == 0) {
-      sector_store->AddUnsyncedInterval(SectorInterval(i * 8, (i + 1) * 8));
+      source_manager->store()->AddUnsyncedInterval(SectorInterval(i * 8, (i + 1) * 8));
     }
   }
 

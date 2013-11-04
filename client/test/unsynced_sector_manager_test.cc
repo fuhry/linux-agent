@@ -17,27 +17,22 @@ using ::datto_linux_client::SectorInterval;
 using ::datto_linux_client_test::LoopDevice;
 
 TEST(UnsyncedSectorManagerTest, Constructor) {
-  UnsyncedSectorManager manager();
+  UnsyncedSectorManager manager("/dev/null");
 }
 
 TEST(UnsyncedSectorManagerTest, Tracers) {
   LoopDevice loop_dev;
 
   {
-    UnsyncedSectorManager manager;
-    // Should be fine if nothing is being traced
-    manager.StopAllTracers();
+    UnsyncedSectorManager manager(loop_dev.path());
 
-    manager.StartTracer(loop_dev.path());
-    manager.StopTracer(loop_dev.path());
+    manager.StartTracer();
+    manager.StopTracer();
 
-    manager.StartTracer(loop_dev.path());
-    manager.StopAllTracers();
-
-    manager.StartTracer(loop_dev.path());
+    manager.StartTracer();
 
     try {
-      manager.StartTracer(loop_dev.path());
+      manager.StartTracer();
       FAIL() << "Shouldn't have been able to start another tracer";
     } catch (const std::runtime_error &e) {
       // good
@@ -45,19 +40,19 @@ TEST(UnsyncedSectorManagerTest, Tracers) {
   }
 
   // Destructor should have been called from previous block
-  UnsyncedSectorManager manager;
-  manager.StartTracer(loop_dev.path());
+  UnsyncedSectorManager manager(loop_dev.path());
+  manager.StartTracer();
 }
 
-TEST(UnsyncedSectorManagerTest, GetStore) {
-  UnsyncedSectorManager manager;
+TEST(UnsyncedSectorManagerTest, store) {
+  UnsyncedSectorManager manager("/dev/null");
 
   {
-    std::shared_ptr<UnsyncedSectorStore> store(manager.GetStore("/dev/null"));
+    std::shared_ptr<UnsyncedSectorStore> store(manager.store());
     store->AddUnsyncedInterval(SectorInterval(0, 10));
   }
 
-  std::shared_ptr<UnsyncedSectorStore> store(manager.GetStore("/dev/null"));
+  std::shared_ptr<UnsyncedSectorStore> store(manager.store());
 
   EXPECT_EQ(10UL, store->UnsyncedSectorCount());
 }
