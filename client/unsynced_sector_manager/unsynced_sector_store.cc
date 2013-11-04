@@ -32,6 +32,11 @@ SectorInterval UnsyncedSectorStore::GetContinuousUnsyncedSectors() const {
     }
   }
 
+  if (boost::icl::length(largestInterval) < 1024
+      && boost::icl::length(largestInterval) != 0) {
+    return *unsynced_sector_set_.rbegin();
+  }
+
   return largestInterval;
 }
 

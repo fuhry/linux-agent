@@ -26,7 +26,6 @@ class BackupManager {
   void StartIncrementalBackup(const StartBackupRequest &start_request);
   
   void StopBackup(const StopBackupRequest &stop_request);
-  void StopTracing(const std::string &source_path);
 
   ~BackupManager();
 
@@ -34,10 +33,12 @@ class BackupManager {
   BackupManager& operator=(const BackupManager&) = delete;
 
  private:
-  UnsyncedSectorManager unsynced_sector_manager_;
-
   std::mutex in_progress_mutex_;
   std::map<const std::string, std::unique_ptr<Backup>> in_progress_backups_;
+
+  std::mutex managers_mutex_;
+  std::map<const std::string, std::shared_ptr<UnsyncedSectorManager>>
+      unsynced_managers_;
 };
 
 } // datto_linux_client

@@ -9,11 +9,11 @@
 namespace datto_linux_client {
 
 Backup::Backup(std::shared_ptr<MountableBlockDevice> source_device,
-               std::shared_ptr<UnsyncedSectorStore> source_sector_store,
+               std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager,
                std::shared_ptr<BlockDevice> destination_device,
                std::shared_ptr<ReplyChannel> reply_channel)
     : source_device_(source_device),
-      source_sector_store_(source_sector_store),
+      source_unsynced_manager_(source_unsynced_manager),
       destination_device_(destination_device),
       reply_channel_(reply_channel),
       status_(BackupStatus::NOT_STARTED),
@@ -48,7 +48,7 @@ void Backup::DoBackup() {
 
 void Backup::Copy() {
   DeviceSynchronizer synchronizer(source_device_,
-                                  source_sector_store_,
+                                  source_unsynced_manager_,
                                   destination_device_,
                                   reply_channel_);
 

@@ -13,15 +13,17 @@
 namespace datto_linux_client {
 
 BackupManager::BackupManager()
-    : unsynced_sector_manager_(),
-      in_progress_mutex_(),
-      in_progress_backups_() {}
+    : in_progress_mutex_(),
+      in_progress_backups_(),
+      managers_mutex_(),
+      unsynced_managers_() {}
 
 void BackupManager::StartFullBackup(
     const StartBackupRequest &start_request,
     std::shared_ptr<ReplyChannel> reply_channel) {
 
-  std::lock_guard<std::mutex> lock(in_progress_mutex_);
+  std::lock_guard<std::mutex> ip_lock(in_progress_mutex_);
+  std::lock_guard<std::mutex> m_lock(managers_mutex_);
 
   LOG(INFO) << "Starting full backup";
 
@@ -31,6 +33,17 @@ void BackupManager::StartFullBackup(
   if (in_progress_backups_.count(source_path)) {
     throw BackupException("Backup is already in progress");
   }
+
+  // For a full, we can delete any already tracked sectors
+  if (unsynced_managers_.count(source_path)) {
+    unsynced_managers_.erase(source_path);
+  }
+
+  // Create the unsynced sector manager
+  auto source_unsynced_manager_ =
+      std::make_shared<UnsyncedSectorManager>(source_path);
+  unsynced_managers_[source_path] = source_unsynced_manager_;
+
 
   // Create the ExtMountableBlockDevice
   std::shared_ptr<ExtMountableBlockDevice> source_device(
@@ -43,34 +56,32 @@ void BackupManager::StartFullBackup(
   std::shared_ptr<NbdBlockDevice> destination_device(
       new NbdBlockDevice(destination_host, destination_port));
 
-  auto source_store = unsynced_sector_manager_.GetStore(source_path);
-
   // Start the tracer so we catch blocks that change during the backup
-  unsynced_sector_manager_.StartTracer(source_path);
+  source_unsynced_manager_->StartTracer();
 
   // Create the backup object
   std::unique_ptr<FullBackup> backup(new FullBackup(source_device,
-                                                    source_store,
+                                                    source_unsynced_manager_,
                                                     destination_device,
                                                     reply_channel));
 
-  // Start it
-  backup->DoBackup();
+  // Track it in our progress map
+  in_progress_backups_[source_path] = std::move(backup);
 
-  // Put it in the map
-  in_progress_backups_.insert(
-      std::pair<std::string, std::unique_ptr<Backup>>(source_path,
-                                                      std::move(backup)));
+  // Start it
+  in_progress_backups_[source_path]->DoBackup();
 }
 
 void BackupManager::StartIncrementalBackup(
     const StartBackupRequest &start_request) {
-  std::lock_guard<std::mutex> lock(in_progress_mutex_);
+  std::lock_guard<std::mutex> ip_lock(in_progress_mutex_);
+  std::lock_guard<std::mutex> m_lock(managers_mutex_);
+
   throw std::runtime_error("Not implemented!");
 }
 
 void BackupManager::StopBackup(const StopBackupRequest &stop_request) {
-  std::lock_guard<std::mutex> lock(in_progress_mutex_);
+  std::lock_guard<std::mutex> ip_lock(in_progress_mutex_);
 
   std::string source_path = stop_request.block_path();
   std::unique_ptr<Backup> backup =
@@ -78,11 +89,6 @@ void BackupManager::StopBackup(const StopBackupRequest &stop_request) {
 
   backup->Stop();
   // backup destructor will be called here
-}
-
-void BackupManager::StopTracing(const std::string &source_path) {
-  // TODO: Should probably add a check that a backup isn't in progress
-  unsynced_sector_manager_.StopTracer(source_path);
 }
 
 BackupManager::~BackupManager() {

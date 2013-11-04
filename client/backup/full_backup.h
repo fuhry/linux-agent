@@ -11,7 +11,7 @@ namespace datto_linux_client {
 class FullBackup : public Backup {
  public:
   FullBackup(std::shared_ptr<MountableBlockDevice> source_device,
-             std::shared_ptr<UnsyncedSectorStore> source_sector_store,
+             std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager,
              std::shared_ptr<BlockDevice> destination_device,
              std::shared_ptr<ReplyChannel> reply_channel);
 
