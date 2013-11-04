@@ -21,7 +21,7 @@ inline bool should_continue(const std::vector<uint64_t> &work_left_history) {
   DLOG(INFO) << "Determining if the process should stop";
   DLOG(INFO) << "Back: " << work_left_history.back()
              << " Front: " << work_left_history.front();
-  return work_left_history.back() > work_left_history.front();
+  return true;
 }
 
 // It is up to the caller to ensure buf is large enough
