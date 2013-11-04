@@ -56,6 +56,9 @@ class BlockDevice {
   // Throw an exception if one is already open
   virtual int Open();
 
+  // Flushes using the BLKFLSBUF ioctl
+  virtual void Flush();
+
   // Close the file descriptor returned
   // Don't throw if one isn't open
   virtual void Close();

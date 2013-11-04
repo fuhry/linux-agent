@@ -53,6 +53,16 @@ void BlockDevice::Init() {
   close(fd);
 }
 
+void BlockDevice::Flush() {
+  int fd = open(path_.c_str(), O_RDWR);
+
+  if (ioctl(fd, BLKFLSBUF, 0)) {
+    PLOG(ERROR) << "BLKFLSBUF " << path_;
+  }
+
+  close(fd);
+}
+
 void BlockDevice::Throttle(double scalar) {
   throttle_scalar_ = scalar;
 }
