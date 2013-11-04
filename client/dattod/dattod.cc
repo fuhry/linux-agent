@@ -54,6 +54,8 @@ int main(int argc, char *argv[]) {
     PLOG(ERROR) << "Unable to daemonize";
     return 1;
   }
+#else
+  FLAGS_logtostderr = 1;
 #endif
 
   // Acquire lock (must happen after daemon() as daemon() changes the pid)
