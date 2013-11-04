@@ -12,10 +12,10 @@ void TraceHandler::AddTrace(const struct blk_io_trace &trace_data) {
               << std::hex << trace_data.action << std::dec;
 
     uint64_t sectors_written = trace_data.bytes / SECTOR_SIZE;
-    VLOG(2) << sectors_written << " sectors";
 
     uint64_t sector = trace_data.sector;
     SectorInterval interval(sector, sector + sectors_written);
+    DLOG(INFO) << "Got trace: " << interval;
     (store_)->AddUnsyncedInterval(interval);
   } else {
     VLOG(2) << "Discarding trace with action 0x"

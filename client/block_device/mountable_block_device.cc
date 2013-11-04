@@ -29,28 +29,26 @@ std::map<std::string, std::string> GetMountedDevices() {
     int second_space = line_str.find(' ', first_space + 1);
     std::string path = line_str.substr(0, first_space);
     VLOG(2) << "Path is: " << path;
-    std::string mount_point =
-        line_str.substr(first_space + 1, second_space - first_space - 1);
+    std::string mount_point = line_str.substr(first_space + 1,
+                                              second_space - first_space - 1);
 
-    std::string real_path;
     char real_path_buf[PATH_MAX];
-    if (readlink(path.c_str(), real_path_buf, PATH_MAX) == -1) {
+    if (realpath(path.c_str(), real_path_buf) == NULL) {
       int error = errno;
+      PLOG(INFO) << "Readlink on " << path;
       if (error == ENOENT) {
         continue;
       } else if (error == EACCES) {
         continue;
       } else if (error == ENOTDIR) {
         continue;
-      } else if (error == EINVAL) {
-        real_path = path;
       } else {
         PLOG(ERROR) << "Error during readlink";
         throw datto_linux_client::BlockDeviceException("readlink");
       }
-    } else {
-      real_path = std::string(real_path_buf);
     }
+    std::string real_path = std::string(real_path_buf);
+    LOG(INFO) << path << " is actually " << real_path;
 
     // TODO this replace only handles the character ' ' in a path.
     // There are other characters that aren't as they seem (e.g. \),
@@ -92,6 +90,7 @@ std::string MountableBlockDevice::GetMountPoint() {
   auto mounted_devices = GetMountedDevices();
   auto mount_pair = mounted_devices.find(path_);
   if (mount_pair == mounted_devices.end()) {
+    LOG(ERROR) << path_ << " is not mounted";
     throw BlockDeviceException("Block device is not mounted");
   }
   return mount_pair->second;

@@ -3,6 +3,7 @@
 #include "unsynced_sector_manager/sector_interval.h"
 #include <glog/logging.h>
 
+#include <time.h>
 #include <chrono>
 
 namespace {
@@ -135,9 +136,15 @@ void DeviceSynchronizer::StartSync() {
 
       auto source_store = source_unsynced_manager_->store();
 
-      bool just_flushed = false;
+      time_t freeze_time = 0;
 
       do {
+        // Unthaw if it's been more than a couple seconds
+        if (freeze_time && (time(NULL) - freeze_time > 2)) {
+          source_device_->Thaw();
+          freeze_time = 0;
+        }
+
         // Trim history if it gets too big
         if (work_left_history.size() > MAX_SIZE_WORK_LEFT_HISTORY) {
           DLOG(INFO) << "Trimming history";
@@ -161,19 +168,18 @@ void DeviceSynchronizer::StartSync() {
 
         // If the only interval is size zero, we are done
         if (boost::icl::cardinality(to_sync_interval) == 0) {
-          // If we got an empty interval, make sure there are no traces waiting
-          if (!just_flushed) {
-            sync();
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+          if (!freeze_time) {
+            source_device_->Freeze();
+            freeze_time = time(NULL);
             source_unsynced_manager_->FlushTracer();
-            just_flushed = true;
             continue;
           }
+
+          source_device_->Thaw();
           LOG(INFO) << "Got size 0 interval (process is finished)";
           succeeded_ = true;
           break;
         }
-        just_flushed = false;
 
         off_t seek_pos = to_sync_interval.lower() * SECTOR_SIZE;
 
