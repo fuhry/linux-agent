@@ -19,4 +19,4 @@ All components should have unit tests. Note that this doesn't mean all classes, 
 Update the CMakeLists.txt file to add your test to the test suite. How to do this should be obvious from context.
 
 ## Scripts during testing
-While we should avoid shelling out as much as possible, somethings are much easier to do with a bash script than in C++. See device\_tracer\_test for an example of how to use scripts to setup the environment, although at some point there will be a better method for this.
+While we should avoid shelling out as much as possible, somethings are much easier to do with a bash script than in C++. See device\_tracer\_test for an example of how to use scripts to setup the environment.
