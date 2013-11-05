@@ -215,7 +215,7 @@ TEST_F(DeviceSynchronizerTest, SyncTest) {
   while (!device_synchronizer->done()) {
     sleep(1);
     wait_secs++;
-    if (wait_secs > 3) {
+    if (wait_secs > 10) {
       FAIL() << "Took way too long to sync the blocks";
     }
   }
