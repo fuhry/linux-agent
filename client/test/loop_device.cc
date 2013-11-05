@@ -106,6 +106,9 @@ LoopDevice::~LoopDevice() {
       system(("sleep .25 && ./test/cleanup_test_loop_device " + path_).c_str());
   }
   (void) suppress_warning;
+
+  // Remove the shared memory file
+  unlink(GetSharedMemoryPath().c_str());
 }
 
 }
