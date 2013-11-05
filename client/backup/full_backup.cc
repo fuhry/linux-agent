@@ -16,6 +16,7 @@ void FullBackup::Prepare() {
   // Add in-use sectors to the store
   auto in_use_set = source_device_->GetInUseSectors();
 
+  // TODO Check if this is slow enough to make it worth optimizing
   for (const SectorInterval &interval : *in_use_set) {
     source_unsynced_manager_->store()->AddUnsyncedInterval(interval);
   }
