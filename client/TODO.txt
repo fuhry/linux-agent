@@ -9,4 +9,5 @@ This is more of a maintenance TODO more than a feature TODO
 ** In particular, make sure destructors are called in the right order
 * Move dattosrv out of dattocli and into a test directory
 * Speed up tracer flushing as this seems to be the slowest part at the end of a backup
-* More unique_ptrs! It is possible to convert from unique -> shared (!)
+* More unique_ptrs. It is possible to convert from unique -> shared (!)
+* Check that things are logged well before exceptions are thrown
