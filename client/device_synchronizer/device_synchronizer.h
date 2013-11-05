@@ -35,6 +35,8 @@ class DeviceSynchronizer {
     return succeeded_;
   }
 
+ ~DeviceSynchronizer();
+
  private:
   std::atomic<bool> should_stop_;
   std::atomic<bool> succeeded_;

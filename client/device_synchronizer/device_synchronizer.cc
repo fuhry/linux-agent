@@ -237,8 +237,15 @@ void DeviceSynchronizer::StartSync() {
     done_ = true;
   }); // end thread
   DLOG(INFO) << "Sync thread started";
+}
 
-  // TODO create a way to stop synchronizing (stop backup will need this)
-  sync_thread_.detach();
+void DeviceSynchronizer::Stop() {
+  should_stop_ = true;
+  sync_thread_.join();
 }
+
+DeviceSynchronizer::~DeviceSynchronizer() {
+  Stop();
 }
+
+} // datto_linux_client
