@@ -238,6 +238,7 @@ void DeviceSynchronizer::StartSync() {
   }); // end thread
   DLOG(INFO) << "Sync thread started";
 
+  // TODO create a way to stop synchronizing (stop backup will need this)
   sync_thread_.detach();
 }
 }
