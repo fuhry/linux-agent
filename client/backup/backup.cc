@@ -56,10 +56,8 @@ void Backup::Copy() {
 
   while (!synchronizer.done() && !do_stop_) {
     // TODO Some sort of accounting/progress verification here
-    // TODO Freeze FS when almost done
     std::this_thread::yield();
   }
-  // TODO Unfreeze FS when done
 }
 
 void Backup::Stop() {
