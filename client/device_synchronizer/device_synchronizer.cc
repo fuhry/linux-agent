@@ -199,13 +199,11 @@ void DeviceSynchronizer::StartSync() {
           throw DeviceSynchronizerException("Unable to seek destination");
         }
 
-        DLOG(INFO) << "Marking interval " << to_sync_interval.lower() << " : "
-                   << to_sync_interval.upper();
+        DLOG(INFO) << "Marking interval " << to_sync_interval;
         DLOG(INFO) << "Cardinality is: "
                    << boost::icl::cardinality(to_sync_interval);
         DLOG(INFO) << "Sectors per block: " << sectors_per_block;
         source_store->MarkToSyncInterval(to_sync_interval);
-        DLOG(INFO) << "Marked";
         // Loop until we copy all of the blocks of the sector interval
         for (uint64_t i = 0;
              i < boost::icl::cardinality(to_sync_interval);
