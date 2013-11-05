@@ -2,6 +2,11 @@
 The Linux Agent is client side software that creates and transfers image-based
 backups of the block devices on a Linux machine. 
 
+## Table of Contents
+* [Project Overview](#project-overview)
+* [Directory Structure](#directory-structure)
+* [Implementation Details](#implementation-details)
+
 ## Project Overview
 The intention of this project is to create a general purpose tool to perform
 image based backups of Linux machines. However, backing up to our products is
