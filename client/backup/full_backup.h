@@ -13,10 +13,9 @@ class FullBackup : public Backup {
   FullBackup(std::shared_ptr<MountableBlockDevice> source_device,
              std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager,
              std::shared_ptr<BlockDevice> destination_device,
-             std::shared_ptr<ReplyChannel> reply_channel);
+             std::shared_ptr<BackupEventHandler> event_handler);
 
-  void Prepare();
-  void Cleanup();
+  void Prepare(std::shared_ptr<CancellationToken> cancel_token);
 };
 
 } // datto_linux_client

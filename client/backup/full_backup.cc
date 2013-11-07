@@ -6,13 +6,13 @@ FullBackup::FullBackup(
    std::shared_ptr<MountableBlockDevice> source_device,
    std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager,
    std::shared_ptr<BlockDevice> destination_device,
-   std::shared_ptr<ReplyChannel> reply_channel)
+   std::shared_ptr<BackupEventHandler> event_handler)
     : Backup(source_device,
              source_unsynced_manager,
              destination_device,
-             reply_channel) {}
+             event_handler) {}
 
-void FullBackup::Prepare() {
+void FullBackup::Prepare(std::shared_ptr<CancellationToken> cancel_token) {
   // Add in-use sectors to the store
   auto in_use_set = source_device_->GetInUseSectors();
 
@@ -20,10 +20,6 @@ void FullBackup::Prepare() {
   for (const SectorInterval &interval : *in_use_set) {
     source_unsynced_manager_->store()->AddUnsyncedInterval(interval);
   }
-}
-
-void FullBackup::Cleanup() {
-  // TODO: I think this can be empty, destructors should do it
 }
 
 } // datto_linux_client
