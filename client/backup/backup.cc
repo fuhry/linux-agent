@@ -1,4 +1,5 @@
 #include "backup/backup.h"
+#include "backup/backup_exception.h"
 
 #include <thread>
 
@@ -11,57 +12,50 @@ namespace datto_linux_client {
 Backup::Backup(std::shared_ptr<MountableBlockDevice> source_device,
                std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager,
                std::shared_ptr<BlockDevice> destination_device,
-               std::shared_ptr<ReplyChannel> reply_channel)
+               std::shared_ptr<BackupEventHandler> event_handler)
     : source_device_(source_device),
       source_unsynced_manager_(source_unsynced_manager),
       destination_device_(destination_device),
-      reply_channel_(reply_channel),
-      status_(BackupStatus::NOT_STARTED),
-      do_stop_(false) {}
+      event_handler_(event_handler) {}
 
-
-void Backup::DoBackup() {
+void Backup::DoBackup(std::shared_ptr<CancellationToken> cancel_token) {
   try {
     LOG(INFO) << "Preparing for backup";
-    status_ = BackupStatus::PREPARING;
-    Prepare();
+    event_handler_->BackupPreparing();
+    Prepare(cancel_token);
 
-    if (do_stop_) {
-      LOG(INFO) << "Stopping";
-    } else {
-      LOG(INFO) << "Copying data to destination device";
-      status_ = BackupStatus::COPYING;
-      Copy();
-    }
+    if (cancel_token->ShouldCancel()) {
+      LOG(INFO) << "Cancelled before copy";
+      event_handler_->BackupCancelled();
+      return;
+    } 
 
-    LOG(INFO) << "Cleaning up after backup";
-    status_ = BackupStatus::CLEANING_UP;
-    Cleanup();
+    LOG(INFO) << "Copying data to destination device";
+    event_handler_->BackupCopying();
+    Copy(cancel_token);
 
-    status_ = BackupStatus::FINISHED;
+    if (cancel_token->ShouldCancel()) {
+      LOG(INFO) << "Cancelled after copy";
+      event_handler_->BackupCancelled();
+      return;
+    } 
+
+    event_handler_->BackupSucceeded();
   } catch (const std::runtime_error &e) {
     LOG(ERROR) << "Error during backup: " << e.what();
-    status_ = BackupStatus::FAILED;
-    throw;
+    event_handler_->BackupFailed(e.what());
   }
 }
 
-void Backup::Copy() {
+void Backup::Copy(std::shared_ptr<CancellationToken> cancel_token) {
   DeviceSynchronizer synchronizer(source_device_,
                                   source_unsynced_manager_,
                                   destination_device_,
-                                  reply_channel_);
+                                  event_handler_);
 
-  synchronizer.StartSync();
-
-  while (!synchronizer.done() && !do_stop_) {
-    // TODO Some sort of accounting/progress verification here
-    std::this_thread::yield();
-  }
+  synchronizer.DoSync(cancel_token);
 }
 
-void Backup::Stop() {
-  do_stop_ = true;
-}
+Backup::~Backup() { }
 
 } // datto_linux_client
