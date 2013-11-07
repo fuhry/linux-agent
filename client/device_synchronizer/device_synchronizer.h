@@ -2,14 +2,11 @@
 #define DATTO_CLIENT_DEVICE_SYNCHRONIZER_DEVICE_SYNCHRONIZER_H_
 
 #include <memory>
-#include <thread>
-#include <atomic>
-#include <unistd.h>
-#include <stdint.h>
 
+#include "cancellation/cancellation_token.h"
 #include "block_device/block_device.h"
 #include "block_device/mountable_block_device.h"
-#include "request_listener/reply_channel.h"
+#include "backup/backup_event_handler.h"
 #include "unsynced_sector_manager/unsynced_sector_manager.h"
 
 namespace datto_linux_client {
@@ -20,33 +17,19 @@ class DeviceSynchronizer {
       std::shared_ptr<MountableBlockDevice> source_device,
       std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager,
       std::shared_ptr<BlockDevice> destination_device,
-      std::shared_ptr<ReplyChannel> reply_channel);
+      std::shared_ptr<BackupEventHandler> event_handler);
 
   // Precondition to running this is source_device must be both traced and
   // mounted
-  void StartSync();
-  void Stop();
-
-  bool done() {
-    return done_;
-  }
-
-  bool succeeded() {
-    return succeeded_;
-  }
+  void DoSync(std::shared_ptr<CancellationToken> cancel_token);
 
  ~DeviceSynchronizer();
 
  private:
-  std::atomic<bool> should_stop_;
-  std::atomic<bool> succeeded_;
-  std::atomic<bool> done_;
-  std::thread sync_thread_;
-
   std::shared_ptr<MountableBlockDevice> source_device_;
   std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager_;
   std::shared_ptr<BlockDevice> destination_device_;
-  std::shared_ptr<ReplyChannel> reply_channel_;
+  std::shared_ptr<BackupEventHandler> event_handler_;
 };
 }
 
