@@ -24,6 +24,7 @@ class BackupEventHandler {
   void BackupCopying();
 
   void BackupSucceeded();
+  void BackupCancelled();
   void BackupFailed(const std::string &failure_message);
 
   void UpdateUnsyncedCount(uint64_t num_unsynced);
