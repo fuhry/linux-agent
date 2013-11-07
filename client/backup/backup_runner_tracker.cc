@@ -34,5 +34,15 @@ void BackupRunnerTracker::RunnerComplete(const *BackupRunner runner) {
   delete_thread.detach();
 }
 
+BackupRunnerTracker::~BackupRunnerTracker() {
+  // Don't worry about locking the mutex, the size should only be
+  // decreasing. Once it is zero, it won't change again.
+
+  // Wait until all backup runners are done before destructing them
+  while (in_progress_list_.size() > 0) {
+    std::this_thread::yield();
+  }
+}
+
 } // datto_linux_client
 
