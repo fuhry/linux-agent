@@ -14,11 +14,11 @@ void BackupRunnerTracker::AddRunner(std::unique_ptr<BackupRunner> runner) {
 }
 void BackupRunnerTracker::RunnerComplete(const *BackupRunner runner) {
 
-  // We worry about this because calling erase will call the destructor for the
-  // BackupRunner. A thread in the BackupRunner is the one calling this. The
-  // destructor for the BackupRunner will block on it's thread calling this,
-  // which will cause us to deadlock if we don't call erase in a separate
-  // thread.
+  // We worry about this because calling erase() calls the destructor for the
+  // BackupRunner. A thread in the BackupRunner is the one calling
+  // RunnerComplete. The destructor for BackupRunner blocks on the thread
+  // calling this, which will cause us to deadlock if we don't call erase in a
+  // separate thread.
   std::thread delete_thread([&]() {
     std::lock_guard<std::mutex> lock(in_progress_mutex_);
     for (auto itr = in_progress_list_.begin();
