@@ -16,7 +16,7 @@ InProgressPathSet::InProgressPathSet()
 void InProgressPathSet::AddPathOrThrow(const std::string &path) {
   std::lock_guard<std::mutex> lock(set_mutex_);
   if (set_.count(path)) {
-    PLOG(ERROR) << "Path in set: " << path;
+    LOG(ERROR) << "Path in set: " << path;
     throw BackupException("Path already in set");
   }
   set_.insert(path);
@@ -24,7 +24,7 @@ void InProgressPathSet::AddPathOrThrow(const std::string &path) {
 void InProgressPathSet::RemovePath(const std::string &path) {
   std::lock_guard<std::mutex> lock(set_mutex_);
   if (set_.erase(path) == 0) {
-    PLOG(ERROR) << "Path not found: " << path;
+    LOG(ERROR) << "Path not found: " << path;
     throw BackupException("Unable to find path");
   }
 }
