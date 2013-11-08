@@ -8,11 +8,21 @@ BackupRunnerTracker::BackupRunnerTracker()
     : in_progress_mutex_(),
       in_progress_list_() {}
 
-void BackupRunnerTracker::AddRunner(std::unique_ptr<BackupRunner> runner) { 
+void BackupRunnerTracker::StartRunner(
+    std::unique_ptr<Backup> backup,
+    std::shared_ptr<CancellationToken> cancel_token) { 
+
   std::lock_guard<std::mutex> lock(in_progress_mutex_);
+
+  std::shared_ptr<BackupRunnerTracker> this_ptr(this);
+
+  std::unique_ptr<BackupRunner> runner(std::move(backup),
+                                       this_ptr,
+                                       cancel_token);
+
   in_progress_list_.push_back(std::move(runner));
 }
-void BackupRunnerTracker::RunnerComplete(const *BackupRunner runner) {
+void BackupRunnerTracker::RunnerComplete(const BackupRunner *runner) {
 
   // We worry about this because calling erase() calls the destructor for the
   // BackupRunner. A thread in the BackupRunner is the one calling

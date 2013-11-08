@@ -10,8 +10,9 @@ void RequestHandler::Handle(const Request &request,
                             std::shared_ptr<ReplyChannel> reply_channel) {
   LOG(INFO) << "Handling request of type " << request.type();
   if (request.type() == Request::START_BACKUP) {
-    backup_manager_->StartFullBackup(request.start_backup_request(),
-                                     reply_channel);
+    Reply reply = backup_manager_->StartBackup(
+        request.start_backup_request());
+    reply_channel->SendReply(reply);
   } else {
     // TODO
     throw std::runtime_error("Not implemented");

@@ -11,7 +11,7 @@ namespace datto_linux_client {
 // it is removed from the BackupRunnerTracker
 class BackupRunner {
  public:
-  BackupRunner(std::shared_ptr<Backup> backup,
+  BackupRunner(std::unique_ptr<Backup> backup,
                std::shared_ptr<BackupRunnerTracker> backup_runner_tracker,
                std::shared_ptr<CancellationToken> cancel_token);
 
@@ -20,7 +20,7 @@ class BackupRunner {
   BackupRunner(const BackupRunner &) = delete;
   BackupRunner& operator=(const BackupRunner &) = delete;
  private:
-  std::shared_ptr<Backup> backup_;
+  std::unique_ptr<Backup> backup_;
   std::shared_ptr<BackupRunnerTracker> backup_runner_tracker_;
   std::shared_ptr<CancellationToken> cancel_token_;
 };
