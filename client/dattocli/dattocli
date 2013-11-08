@@ -92,17 +92,12 @@ def send_to_dattod(message):
     s.send(struct.pack('!I', len(message))) # send message over the socket
     s.send(message)
 
-    while True: # wait for replies, show them on stdout
-        length = s.recv(4) #TODO: is there a sizeof?
-        if not length:
-            break
-        else:
-            length = struct.unpack('!I', length)[0]
-            data = s.recv(length)
-            reply = StringReply()
-            reply.ParseFromString(data)
-            if reply.message == 'DISCONNECT': #TODO: proper disconnect message
-               break
+    length = s.recv(4) #TODO: is there a sizeof?
+    length = struct.unpack('!I', length)[0]
+    data = s.recv(length)
+    reply = StringReply()
+    reply.ParseFromString(data)
+    print reply.message
 
     s.close() # when the socket is closed, return    
 
