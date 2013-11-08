@@ -2,12 +2,13 @@
 
 namespace datto_linux_client {
 
-CancellationToken() : should_cancel_(false) {}
+CancellationToken::CancellationToken()
+    : should_cancel_(false) {}
 
 void CancellationToken::Cancel() {
   should_cancel_ = true;
 }
-bool ShouldCancel() {
+bool CancellationToken::ShouldCancel() {
   return should_cancel_;
 }
 

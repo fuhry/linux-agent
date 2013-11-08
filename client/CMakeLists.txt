@@ -35,14 +35,16 @@ add_custom_command(TARGET dattocli
 # dattod
 add_executable(dattod
                backup/backup.cc
-               backup/backup_manager.cc
                backup/backup_event_handler.cc
+               backup/backup_manager.cc
                backup/full_backup.cc
+               backup/in_progress_path_set.cc
                block_device/block_device.cc
                block_device/mountable_block_device.cc
                block_trace/cpu_tracer.cc
                block_trace/device_tracer.cc
                block_trace/trace_handler.cc
+               cancellation/cancellation_token.cc
                dattod/dattod.cc
                dattod/dattod.cc
                dattod/flock.cc

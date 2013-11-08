@@ -3,12 +3,12 @@
 
 #include <map>
 #include <memory>
+#include <atomic>
 #include <mutex>
 #include <string>
 
 #include "backup/backup.h"
-#include "backup/backup_runner.h"
-#include "backup/backup_runner_tracker.h"
+#include "backup/in_progress_path_set.h"
 #include "block_device/block_device.h"
 #include "unsynced_sector_manager/unsynced_sector_manager.h"
 
@@ -28,17 +28,11 @@ class BackupManager {
 
   ~BackupManager();
 
-  // Make sure there isn't a backup in progress
-  if (in_progress_backups_.count(source_path)) {
-    throw BackupException("Backup is already in progress");
-  }
-
-
   BackupManager (const BackupManager&) = delete;
   BackupManager& operator=(const BackupManager&) = delete;
 
  private:
-  BackupRunnerTracker backup_runner_tracker_;
+  InProgressPathSet in_progress_paths_;
 
   std::mutex cancel_tokens_mutex_;
   std::map<const std::string, std::weak_ptr<CancellationToken>>
@@ -47,6 +41,8 @@ class BackupManager {
   std::mutex managers_mutex_;
   std::map<const std::string, std::shared_ptr<UnsyncedSectorManager>>
       unsynced_managers_;
+
+  std::atomic<bool> destructor_called_;
 };
 
 } // datto_linux_client
