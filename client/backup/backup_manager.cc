@@ -21,10 +21,13 @@ BackupManager::BackupManager()
       unsynced_managers_(),
       destructor_called_(false) {}
 
-// TODO This shouldn't throw, it should only return error replys
 Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
+  // TODO Add a meaningful reply
+  Reply dummy;
+  dummy.set_type(Reply::STRING);
+
   if (destructor_called_) {
-    throw BackupException("Can't start during teardown");
+    return dummy; // "Can't start during teardown"
   }
   std::lock_guard<std::mutex> m_lock(managers_mutex_);
 
@@ -41,63 +44,79 @@ Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
 
   // TODO Check type of backup
   LOG(INFO) << "Starting full backup";
-
-  // Make sure the path isn't already being backed up
   std::string source_path = start_request.block_path();
-  in_progress_paths_.AddPathOrThrow(source_path);
 
-  // 1. Create the source ExtMountableBlockDevice
-  std::shared_ptr<ExtMountableBlockDevice> source_device(
-      new ExtMountableBlockDevice(source_path));
-
-  // For a full, we can delete any already tracked sectors
-  if (unsynced_managers_.count(source_path)) {
-    unsynced_managers_.erase(source_path);
+  try {
+    // Make sure the path isn't already being backed up
+    in_progress_paths_.AddPathOrThrow(source_path);
+  } catch (const BackupException &e) {
+    return dummy; // "Backup already in progress"
   }
 
-  // 2. Create the source unsynced sector manager
-  auto source_unsynced_manager_ =
-    std::make_shared<UnsyncedSectorManager>(source_path);
-  unsynced_managers_[source_path] = source_unsynced_manager_;
+  try {
+    // 1. Create the source ExtMountableBlockDevice
+    std::shared_ptr<ExtMountableBlockDevice> source_device(
+        new ExtMountableBlockDevice(source_path));
 
-  // 3. Create the destination NbdBlockDevice
-  std::string destination_host = start_request.destination_host();
-  uint16_t destination_port = (uint16_t)start_request.destination_port();
+    // For a full, we can delete any already tracked sectors
+    if (unsynced_managers_.count(source_path)) {
+      unsynced_managers_.erase(source_path);
+    }
 
-  std::shared_ptr<NbdBlockDevice> destination_device(
-      new NbdBlockDevice(destination_host, destination_port));
+    // 2. Create the source unsynced sector manager
+    auto source_unsynced_manager_ =
+      std::make_shared<UnsyncedSectorManager>(source_path);
+    unsynced_managers_[source_path] = source_unsynced_manager_;
 
-  // Start the tracer so we catch blocks that change during the backup
-  source_unsynced_manager_->StartTracer();
+    // 3. Create the destination NbdBlockDevice
+    std::string destination_host = start_request.destination_host();
+    uint16_t destination_port = (uint16_t)start_request.destination_port();
 
-  // 4. Create an event handler which is notified and acts on progress changes
-  std::shared_ptr<BackupEventHandler> event_handler =
-      std::make_shared<BackupEventHandler>("dummy-job-guid");
+    std::shared_ptr<NbdBlockDevice> destination_device(
+        new NbdBlockDevice(destination_host, destination_port));
 
-  // Create the actual backup object
-  std::unique_ptr<Backup> backup(new FullBackup(source_device,
-                                                source_unsynced_manager_,
-                                                destination_device,
-                                                event_handler));
-  // TODO: 5. Create the cancellation token
+    // Start the tracer so we catch blocks that change during the backup
+    source_unsynced_manager_->StartTracer();
 
-  // Start the backup in a detached thread
-  //
-  // We can capture by reference on in_progress_paths_ because BackupManager's
-  // destructor guarantees that in_progress_paths_ persists until all backup
-  // threads are complete
-  std::thread backup_thread([=, &backup, &in_progress_paths_]() {
-    std::unique_ptr<Backup> thread_local_backup = std::move(backup);
-    thread_local_backup->DoBackup(nullptr);
+    // 4. Create an event handler which is notified and acts on progress change
+    std::shared_ptr<BackupEventHandler> event_handler =
+        std::make_shared<BackupEventHandler>("dummy-job-guid");
+
+    // Create the actual backup object
+    std::unique_ptr<Backup> backup(new FullBackup(source_device,
+                                                  source_unsynced_manager_,
+                                                  destination_device,
+                                                  event_handler));
+    // TODO: 5. Create the cancellation token
+    auto cancel_token = std::make_shared<CancellationToken>();
+
+    // Start the backup in a detached thread
+    //
+    // We can capture by reference on in_progress_paths_ because
+    // BackupManager's destructor guarantees that in_progress_paths_ persists
+    // until all backup threads are complete
+    std::thread backup_thread([=, &backup, &in_progress_paths_]() {
+      std::unique_ptr<Backup> thread_local_backup = std::move(backup);
+      thread_local_backup->DoBackup(cancel_token);
+      in_progress_paths_.RemovePath(source_path);
+    });
+
+    backup_thread.detach();
+
+    while (backup) {
+      std::this_thread::yield();
+    }
+  } catch (const std::runtime_error &e) {
+    // TODO Make this more clear:
+    // We can only do this here (without worrying about a race with the
+    // RemovePath call in backup_thread) because everything after
+    // backup_thread's creation won't throw
     in_progress_paths_.RemovePath(source_path);
-  });
+    LOG(ERROR) << e.what();
+    return dummy; // e.what();
+  }
 
-  backup_thread.detach();
-
-  // TODO Add a meaningful reply
-  Reply dummy;
-  dummy.set_type(Reply::STRING);
-  return dummy;
+  return dummy; // success
 }
 
 Reply BackupManager::StopBackup(const StopBackupRequest &stop_request) {
