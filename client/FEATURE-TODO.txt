@@ -1,0 +1,9 @@
+* REST API
+* Something else Justin wanted but I don't remember (pairing?)
+* Support ext2 (subclass, freeze is no-op)
+* Diff backup
+* Freeze during metadata reads
+* Stop backup
+* Progress request
+* XFS/Reiser
+* System info
