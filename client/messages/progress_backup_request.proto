@@ -1,5 +1,0 @@
-package datto_linux_client;
-
-message ProgressBackupRequest {
-    // No contents needed, progress for all backups will be returned
-}

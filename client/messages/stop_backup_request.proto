@@ -1,5 +1,0 @@
-package datto_linux_client;
-
-message StopBackupRequest {
-    required string block_path = 1;
-}
