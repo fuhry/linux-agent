@@ -3,7 +3,7 @@
 * Support ext2 (subclass, freeze is no-op)
 * Diff backup
 * Freeze during metadata reads
-* Stop backup
+* Stop backup (MarkToSyncInterval should backup the interval, not just erase it)
 * Progress request
 * XFS/Reiser
 * System info
