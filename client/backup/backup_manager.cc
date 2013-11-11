@@ -120,17 +120,7 @@ Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
 }
 
 Reply BackupManager::StopBackup(const StopBackupRequest &stop_request) {
-  std::string source_path = stop_request.block_path();
-
-  std::lock_guard<std::mutex> c_lock(cancel_tokens_mutex_);
-
-  // The weak_ptr will be default constructed if it isn't in the map
-  auto token = cancel_tokens_[source_path].lock();
-
-  if (token) {
-    token->Cancel();
-  }
-
+  // TODO
   Reply dummy;
   dummy.set_type(Reply::STRING);
   return dummy;
