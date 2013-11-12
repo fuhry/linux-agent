@@ -4,3 +4,4 @@
 * Progress request
 * XFS/Reiser
 * System info
+* FS Detection (fsstat)
