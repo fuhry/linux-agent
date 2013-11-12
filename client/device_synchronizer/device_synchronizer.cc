@@ -167,15 +167,19 @@ void DeviceSynchronizer::DoSync(std::shared_ptr<CancellationToken> cancel_token)
 
     // If the only interval is size zero, we are done
     if (boost::icl::cardinality(to_sync_interval) == 0) {
-      if (!freeze_time) {
-        source_device_->Freeze();
-        freeze_time = time(NULL);
-        source_device_->Flush();
-        source_unsynced_manager_->FlushTracer();
-        continue;
+      // Freeze if we can (so things are consistent on disk)
+      try {
+        if (!freeze_time) {
+          source_device_->Freeze();
+          freeze_time = time(NULL);
+          source_device_->Flush();
+          source_unsynced_manager_->FlushTracer();
+          continue;
+        }
+        source_device_->Thaw();
+      } catch (const BlockDeviceException &e) {
+        LOG(WARNING) << "Unable to freeze " << source_device_->path();
       }
-
-      source_device_->Thaw();
       LOG(INFO) << "Got size 0 interval (process is finished)";
       break;
     }
