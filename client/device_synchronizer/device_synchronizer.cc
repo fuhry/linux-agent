@@ -222,6 +222,8 @@ void DeviceSynchronizer::DoSync(std::shared_ptr<CancellationToken> cancel_token)
     DLOG(INFO) << "Finished copying interval " << to_sync_interval;
   }
   DLOG(INFO) << "Sync completed";
+  source_device_->Close();
+  destination_device_->Close();
 }
 
 DeviceSynchronizer::~DeviceSynchronizer() {
