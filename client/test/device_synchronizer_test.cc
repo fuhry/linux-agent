@@ -1,10 +1,12 @@
 #include "device_synchronizer/device_synchronizer.h"
+#include "backup/backup_event_handler.h"
 #include "block_device/block_device.h"
-#include "request_listener/reply_channel.h"
 #include "block_device/mountable_block_device.h"
+#include "cancellation/cancellation_token.h"
+#include "request_listener/reply_channel.h"
+#include "test/loop_device.h"
 #include "unsynced_sector_manager/sector_interval.h"
 #include "unsynced_sector_manager/sector_set.h"
-#include "test/loop_device.h"
 
 #include <memory>
 #include <array>
@@ -19,6 +21,8 @@
 
 namespace {
 
+using ::datto_linux_client::BackupEventHandler;
+using ::datto_linux_client::CancellationToken;
 using ::datto_linux_client::DeviceSynchronizer;
 using ::datto_linux_client::MountableBlockDevice;
 using ::datto_linux_client::Reply;
@@ -61,6 +65,8 @@ class DummyReplyChannel : public ReplyChannel {
 class DeviceSynchronizerTest : public ::testing::Test {
  protected:
   DeviceSynchronizerTest() {
+    cancel_token = std::make_shared<CancellationToken>();
+
     source_loop = std::make_shared<LoopDevice>();
     source_loop->FormatAsExt3();
 
@@ -75,7 +81,7 @@ class DeviceSynchronizerTest : public ::testing::Test {
     source_manager = std::make_shared<UnsyncedSectorManager>(
                           source_loop->path());
 
-    reply_channel = std::make_shared<DummyReplyChannel>();
+    event_handler = std::make_shared<BackupEventHandler>("dummy");
   }
 
   void ConstructSynchronizer() {
@@ -84,7 +90,7 @@ class DeviceSynchronizerTest : public ::testing::Test {
                               source_device,
                               source_manager,
                               destination_device,
-                              reply_channel);
+                              event_handler);
 
   }
 
@@ -93,6 +99,8 @@ class DeviceSynchronizerTest : public ::testing::Test {
   // Order matters here, things will be destructed in opposite order
   // of declaration
 
+  std::shared_ptr<CancellationToken> cancel_token;
+
   std::shared_ptr<LoopDevice> source_loop;
   std::shared_ptr<MountableBlockDevice> source_device;
   std::shared_ptr<UnsyncedSectorManager> source_manager;
@@ -100,7 +108,7 @@ class DeviceSynchronizerTest : public ::testing::Test {
   std::shared_ptr<LoopDevice> destination_loop;
   std::shared_ptr<MountableBlockDevice> destination_device;
 
-  std::shared_ptr<DummyReplyChannel> reply_channel;
+  std::shared_ptr<BackupEventHandler> event_handler;
 
   std::shared_ptr<DeviceSynchronizer> device_synchronizer;
 };
@@ -133,40 +141,6 @@ TEST_F(DeviceSynchronizerTest, ConstructFailure2) {
   } catch (const std::runtime_error &e) {
     // good
   }
-}
-
-TEST_F(DeviceSynchronizerTest, BasicSyncTest) {
-  // Write garbage to the first 4k block then sync (which should overwrite it)
-  // from source_device
-  int destination_fd = destination_device->Open();
-  int urandom_fd = open("/dev/urandom", O_RDONLY);
-  char buf[4096];
-
-  if (read(urandom_fd, buf, 4096) == -1) {
-    FAIL() << "Failed reading from urandom";
-  }
-  if (write(destination_fd, buf, 4096) == -1) {
-    FAIL() << "Failed writing to destination";
-  }
-
-  destination_device->Close();
-
-  source_manager->store()->AddUnsyncedInterval(SectorInterval(0, 8));
-
-  ConstructSynchronizer();
-
-  device_synchronizer->StartSync();
-
-  int wait_secs = 0;
-  while (!device_synchronizer->done()) {
-    sleep(1);
-    wait_secs++;
-    if (wait_secs > 10) {
-      FAIL() << "Took way too long to sync a 4k block";
-    }
-  }
-
-  EXPECT_TRUE(device_synchronizer->succeeded());
 }
 
 // TODO Make this test block size agnostic
@@ -208,18 +182,11 @@ TEST_F(DeviceSynchronizerTest, SyncTest) {
   close(urandom_fd);
   source_device->Close();
 
+  // Do the Sync
   ConstructSynchronizer();
-  device_synchronizer->StartSync();
+  device_synchronizer->DoSync(cancel_token);
 
-  int wait_secs = 0;
-  while (!device_synchronizer->done()) {
-    sleep(1);
-    wait_secs++;
-    if (wait_secs > 10) {
-      FAIL() << "Took way too long to sync the blocks";
-    }
-  }
-
+  // Make sure it worked
   source_fd = source_device->Open();
   int destination_fd = destination_device->Open();
   std::array<char, 4096> source_buf;
