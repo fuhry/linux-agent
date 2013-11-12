@@ -39,6 +39,7 @@ add_executable(dattod
                backup/backup_manager.cc
                backup/full_backup.cc
                backup/in_progress_path_set.cc
+               backup/incremental_backup.cc
                block_device/block_device.cc
                block_device/mountable_block_device.cc
                block_trace/cpu_tracer.cc

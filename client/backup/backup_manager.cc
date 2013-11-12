@@ -6,6 +6,7 @@
 #include "backup/backup_exception.h"
 #include "backup/backup_event_handler.h"
 #include "backup/full_backup.h"
+#include "backup/incremental_backup.h"
 #include "fs_parsing/ext_mountable_block_device.h"
 #include "remote_block_device/nbd_block_device.h"
 
@@ -58,15 +59,12 @@ Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
     std::shared_ptr<ExtMountableBlockDevice> source_device(
         new ExtMountableBlockDevice(source_path));
 
-    // For a full, we can delete any already tracked sectors
-    if (unsynced_managers_.count(source_path)) {
-      unsynced_managers_.erase(source_path);
+    // 2. Get (and create if needed) the source unsynced sector manager
+    if (!unsynced_managers_.count(source_path)) {
+      unsynced_managers_[source_path] = 
+        std::make_shared<UnsyncedSectorManager>(source_path);
     }
-
-    // 2. Create the source unsynced sector manager
-    auto source_unsynced_manager_ =
-      std::make_shared<UnsyncedSectorManager>(source_path);
-    unsynced_managers_[source_path] = source_unsynced_manager_;
+    auto source_unsynced_manager_ = unsynced_managers_[source_path];
 
     // 3. Create the destination NbdBlockDevice
     std::string destination_host = start_request.destination_host();
@@ -75,20 +73,35 @@ Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
     std::shared_ptr<NbdBlockDevice> destination_device(
         new NbdBlockDevice(destination_host, destination_port));
 
-    // Start the tracer so we catch blocks that change during the backup
-    source_unsynced_manager_->StartTracer();
-
     // 4. Create an event handler which is notified and acts on progress change
     std::shared_ptr<BackupEventHandler> event_handler =
         std::make_shared<BackupEventHandler>("dummy-job-guid");
 
-    // Create the actual backup object
-    std::unique_ptr<Backup> backup(new FullBackup(source_device,
-                                                  source_unsynced_manager_,
-                                                  destination_device,
-                                                  event_handler));
     // TODO: 5. Create the cancellation token
     auto cancel_token = std::make_shared<CancellationToken>();
+
+    // Create the actual backup object
+    std::unique_ptr<Backup> backup;
+
+    // TODO Move this somewhere else
+    switch (start_request.type()) {
+      case StartBackupRequest::FULL_BACKUP:
+        backup = std::move(std::unique_ptr<Backup>(
+            new FullBackup(source_device,
+                           source_unsynced_manager_,
+                           destination_device,
+                           event_handler)));
+        break;
+      case StartBackupRequest::INCREMENTAL_BACKUP:
+        backup = std::move(std::unique_ptr<Backup>(
+            new IncrementalBackup(source_device,
+                                  source_unsynced_manager_,
+                                  destination_device,
+                                  event_handler)));
+        break;
+      default:
+        throw std::runtime_error("Not implemeneted");
+    }
 
     // Start the backup in a detached thread
     //
@@ -103,6 +116,7 @@ Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
 
     backup_thread.detach();
 
+    // Wait for the backup_thread to take ownership of the backup
     while (backup) {
       std::this_thread::yield();
     }

@@ -46,4 +46,8 @@ void UnsyncedSectorManager::StopTracer() {
   device_tracer_.reset();
 }
 
+bool UnsyncedSectorManager::IsTracing() {
+  return device_tracer_.get() != nullptr;
+}
+
 } // datto_linux_client

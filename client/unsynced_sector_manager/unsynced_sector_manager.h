@@ -17,10 +17,9 @@ class UnsyncedSectorManager {
 
   void FlushTracer();
 
-  // Only needs to be called if stopped prior
   void StartTracer();
-
   void StopTracer();
+  bool IsTracing();
 
   std::shared_ptr<UnsyncedSectorStore> store() {
     return store_;
