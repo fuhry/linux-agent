@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+
+import subprocess
+import socket
+import struct
+import threading
+from dattolib import make_request_to_dattod
+from request_pb2 import Request
+from reply_pb2 import Reply
+
+LISTEN_ADDRESS = ("0.0.0.0", 2856)
+
+PASSOF_LIST = [Request.START_BACKUP, Request.STOP_BACKUP,
+               Request.PAUSE_BACKUP, Request.RESUME_BACKUP]
+
+def run_command(command):
+    p = subprocess.Popen(command, stdout=subprocess.PIPE)
+    (stdout, stderr) = p.communicate()
+    return stdout.strip()
+
+def handle_connection(connection):
+    try:
+        # receive 4 bytes containing the size of the Request
+        length = connection.recv(4)
+        length = struct.unpack('!I', length)[0]
+
+        request = Request()
+        # Get the data from the network
+        data = connection.recv(length)
+        # Interpret the data as a Request object
+        request.ParseFromString(data)
+
+        # Handle or pass off
+        if request.type in PASSOF_LIST:
+            reply = make_request_to_dattod(request)
+        elif request.type == Request.BASIC_INFO:
+            reply = Reply()
+            reply.type = Reply.BASIC_INFO
+            reply.basic_info_reply.agent_version = "v2.0"
+            reply.basic_info_reply.hostname = run_command(["hostname"])
+            reply.basic_info_reply.uname_a = run_command(["uname", "-a"])
+            lsb_release_p = subprocess.Popen(
+                    ["lsb_release", "-a"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
+            (lsb_stdout, lsb_stderr) = lsb_release_p.communicate()
+            reply.basic_info_reply.lsb_release_a = lsb_stdout
+            reply.basic_info_reply.lsb_release_a = \
+                    run_command(["lsb_release", "-a"])
+
+        else:
+            reply = Reply()
+            reply.type = Reply.ErrorReply
+
+        reply_serialized = reply.SerializeToString()
+        # Send size
+        connection.send(struct.pack('!I', len(reply_serialized)))
+        # Send Reply
+        connection.send(reply_serialized)
+    finally:
+        # Close connection
+        connection.close()
+
+class DattoWebListener(object):
+    
+    def __init__(self, address):
+        self.address = address
+        self.sock = None
+
+    def listen(self):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind(self.address)
+        self.sock.listen(3)
+
+    def accept_loop(self):
+        while True:
+            conn, addr = self.sock.accept()
+            print "Connection from :", addr 
+            thread = threading.Thread(target=handle_connection, args=(conn,))
+            thread.daemon = True
+            thread.start()
+
+
+if __name__ == "__main__":
+    listener = DattoWebListener(LISTEN_ADDRESS)
+    listener.listen()
+    listener.accept_loop()

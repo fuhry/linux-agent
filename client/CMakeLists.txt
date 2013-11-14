@@ -29,7 +29,15 @@ add_custom_target(dattocli)
 add_dependencies(dattocli protobuf_python)
 add_custom_command(TARGET dattocli
                    COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/dattocli/dattocli
-                              ${CMAKE_CURRENT_SOURCE_DIR}/dattocli/argparse.py
+                              ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/argparse.py
+                              ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/dattolib.py
+                              ${CMAKE_CURRENT_BINARY_DIR})
+# dattoweb
+add_custom_target(dattoweb)
+add_dependencies(dattoweb protobuf_python)
+add_custom_command(TARGET dattoweb
+                   COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/dattoweb/dattoweb
+                              ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/dattolib.py
                               ${CMAKE_CURRENT_BINARY_DIR})
 
 # dattod
