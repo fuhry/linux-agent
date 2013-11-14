@@ -12,6 +12,7 @@ from progress_backup_request_pb2 import ProgressBackupRequest
 from stop_backup_request_pb2 import StopBackupRequest
 from request_pb2 import Request
 from string_reply_pb2 import StringReply
+from dattolib import make_request_to_dattod
 
 
 IPC_SOCKET_PATH = "/var/datto/dattod_ipc"
@@ -75,33 +76,9 @@ def parse_args():
 
     return args.func(args)
 
-
-# Note that dattocli should not do any validation that block_device is
-# actually a block device before passing it off to dattod. dattod should
-# perform that validation
-def send_to_dattod(message):
-    # check if socket path exists, bail (and exit 1) if not
-    if not os.path.exists(IPC_SOCKET_PATH):
-        print 'Abort: Socket does not exist!'
-        exit(1)
-
-    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    s.connect(IPC_SOCKET_PATH)
-
-    message = message.SerializeToString()
-    s.send(struct.pack('!I', len(message))) # send message over the socket
-    s.send(message)
-
-    length = s.recv(4) #TODO: is there a sizeof?
-    length = struct.unpack('!I', length)[0]
-    data = s.recv(length)
-    reply = StringReply()
-    reply.ParseFromString(data)
-    print reply.message
-
-    s.close() # when the socket is closed, return    
-
 if __name__ == "__main__":
     # parse_args should only return if it has a message
     message = parse_args()
-    send_to_dattod(message)
+    reply = make_request_to_dattod(message)
+    print reply
+
