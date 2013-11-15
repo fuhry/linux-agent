@@ -115,7 +115,7 @@ add_unit_test(mountable_block_device_test
               block_device/block_device.cc)
 
 add_unit_test(device_synchronizer_test
-              backup/backup_event_handler.cc
+              backup_event_tracker/backup_event_handler.cc
               block_device/block_device.cc
               block_device/mountable_block_device.cc
               block_trace/cpu_tracer.cc

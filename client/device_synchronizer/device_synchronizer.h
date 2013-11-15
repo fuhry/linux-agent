@@ -6,7 +6,7 @@
 #include "cancellation/cancellation_token.h"
 #include "block_device/block_device.h"
 #include "block_device/mountable_block_device.h"
-#include "backup/backup_event_handler.h"
+#include "backup_event_tracker/backup_event_handler.h"
 #include "unsynced_sector_manager/unsynced_sector_manager.h"
 
 namespace datto_linux_client {

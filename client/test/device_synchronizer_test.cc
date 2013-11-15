@@ -1,5 +1,6 @@
 #include "device_synchronizer/device_synchronizer.h"
-#include "backup/backup_event_handler.h"
+
+#include "backup_event_tracker/backup_event_handler.h"
 #include "block_device/block_device.h"
 #include "block_device/mountable_block_device.h"
 #include "cancellation/cancellation_token.h"
@@ -7,6 +8,8 @@
 #include "test/loop_device.h"
 #include "unsynced_sector_manager/sector_interval.h"
 #include "unsynced_sector_manager/sector_set.h"
+
+#include "backup_status_reply.pb.h"
 
 #include <memory>
 #include <array>
@@ -22,6 +25,7 @@
 namespace {
 
 using ::datto_linux_client::BackupEventHandler;
+using ::datto_linux_client::BackupStatusReply;
 using ::datto_linux_client::CancellationToken;
 using ::datto_linux_client::DeviceSynchronizer;
 using ::datto_linux_client::MountableBlockDevice;
@@ -81,7 +85,11 @@ class DeviceSynchronizerTest : public ::testing::Test {
     source_manager = std::make_shared<UnsyncedSectorManager>(
                           source_loop->path());
 
-    event_handler = std::make_shared<BackupEventHandler>("dummy");
+    auto mutex = std::make_shared<std::mutex>();
+    auto reply = std::make_shared<BackupStatusReply>();
+
+    event_handler =
+      std::make_shared<BackupEventHandler>("dummy", mutex, reply);
   }
 
   void ConstructSynchronizer() {
