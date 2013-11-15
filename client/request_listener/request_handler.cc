@@ -9,14 +9,18 @@ RequestHandler::RequestHandler(std::shared_ptr<BackupManager> backup_manager)
 void RequestHandler::Handle(const Request &request,
                             std::shared_ptr<ReplyChannel> reply_channel) {
   LOG(INFO) << "Handling request of type " << request.type();
+  Reply reply;
   if (request.type() == Request::START_BACKUP) {
-    Reply reply = backup_manager_->StartBackup(
+    reply = backup_manager_->StartBackup(
         request.start_backup_request());
-    reply_channel->SendReply(reply);
+  } else if (request.type() == Request::BACKUP_STATUS) {
+    reply = backup_manager_->BackupStatus(
+        request.backup_status_request());
   } else {
     // TODO
     throw std::runtime_error("Not implemented");
   }
+  reply_channel->SendReply(reply);
 }
- 
+
 } //  datto_linux_client

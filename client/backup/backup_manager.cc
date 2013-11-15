@@ -4,7 +4,8 @@
 #include <stdint.h>
 
 #include "backup/backup_exception.h"
-#include "backup/backup_event_handler.h"
+#include "backup_event_tracker/backup_event_tracker.h"
+#include "backup_event_tracker/backup_event_handler.h"
 #include "backup/full_backup.h"
 #include "backup/incremental_backup.h"
 #include "fs_parsing/ext_mountable_block_device.h"
@@ -16,6 +17,7 @@ namespace datto_linux_client {
 
 BackupManager::BackupManager()
     : in_progress_paths_(),
+      backup_event_tracker_(),
       cancel_tokens_mutex_(),
       cancel_tokens_(),
       managers_mutex_(),
@@ -74,8 +76,8 @@ Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
         new NbdBlockDevice(destination_host, destination_port));
 
     // 4. Create an event handler which is notified and acts on progress change
-    std::shared_ptr<BackupEventHandler> event_handler =
-        std::make_shared<BackupEventHandler>("dummy-job-guid");
+    auto event_handler =
+        backup_event_tracker_.CreateEventHandler("dummy-guid");
 
     // TODO: 5. Create the cancellation token
     auto cancel_token = std::make_shared<CancellationToken>();
@@ -90,14 +92,14 @@ Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
             new FullBackup(source_device,
                            source_unsynced_manager_,
                            destination_device,
-                           event_handler)));
+                           std::move(event_handler))));
         break;
       case StartBackupRequest::INCREMENTAL_BACKUP:
         backup = std::move(std::unique_ptr<Backup>(
             new IncrementalBackup(source_device,
                                   source_unsynced_manager_,
                                   destination_device,
-                                  event_handler)));
+                                  std::move(event_handler))));
         break;
       default:
         throw std::runtime_error("Not implemeneted");
@@ -138,6 +140,30 @@ Reply BackupManager::StopBackup(const StopBackupRequest &stop_request) {
   Reply dummy;
   dummy.set_type(Reply::STRING);
   return dummy;
+}
+
+Reply BackupManager::BackupStatus(const BackupStatusRequest &status_request) {
+  std::shared_ptr<Reply> reply = std::make_shared<Reply>();
+  try {
+    auto status_reply =
+      backup_event_tracker_.GetReply(status_request.job_guid());
+    // status_reply will be nullptr if it didn't exist
+    if (status_reply) {
+      reply->set_type(Reply::BACKUP_STATUS);
+      *reply->mutable_backup_status_reply() = *status_reply;
+    }
+  } catch (const std::runtime_error &e) {
+    LOG(ERROR) << "Error getting status: " << e.what();
+  }
+
+  if (!reply->has_type()) {
+    reply->set_type(Reply::ERROR);
+    reply->mutable_error_reply()->set_short_error("Job didn't exist");
+    reply->mutable_error_reply()->set_long_error(
+        "Couldn't find job guid: " + status_request.job_guid());
+  }
+
+  return *reply;
 }
 
 BackupManager::~BackupManager() {

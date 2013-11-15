@@ -11,7 +11,8 @@ from reply_pb2 import Reply
 LISTEN_ADDRESS = ("0.0.0.0", 2856)
 
 PASSOF_LIST = [Request.START_BACKUP, Request.STOP_BACKUP,
-               Request.PAUSE_BACKUP, Request.RESUME_BACKUP]
+               Request.PAUSE_BACKUP, Request.RESUME_BACKUP,
+               Request.BACKUP_STATUS]
 
 def run_command(command):
     p = subprocess.Popen(command, stdout=subprocess.PIPE)
@@ -44,7 +45,8 @@ def handle_connection(connection):
 
         else:
             reply = Reply()
-            reply.type = Reply.ErrorReply
+            reply.type = Reply.ERROR
+
 
         reply_serialized = reply.SerializeToString()
         # Send size

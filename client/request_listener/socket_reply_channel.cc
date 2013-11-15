@@ -10,9 +10,9 @@ SocketReplyChannel::SocketReplyChannel(int connection_fd)
 
 void SocketReplyChannel::SendReply(const Reply &reply) {
   uint32_t reply_size = reply.ByteSize();
-  reply_size = htonl(reply_size);
-
   DLOG(INFO) << "Sending reply of size " << reply_size;
+
+  reply_size = htonl(reply_size);
 
   if (write(connection_fd_, &reply_size, sizeof(reply_size)) == -1) {
     PLOG(ERROR) << "Error writing to socket fd";

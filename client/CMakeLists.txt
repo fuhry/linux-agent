@@ -43,11 +43,12 @@ add_custom_command(TARGET dattoweb
 # dattod
 add_executable(dattod
                backup/backup.cc
-               backup/backup_event_handler.cc
                backup/backup_manager.cc
                backup/full_backup.cc
                backup/in_progress_path_set.cc
                backup/incremental_backup.cc
+               backup_event_tracker/backup_event_handler.cc
+               backup_event_tracker/backup_event_tracker.cc
                block_device/block_device.cc
                block_device/mountable_block_device.cc
                block_trace/cpu_tracer.cc

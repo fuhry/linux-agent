@@ -9,6 +9,7 @@
 
 #include "backup/backup.h"
 #include "backup/in_progress_path_set.h"
+#include "backup_event_tracker/backup_event_tracker.h"
 #include "block_device/block_device.h"
 #include "unsynced_sector_manager/unsynced_sector_manager.h"
 
@@ -25,6 +26,7 @@ class BackupManager {
 
   Reply StartBackup(const StartBackupRequest &start_request);
   Reply StopBackup(const StopBackupRequest &stop_request);
+  Reply BackupStatus(const BackupStatusRequest &status_request);
 
   ~BackupManager();
 
@@ -33,6 +35,7 @@ class BackupManager {
 
  private:
   InProgressPathSet in_progress_paths_;
+  BackupEventTracker backup_event_tracker_;
 
   std::mutex cancel_tokens_mutex_;
   std::map<const std::string, std::weak_ptr<CancellationToken>>
