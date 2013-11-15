@@ -39,12 +39,6 @@ def handle_connection(connection):
             reply.basic_info_reply.agent_version = "v2.0"
             reply.basic_info_reply.hostname = run_command(["hostname"])
             reply.basic_info_reply.uname_a = run_command(["uname", "-a"])
-            lsb_release_p = subprocess.Popen(
-                    ["lsb_release", "-a"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE)
-            (lsb_stdout, lsb_stderr) = lsb_release_p.communicate()
-            reply.basic_info_reply.lsb_release_a = lsb_stdout
             reply.basic_info_reply.lsb_release_a = \
                     run_command(["lsb_release", "-a"])
 
