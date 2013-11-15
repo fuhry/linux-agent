@@ -108,6 +108,7 @@ DeviceSynchronizer::DeviceSynchronizer(
 
 void DeviceSynchronizer::DoSync(std::shared_ptr<CancellationToken> cancel_token) {
   LOG(INFO) << "Starting sync ";
+  uint64_t total_bytes_sent = 0;
   int source_fd = source_device_->Open();
   int destination_fd = destination_device_->Open();
 
@@ -224,6 +225,10 @@ void DeviceSynchronizer::DoSync(std::shared_ptr<CancellationToken> cancel_token)
       }
     } // copy all blocks in interval
     DLOG(INFO) << "Finished copying interval " << to_sync_interval;
+
+    total_bytes_sent += boost::icl::cardinality(to_sync_interval) * 512;
+    DLOG(INFO) << "Total sent: " << total_bytes_sent;
+    event_handler_->UpdateSyncedCount(total_bytes_sent);
   }
   DLOG(INFO) << "Sync completed";
   source_device_->Close();
