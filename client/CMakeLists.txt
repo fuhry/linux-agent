@@ -83,6 +83,12 @@ add_unit_test(unsynced_sector_store_test
 add_unit_test(flock_test
               dattod/flock.cc)
 
+add_unit_test(backup_event_tracker_test
+              backup_event_tracker/backup_event_handler.cc
+              ${PROTO_SRCS}
+              backup_event_tracker/backup_event_tracker.cc)
+target_link_libraries(backup_event_tracker_test ${PROTOBUF_LIBRARIES})
+
 add_unit_test(signal_handler_test
               dattod/signal_handler.cc)
 
