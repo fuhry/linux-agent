@@ -47,7 +47,6 @@ def handle_connection(connection):
             reply = Reply()
             reply.type = Reply.ERROR
 
-
         reply_serialized = reply.SerializeToString()
         # Send size
         connection.send(struct.pack('!I', len(reply_serialized)))

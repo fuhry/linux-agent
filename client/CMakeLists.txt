@@ -70,9 +70,10 @@ add_executable(dattod
                unsynced_sector_manager/unsynced_sector_manager.cc
                unsynced_sector_manager/unsynced_sector_store.cc
                ${PROTO_SRCS})
-target_link_libraries(dattod glog)
-target_link_libraries(dattod ext2fs)
 target_link_libraries(dattod com_err)
+target_link_libraries(dattod ext2fs)
+target_link_libraries(dattod glog)
+target_link_libraries(dattod uuid)
 target_link_libraries(dattod ${PROTOBUF_LIBRARIES})
 
 # Unit tests

@@ -2,6 +2,7 @@
 
 #include <thread>
 #include <stdint.h>
+#include <uuid/uuid.h>
 
 #include "backup/backup_exception.h"
 #include "backup_event_tracker/backup_event_tracker.h"
@@ -12,6 +13,18 @@
 #include "remote_block_device/nbd_block_device.h"
 
 #include <glog/logging.h>
+
+namespace {
+
+std::string make_uuid() {
+  uuid_t uuid;
+  uuid_generate_time(uuid);
+  char uuid_c_str[36];
+  uuid_unparse(uuid, uuid_c_str);
+  return std::string(uuid_c_str);
+}
+
+}
 
 namespace datto_linux_client {
 
@@ -25,9 +38,17 @@ BackupManager::BackupManager()
       destructor_called_(false) {}
 
 Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
-  // TODO Add a meaningful reply
+  std::string uuid = make_uuid();
+
+  Reply reply;
+  reply.set_type(Reply::START_BACKUP);
+  reply.mutable_start_backup_reply()->set_job_guid(uuid);
+
+  // TODO Make all replies meaningful
   Reply dummy;
   dummy.set_type(Reply::STRING);
+  dummy.mutable_string_reply()->set_message(
+      "Dummy reply, needs to be filled out");
 
   if (destructor_called_) {
     return dummy; // "Can't start during teardown"
@@ -76,8 +97,7 @@ Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
         new NbdBlockDevice(destination_host, destination_port));
 
     // 4. Create an event handler which is notified and acts on progress change
-    auto event_handler =
-        backup_event_tracker_.CreateEventHandler("dummy-guid");
+    auto event_handler = backup_event_tracker_.CreateEventHandler(uuid);
 
     // TODO: 5. Create the cancellation token
     auto cancel_token = std::make_shared<CancellationToken>();
@@ -132,7 +152,7 @@ Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
     return dummy; // e.what();
   }
 
-  return dummy; // success
+  return reply; // success
 }
 
 Reply BackupManager::StopBackup(const StopBackupRequest &stop_request) {
@@ -160,7 +180,7 @@ Reply BackupManager::BackupStatus(const BackupStatusRequest &status_request) {
     reply->set_type(Reply::ERROR);
     reply->mutable_error_reply()->set_short_error("Job didn't exist");
     reply->mutable_error_reply()->set_long_error(
-        "Couldn't find job guid: " + status_request.job_guid());
+        "Couldn't find job uuid: " + status_request.job_guid());
   }
 
   return *reply;
