@@ -41,8 +41,8 @@ void Flock::WritePid() {
     PLOG(ERROR) << "Unable to truncate lock file " << path_;
     throw DattodException("Unable to truncate lock file");
   }
-  // + 1 for the \0
-  if (write(path_fd_, buf, pid_length + 1) == -1) {
+  // Don't write the null byte
+  if (write(path_fd_, buf, pid_length) == -1) {
     PLOG(ERROR) << "Unable to write to lock file " << path_;
     throw DattodException("Unable to write to lock file");
   }
