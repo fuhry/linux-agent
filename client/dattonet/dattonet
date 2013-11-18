@@ -19,6 +19,59 @@ def run_command(command):
     (stdout, stderr) = p.communicate()
     return stdout.strip()
 
+def get_basic_info():
+    reply = Reply()
+    reply.type = Reply.BASIC_INFO
+    # TODO version
+    reply.basic_info_reply.agent_version = "v2.0"
+    reply.basic_info_reply.hostname = run_command(["hostname"])
+    reply.basic_info_reply.uname_a = run_command(["uname", "-a"])
+    reply.basic_info_reply.lsb_release_a = \
+            run_command(["lsb_release", "-a"])
+
+    return reply
+
+def get_complete_info():
+    reply = Reply()
+    reply.type = Reply.COMPLETE_INFO
+    # TODO version
+    reply.complete_info_reply.agent_version = "v2.0"
+    reply.complete_info_reply.hostname = run_command(["hostname"])
+    reply.complete_info_reply.uname_a = run_command(["uname", "-a"])
+    reply.complete_info_reply.lsb_release_a = \
+            run_command(["lsb_release", "-a"])
+
+    with open("/proc/meminfo") as meminfo:
+        reply.complete_info_reply.meminfo = meminfo.read()
+
+    with open("/proc/cpuinfo") as cpuinfo:
+        reply.complete_info_reply.cpuinfo = cpuinfo.read()
+
+    try:
+        with open("/var/datto/dattod.pid") as datto_pid_file:
+            dattod_pid = (datto_pid_file.read()).strip()
+
+        with open("/proc/" + dattod_pid + "/stat") as dattod_stat:
+            dattod_jiffs = int(dattod_stat.read().split()[21])
+
+        jiffs_per_sec = int(run_command(["getconf", "CLK_TCK"]))
+        
+        # This is uptime from when the system booted
+        dattod_uptime = dattod_jiffs / jiffs_per_sec
+
+        with open("/proc/uptime") as uptime_file:
+            system_uptime = int(float(uptime_file.read().split()[0]))
+
+        reply.complete_info_reply.dattod_uptime_seconds = \
+                system_uptime - dattod_uptime
+
+    except IOError as e:
+        # Just don't set it if we can't get it
+        print e
+        pass
+
+    return reply
+
 def handle_connection(connection):
     try:
         # receive 4 bytes containing the size of the Request
@@ -35,17 +88,13 @@ def handle_connection(connection):
         if request.type in PASSOF_LIST:
             reply = make_request_to_dattod(request)
         elif request.type == Request.BASIC_INFO:
-            reply = Reply()
-            reply.type = Reply.BASIC_INFO
-            reply.basic_info_reply.agent_version = "v2.0"
-            reply.basic_info_reply.hostname = run_command(["hostname"])
-            reply.basic_info_reply.uname_a = run_command(["uname", "-a"])
-            reply.basic_info_reply.lsb_release_a = \
-                    run_command(["lsb_release", "-a"])
-
+            reply = get_basic_info()
+        elif request.type == Request.COMPLETE_INFO:
+            reply = get_complete_info()
         else:
             reply = Reply()
             reply.type = Reply.ERROR
+            reply.error_reply.short_error = "Unexpected request type"
 
         reply_serialized = reply.SerializeToString()
         # Send size
