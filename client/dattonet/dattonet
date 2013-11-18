@@ -47,11 +47,13 @@ def set_block_devices(reply):
         # block_size
         device.block_size = int(block_size)
 
-        # Example:
+        # Example of df -T:
         # # df -T /dev/sda1
         # Filesystem    Type   1K-blocks      Used Available Use% Mounted on
         # /dev/sda1     ext4   951636136  21644300 881651452   3% /
-
+        #
+        # TODO: This returns bad information for the mountpoint and fs
+        #       when not run on the symlink
         df_output = run_command(["df", "-T", device.real_path])
         df_info_split = df_output.split("\n")[1].split()
         filesystem = df_info_split[1]
