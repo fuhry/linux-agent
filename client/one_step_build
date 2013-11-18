@@ -11,3 +11,10 @@ else
 fi
 
 GLOG_minloglevel=${min_level} cmake -DCMAKE_BUILD_TYPE=${build_type} .. && make -j4 -k dattod dattocli dattoweb
+
+
+if [ $? -eq 0 ]; then
+    echo
+    echo "** All files built in ./build **"
+fi
+
