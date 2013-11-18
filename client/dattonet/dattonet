@@ -4,6 +4,7 @@ import subprocess
 import socket
 import struct
 import threading
+import os
 from dattolib import make_request_to_dattod
 from request_pb2 import Request
 from reply_pb2 import Reply
@@ -30,6 +31,42 @@ def get_basic_info():
             run_command(["lsb_release", "-a"])
 
     return reply
+
+def set_block_devices(reply):
+    UUID_DIR = "/dev/disk/by-uuid/"
+    for filename in os.listdir(UUID_DIR):
+        device = reply.complete_info_reply.block_devices.add()
+        # uuid
+        device.uuid = filename
+        real_relative_path = os.readlink(UUID_DIR + filename)
+        # real_path
+        device.real_path = \
+                os.path.abspath(os.path.join(UUID_DIR, real_relative_path))
+
+        block_size = run_command(["blockdev", "--getbsz", device.real_path])
+        # block_size
+        device.block_size = int(block_size)
+
+        # Example:
+        # # df -T /dev/sda1
+        # Filesystem    Type   1K-blocks      Used Available Use% Mounted on
+        # /dev/sda1     ext4   951636136  21644300 881651452   3% /
+
+        df_output = run_command(["df", "-T", device.real_path])
+        df_info_split = df_output.split("\n")[1].split()
+        filesystem = df_info_split[1]
+        device_size = int(df_info_split[2]) * 1024
+        used_size = int(df_info_split[3]) * 1024
+        mount_location = df_info_split[6]
+
+        # device_size
+        device.device_size = device_size
+        # used_space
+        device.used_space = used_size
+        # file_system
+        device.file_system = filesystem
+        # mount_location
+        device.mount_location = mount_location
 
 def get_complete_info():
     reply = Reply()
@@ -69,6 +106,8 @@ def get_complete_info():
         # Just don't set it if we can't get it
         print e
         pass
+
+    set_block_devices(reply)
 
     return reply
 
