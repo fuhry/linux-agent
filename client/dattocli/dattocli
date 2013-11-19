@@ -8,7 +8,7 @@ import os
 import socket
 import struct
 from start_backup_request_pb2 import StartBackupRequest
-from progress_backup_request_pb2 import ProgressBackupRequest
+from backup_status_request_pb2 import BackupStatusRequest
 from stop_backup_request_pb2 import StopBackupRequest
 from request_pb2 import Request
 from string_reply_pb2 import StringReply
@@ -29,12 +29,6 @@ def startbackup(args):
 def stopbackup(args):
     request = Request()
     request.type = Request.STOP_BACKUP
-    request.stop_backup_request.block_path = args.block_device
-    return request
-
-def progress(args):
-    request = Request()
-    request.type = Request.PROGRESS
     request.stop_backup_request.block_path = args.block_device
     return request
 
@@ -68,9 +62,6 @@ def parse_args():
     stop_parser.set_defaults(func=stopbackup)
     stop_parser.add_argument('block_device',
                              help="Block device to stop backing up") 
-
-    parser_progress = subparsers.add_parser('progress')
-    stop_parser.set_defaults(func=progress)
 
     args = parser.parse_args()
 
