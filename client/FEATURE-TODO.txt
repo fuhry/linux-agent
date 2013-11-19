@@ -1,4 +1,3 @@
-* Something else Justin wanted but I don't remember (pairing?)
 * Diff backup
 * Stop backup (MarkToSyncInterval should backup the interval, not just erase it)
 * Progress request
