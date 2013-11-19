@@ -2,5 +2,4 @@
 * Stop backup (MarkToSyncInterval should backup the interval, not just erase it)
 * Progress request
 * XFS/Reiser
-* System info
 * FS Detection (fsstat)
