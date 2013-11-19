@@ -12,3 +12,4 @@ This is more of a maintenance TODO more than a feature TODO
 * More unique_ptrs. It is possible to convert from unique -> shared (!)
 * Check that things are logged well before exceptions are thrown
 * Improve system info for block device LVM partitions / symlinks in general
+* Use fsstat to get fs information during backup
