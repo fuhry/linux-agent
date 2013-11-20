@@ -18,6 +18,7 @@ void UnsyncedSectorStore::MarkToSyncInterval(
     const SectorInterval &sector_interval) {
   std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
   unsynced_sector_set_.subtract(sector_interval);
+  synced_sector_set_.add(sector_interval);
 }
 
 // For now, we just return the largest unsynced interval. If performance
@@ -40,9 +41,20 @@ SectorInterval UnsyncedSectorStore::GetContinuousUnsyncedSectors() const {
   return largestInterval;
 }
 
-void UnsyncedSectorStore::Clear() {
+void UnsyncedSectorStore::ClearAll() {
   std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
   unsynced_sector_set_ = SectorSet();
+  synced_sector_set_ = SectorSet();
+}
+
+void UnsyncedSectorStore::ClearSynced() {
+  std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
+  synced_sector_set_ = SectorSet();
+}
+
+void UnsyncedSectorStore::ResetUnsynced() {
+  std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
+  unsynced_sector_set_ += synced_sector_set_;
 }
 
 uint64_t UnsyncedSectorStore::UnsyncedSectorCount() const {

@@ -24,13 +24,22 @@ class UnsyncedSectorStore {
   void MarkToSyncInterval(const SectorInterval &sector_interval);
 
   // Clears the entire Store
-  void Clear();
+  void ClearAll();
+
+  // Clears synced intervals
+  // Should be called when a backup completes
+  void ClearSynced();
+
+  // Loads the synced intervals into the unsynced intervals
+  // This should be called when a backup is stopped or fails
+  void ResetUnsynced();
 
   SectorInterval GetContinuousUnsyncedSectors() const;
 
   uint64_t UnsyncedSectorCount() const;
  private:
   SectorSet unsynced_sector_set_;
+  SectorSet synced_sector_set_;
   mutable std::mutex sector_set_mutex_ ;
 };
 

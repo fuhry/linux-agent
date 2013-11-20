@@ -14,7 +14,7 @@ FullBackup::FullBackup(
 
 void FullBackup::Prepare(std::shared_ptr<CancellationToken> cancel_token) {
   // For a full, we can clear out any sectors that might be there already
-  source_unsynced_manager_->store()->Clear();
+  source_unsynced_manager_->store()->ClearAll();
 
   // Start the tracer if it isn't going already
   if (!source_unsynced_manager_->IsTracing()) {

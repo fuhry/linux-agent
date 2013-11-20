@@ -41,16 +41,27 @@ TEST(UnsyncedSectorStoreTest, MarkToSyncIntervalTest) {
   store.MarkToSyncInterval(interval2);
   EXPECT_TRUE(SectorInterval(1, 5) == store.GetContinuousUnsyncedSectors());
   EXPECT_EQ(4UL, store.UnsyncedSectorCount());
+
+  store.MarkToSyncInterval(interval1);
+  EXPECT_TRUE(SectorInterval(0, 0) == store.GetContinuousUnsyncedSectors());
+  store.ResetUnsynced();
+  EXPECT_TRUE(interval1 == store.GetContinuousUnsyncedSectors());
+
+  store.MarkToSyncInterval(interval1);
+  EXPECT_TRUE(SectorInterval(0, 0) == store.GetContinuousUnsyncedSectors());
+  store.ClearSynced();
+  store.ResetUnsynced();
+  EXPECT_TRUE(SectorInterval(0, 0) == store.GetContinuousUnsyncedSectors());
 }
 
-TEST(UnsyncedSectorStoreTest, ClearTest) {
+TEST(UnsyncedSectorStoreTest, ClearAllTest) {
   UnsyncedSectorStore store;
   SectorInterval interval(1, 20);
 
   store.AddUnsyncedInterval(interval);
   EXPECT_NE(0UL, store.UnsyncedSectorCount());
 
-  store.Clear();
+  store.ClearAll();
   EXPECT_EQ(0UL, store.UnsyncedSectorCount());
 }
 
