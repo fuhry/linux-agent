@@ -163,27 +163,27 @@ Reply BackupManager::StopBackup(const StopBackupRequest &stop_request) {
 }
 
 Reply BackupManager::BackupStatus(const BackupStatusRequest &status_request) {
-  std::shared_ptr<Reply> reply = std::make_shared<Reply>();
+  Reply reply;
   try {
     auto status_reply =
       backup_event_tracker_.GetReply(status_request.job_guid());
     // status_reply will be nullptr if it didn't exist
     if (status_reply) {
-      reply->set_type(Reply::BACKUP_STATUS);
-      *reply->mutable_backup_status_reply() = *status_reply;
+      reply.set_type(Reply::BACKUP_STATUS);
+      *reply.mutable_backup_status_reply() = *status_reply;
     }
   } catch (const std::runtime_error &e) {
     LOG(ERROR) << "Error getting status: " << e.what();
   }
 
-  if (!reply->has_type()) {
-    reply->set_type(Reply::ERROR);
-    reply->mutable_error_reply()->set_short_error("Job didn't exist");
-    reply->mutable_error_reply()->set_long_error(
+  if (!reply.has_type()) {
+    reply.set_type(Reply::ERROR);
+    reply.mutable_error_reply()->set_short_error("Job didn't exist");
+    reply.mutable_error_reply()->set_long_error(
         "Couldn't find job uuid: " + status_request.job_guid());
   }
 
-  return *reply;
+  return reply;
 }
 
 BackupManager::~BackupManager() {
