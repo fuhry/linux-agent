@@ -23,7 +23,7 @@ using datto_linux_client::Request;
 
 const int SOCKET_BACKLOG = 5;
 
-int open_socket(std::string ipc_socket_path) {
+int OpenSocket(std::string ipc_socket_path) {
   LOG(INFO) << "Opening socket " << ipc_socket_path;
   const char *ipc_path_cstr = ipc_socket_path.c_str();
 
@@ -61,7 +61,7 @@ int open_socket(std::string ipc_socket_path) {
   return sock_fd;
 }
 
-bool connection_is_ready(int socket_fd, int timeout_millis) {
+bool ConnectionIsReady(int socket_fd, int timeout_millis) {
   struct pollfd pfd;
   pfd.fd = socket_fd;
   pfd.events = POLLIN;
@@ -78,7 +78,7 @@ bool connection_is_ready(int socket_fd, int timeout_millis) {
   }
 }
 
-int get_new_connection(int socket_fd) {
+int GetNewConnection(int socket_fd) {
   int connection_fd = accept(socket_fd, NULL, NULL);
   if (connection_fd < 0) {
     PLOG(ERROR) << "Error accepting connection";
@@ -90,7 +90,7 @@ int get_new_connection(int socket_fd) {
 
 // TODO Determine if copy constructor here is okay
 //      during diff backups
-Request read_protobuf_request(int connection_fd) {
+Request ReadProtobufRequest(int connection_fd) {
   uint32_t message_length;
   ssize_t bytes_read;
 
@@ -137,7 +137,7 @@ IpcRequestListener::IpcRequestListener(
     : request_handler_(std::move(request_handler)),
       do_stop_(false) {
 
-  socket_fd_ = open_socket(ipc_socket_path);
+  socket_fd_ = OpenSocket(ipc_socket_path);
 
   std::atomic<bool> started(false);
 
@@ -145,12 +145,12 @@ IpcRequestListener::IpcRequestListener(
   listen_thread_ = std::thread([&]() {
     while (!do_stop_) {
       try {
-        if (connection_is_ready(socket_fd_, 500)) {
+        if (ConnectionIsReady(socket_fd_, 500)) {
           if (do_stop_) {
             break;
           }
-          int connection_fd = get_new_connection(socket_fd_);
-          auto request = read_protobuf_request(connection_fd);
+          int connection_fd = GetNewConnection(socket_fd_);
+          auto request = ReadProtobufRequest(connection_fd);
 
           std::shared_ptr<ReplyChannel> reply_channel(
               new SocketReplyChannel(connection_fd));
