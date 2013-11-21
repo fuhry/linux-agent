@@ -1,4 +1,3 @@
-* Stop backup (MarkToSyncInterval should backup the interval, not just erase it)
 * XFS
 
 To figure out:
