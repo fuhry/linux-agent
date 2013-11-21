@@ -42,5 +42,4 @@ std::unique_ptr<BackupEventHandler> BackupEventTracker::CreateEventHandler(
   return std::move(handler);
 }
 
-
 }
