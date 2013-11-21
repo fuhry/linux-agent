@@ -122,7 +122,7 @@ Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
                                   std::move(event_handler))));
         break;
       default:
-        throw std::runtime_error("Not implemeneted");
+        throw std::runtime_error("Not implemented");
     }
 
     // Start the backup in a detached thread
