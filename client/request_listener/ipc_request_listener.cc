@@ -174,6 +174,7 @@ void IpcRequestListener::Stop() {
   do_stop_ = true;
   // TODO Make sure this doesn't interrupt any ReplyChannel communication,
   // it should only interfere with creating new connections
+  shutdown(socket_fd_, SHUT_RDWR);
   close(socket_fd_);
 }
 
