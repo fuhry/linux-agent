@@ -1,5 +1,5 @@
-#ifndef DATTO_CLIENT_FS_PARSING_XFSPARTITION_H_
-#define DATTO_CLIENT_FS_PARSING_XFSPARTITION_H_
+#ifndef DATTO_CLIENT_FS_PARSING_XFS_MOUNTABLE_BLOCK_DEVICE_H_
+#define DATTO_CLIENT_FS_PARSING_XFS_MOUNTABLE_BLOCK_DEVICE_H_
 
 #include "block_device/mountable_block_device.h"
 
@@ -9,9 +9,7 @@ class XfsMountableBlockDevice : public MountableBlockDevice {
  public:
   explicit XfsMountableBlockDevice(std::string block_path);
   virtual std::unique_ptr<const SectorSet> GetInUseSectors();
- private:
-  int xfs_iter_blocks(SectorSet *sectors);
 };
 
 }
-#endif //  DATTO_CLIENT_FS_PARSING_XFSPARTITION_H_
+#endif //  DATTO_CLIENT_FS_PARSING_XFS_MOUNTABLE_BLOCK_DEVICE_H_
