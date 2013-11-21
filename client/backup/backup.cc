@@ -35,11 +35,15 @@ void Backup::DoBackup(std::shared_ptr<CancellationToken> cancel_token) {
     Copy(cancel_token);
 
     if (cancel_token->ShouldCancel()) {
-      LOG(INFO) << "Cancelled after copy";
+      LOG(INFO) << "Cancelled during copy";
+      // Mark all sectors marked as "synced" back to "unsynced"
+      source_unsynced_manager_->store()->ResetUnsynced();
       event_handler_->BackupCancelled();
       return;
     } 
 
+    // Backup succeeded so don't clear the synced blocks
+    source_unsynced_manager_->store()->ClearSynced();
     event_handler_->BackupSucceeded();
   } catch (const std::runtime_error &e) {
     LOG(ERROR) << "Error during backup: " << e.what();

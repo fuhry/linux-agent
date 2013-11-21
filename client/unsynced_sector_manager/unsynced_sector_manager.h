@@ -21,6 +21,9 @@ class UnsyncedSectorManager {
   void StopTracer();
   bool IsTracing();
 
+  void SyncComplete();
+  void ResetSynced();
+
   std::shared_ptr<UnsyncedSectorStore> store() {
     return store_;
   }

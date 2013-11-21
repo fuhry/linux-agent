@@ -204,6 +204,19 @@ Reply BackupManager::BackupStatus(const BackupStatusRequest &status_request) {
 
 BackupManager::~BackupManager() {
   destructor_called_ = true;
+
+  // Cancel all backups
+  {
+    std::lock_guard<std::mutex> c_lock(cancel_tokens_mutex_);
+    for (auto cancel_pair_ : cancel_tokens_) {
+      auto cancel_token = cancel_pair_.second.lock();
+      if (cancel_token) {
+        cancel_token->Cancel();
+      }
+    }
+  }
+
+  // Wait for all backups to finish
   while (in_progress_paths_.Count()) {
     std::this_thread::yield();
   }
