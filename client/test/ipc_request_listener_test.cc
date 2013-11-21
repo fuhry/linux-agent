@@ -60,6 +60,9 @@ class RequestTestClient {
   void SendRequest(const Request &request) {
     uint32_t request_size = request.ByteSize();
     request_size = htonl(request_size);
+    if (request_size <= 0) {
+      LOG(FATAL) << "Request was too small";
+    }
 
     if (write(sock_fd_, &request_size, sizeof(request_size)) == -1) {
       PLOG(ERROR) << "Error writing to socket fd";
@@ -67,7 +70,7 @@ class RequestTestClient {
     }
 
     if (!request.SerializeToFileDescriptor(sock_fd_)) {
-      PLOG(ERROR) << "Error serializing to fd";
+      LOG(ERROR) << "Error serializing to fd";
       throw std::runtime_error("Error serializing");
     }
   }
