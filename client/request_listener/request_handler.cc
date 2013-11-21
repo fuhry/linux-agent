@@ -11,11 +11,11 @@ void RequestHandler::Handle(const Request &request,
   LOG(INFO) << "Handling request of type " << request.type();
   Reply reply;
   if (request.type() == Request::START_BACKUP) {
-    reply = backup_manager_->StartBackup(
-        request.start_backup_request());
+    reply = backup_manager_->StartBackup(request.start_backup_request());
+  } else if (request.type() == Request::STOP_BACKUP) {
+    reply = backup_manager_->StopBackup(request.stop_backup_request());
   } else if (request.type() == Request::BACKUP_STATUS) {
-    reply = backup_manager_->BackupStatus(
-        request.backup_status_request());
+    reply = backup_manager_->BackupStatus(request.backup_status_request());
   } else {
     // TODO
     throw std::runtime_error("Not implemented");

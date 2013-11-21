@@ -99,8 +99,13 @@ Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
     // 4. Create an event handler which is notified and acts on progress change
     auto event_handler = backup_event_tracker_.CreateEventHandler(uuid);
 
-    // TODO: 5. Create the cancellation token
+    // 5. Create the CancellationToken
     auto cancel_token = std::make_shared<CancellationToken>();
+    {
+      std::lock_guard<std::mutex> c_lock(cancel_tokens_mutex_);
+      // TODO: 5. Create the cancellation token
+      cancel_tokens_[uuid] = cancel_token;
+    }
 
     // Create the actual backup object
     std::unique_ptr<Backup> backup;
@@ -156,10 +161,21 @@ Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
 }
 
 Reply BackupManager::StopBackup(const StopBackupRequest &stop_request) {
-  // TODO
-  Reply dummy;
-  dummy.set_type(Reply::STRING);
-  return dummy;
+  // Find the cancellation token if it exists and use it to cancel
+  {
+    std::lock_guard<std::mutex> c_lock(cancel_tokens_mutex_);
+
+    std::shared_ptr<CancellationToken> cancel_token =
+      cancel_tokens_[stop_request.job_guid()].lock();
+
+    if (cancel_token) {
+      cancel_token->Cancel();
+    }
+  }
+
+  Reply reply;
+  reply.set_type(Reply::STOP_BACKUP);
+  return reply;
 }
 
 Reply BackupManager::BackupStatus(const BackupStatusRequest &status_request) {
@@ -192,6 +208,5 @@ BackupManager::~BackupManager() {
     std::this_thread::yield();
   }
 }
-
 
 } // datto_linux_client
