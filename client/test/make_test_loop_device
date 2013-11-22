@@ -8,7 +8,7 @@ if [ $# -ne 1 ]; then
   exit 1
 fi
 
-if ! truncate --size=10M "$temp_file"; then
+if ! truncate --size=256M "$temp_file"; then
   exit 1
 fi
 
