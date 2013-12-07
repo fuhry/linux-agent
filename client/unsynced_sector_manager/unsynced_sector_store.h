@@ -40,7 +40,7 @@ class UnsyncedSectorStore {
  private:
   SectorSet unsynced_sector_set_;
   SectorSet synced_sector_set_;
-  mutable std::mutex sector_set_mutex_ ;
+  mutable std::mutex sector_set_mutex_;
 };
 
 }
