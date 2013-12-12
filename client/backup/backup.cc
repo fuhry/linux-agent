@@ -42,7 +42,7 @@ void Backup::DoBackup(std::shared_ptr<CancellationToken> cancel_token) {
       return;
     } 
 
-    // Backup succeeded so don't clear the synced blocks
+    // Backup succeeded so don't save the synced blocks
     source_unsynced_manager_->store()->ClearSynced();
     event_handler_->BackupSucceeded();
   } catch (const std::runtime_error &e) {
