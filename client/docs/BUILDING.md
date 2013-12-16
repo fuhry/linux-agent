@@ -1,6 +1,6 @@
 # Building
 ## Install dependencies
-The `install_deps` script will install the appropriate dependancies to build the entire project. However, this script is only supported for Ubuntu 12.04 as that is the architecture that will be producing the release binary. `install_deps` should be easy to adapt to other systems for development purposes, and I encourage you to just look at the `install_dups` script when trying to figure out what you need for your system.
+The `install_deps` script will install the appropriate dependancies to build the entire project. However, this script is only supported for Ubuntu 12.04 as that is the architecture that will be producing the release binary. `install_deps` should be easy to adapt to other systems for development purposes, and I encourage you to just look at the `install_deps` script when trying to figure out what you need for your system.
 
 ## Checkout submodules
 This repository depends on the protocol repository. In the git root, run `git submodule init && git submodule update` to get the needed files.
