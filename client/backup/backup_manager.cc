@@ -135,10 +135,10 @@ Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
     // We can capture by reference on in_progress_paths_ because
     // BackupManager's destructor guarantees that in_progress_paths_ persists
     // until all backup threads are complete
-    std::thread backup_thread([=, &backup, &in_progress_paths_]() {
+    std::thread backup_thread([=, &backup]() {
       std::unique_ptr<Backup> thread_local_backup = std::move(backup);
       thread_local_backup->DoBackup(cancel_token);
-      in_progress_paths_.RemovePath(source_path);
+      this->in_progress_paths_.RemovePath(source_path);
     });
 
     backup_thread.detach();
