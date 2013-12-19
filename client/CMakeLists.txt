@@ -168,3 +168,20 @@ target_link_libraries(extfs_test ext2fs com_err)
 #add_dependencies(ctest_dattocli_test dattocli)
 #add_dependencies(ctest_dattocli_test dattocli_test)
 #add_dependencies(check ctest_dattocli_test)
+
+# Packaging
+set(CPACK_GENERATOR "DEB;RPM")
+set(CPACK_PACKAGE_CONTACT "Nick Garvey ngarvey@dattobackup.com")
+set(CPACK_PACKAGE_EXECUTABLES "Nick Garvey ngarvey@dattobackup.com")
+set(CMACK_INSTALL_DIRECTORY "datto")
+
+file(GLOB python_protobufs ${CMAKE_CURRENT_BINARY_DIR}/*_pb2.py)
+file(GLOB python_libs ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/*.py)
+
+install(TARGETS dattod DESTINATION /usr/sbin)
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattocli DESTINATION /usr/lib/datto)
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattonet DESTINATION /usr/lib/datto)
+install(FILES ${python_protobufs} DESTINATION /usr/lib/datto)
+install(FILES ${python_libs} DESTINATION /usr/lib/datto)
+
+include(CPack)
