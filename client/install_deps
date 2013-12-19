@@ -12,4 +12,5 @@ sudo rsync -r $(dirname $0)/dependency_files/ /
 sudo apt-get update
 sudo apt-get install build-essential cmake libboost-dev libprotobuf-dev \
     blktrace subversion libgoogle-glog-dev libgoogle-glog0 \
-    nbd-server uuid-dev protobuf-compiler python-protobuf e2fslibs-dev
+    nbd-server uuid-dev protobuf-compiler python-protobuf e2fslibs-dev \
+    libboost-regex-dev
