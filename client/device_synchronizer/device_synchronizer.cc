@@ -86,14 +86,13 @@ DeviceSynchronizer::DeviceSynchronizer(
                                       " with itself");
   }
 
-  if (source_device_->DeviceSizeBytes() !=
+  if (source_device_->DeviceSizeBytes() >
       destination_device_->DeviceSizeBytes()) {
     LOG(ERROR) << "Source size: "
                << source_device_->DeviceSizeBytes();
     LOG(ERROR) << "Destination size: "
                << destination_device_->DeviceSizeBytes();
-    throw DeviceSynchronizerException("Source and destination device have"
-                                      " different sizes");
+    throw DeviceSynchronizerException("Destination device is too small");
   }
 
   uint64_t unsynced_count =
