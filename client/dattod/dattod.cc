@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 #else
-  FLAGS_logtostderr = 1;
+  FLAGS_stderrthreshold = 0;
 #endif
 
   // Acquire lock (must happen after daemon() as daemon() changes the pid)
