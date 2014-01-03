@@ -14,6 +14,7 @@ class LoopDevice {
   explicit LoopDevice(std::string backing_file_path);
 
   void FormatAsExt3();
+  void FormatAsXfs();
   
   void Sync();
 

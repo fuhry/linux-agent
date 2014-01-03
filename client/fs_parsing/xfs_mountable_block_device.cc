@@ -1,6 +1,6 @@
 #include "fs_parsing/xfs_mountable_block_device.h"
 
-#include <regex>
+#include <boost/regex.hpp>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -11,15 +11,16 @@
 #include "unsynced_sector_manager/sector_interval.h"
 
 namespace {
-auto BLOCK_SIZE_REGEX = std::regex("^blocksize = ([0-9]+$)");
-auto AG_BLOCKS_REGEX = std::regex("^agblocks = ([0-9]+$)");
-auto FREE_LIST_REGEX = std::regex("^ +([0-9]+) +([0-9])+ +([0-9])+ *$");
+auto BLOCK_SIZE_REGEX = boost::regex("blocksize = ([0-9]+)\n");
+auto AG_BLOCKS_REGEX = boost::regex("agblocks = ([0-9]+)\n");
+auto FREE_LIST_REGEX = boost::regex("^ *([0-9]+) +([0-9]+) +([0-9]+)\n$");
+//auto FREE_LIST_REGEX = boost::regex(" *([0-9]+) +([0-9]+) +([0-9]+).*");
 
-void CheckMatches(const std::smatch &matches, int expected_size) {
-  if (matches.size() != expected_size) {
+inline void CheckMatches(const boost::smatch &matches, uint32_t expected) {
+  if (matches.size() != expected) {
     LOG(ERROR) << "Bad number of matches";
     // TODO Better exception
-    throw std::runtime_error("Unexpected line");
+    throw std::runtime_error("Bad matches");
   }
 }
 
@@ -59,8 +60,8 @@ std::unique_ptr<const SectorSet> XfsMountableBlockDevice::GetInUseSectors() {
     dup2(pipefd[1], 2);
     execlp("xfs_db", "-r", path_.c_str(),
            "-c", "sb",
-           "-c", "print blocksize agblock",
-           "-c", "freesp -d");
+           "-c", "print blocksize agblocks",
+           "-c", "freesp -d", NULL);
     PLOG(ERROR) << "execlp for xfs_db returned";
     _exit(1);
   } 
@@ -76,19 +77,23 @@ std::unique_ptr<const SectorSet> XfsMountableBlockDevice::GetInUseSectors() {
   int block_size = -1;
   int ag_blocks = -1;
 
+  bool got_free_line = false;
+
   while (fgets(buf, 1024, xfs_db_out)) {
+    // line will have a newline on the end
     std::string line(buf);
-    std::smatch matches;
+
+    boost::smatch matches;
     // block_size
-    if (std::regex_match(line, matches, BLOCK_SIZE_REGEX)) {
+    if (boost::regex_match(line, matches, BLOCK_SIZE_REGEX)) {
       CheckMatches(matches, 2);
       block_size = std::stoi(matches[1]);
     // ag_blocks
-    } else if (std::regex_match(line, matches, AG_BLOCKS_REGEX)) {
+    } else if (boost::regex_match(line, matches, AG_BLOCKS_REGEX)) {
       CheckMatches(matches, 2);
       ag_blocks = std::stoi(matches[1]);
     // remove free blocks from in_use_sectors
-    } else if (std::regex_match(line, matches, FREE_LIST_REGEX)) {
+    } else if (boost::regex_match(line, matches, FREE_LIST_REGEX)) {
       CheckMatches(matches, 4);
 
       if (block_size == -1 || ag_blocks == -1) {
@@ -101,8 +106,14 @@ std::unique_ptr<const SectorSet> XfsMountableBlockDevice::GetInUseSectors() {
                               std::stoll(matches[2]);
       uint64_t start_sector = start_block * block_size / 512; 
       uint64_t num_sectors = std::stoll(matches[3]) * block_size / 512;
-      *in_use_sectors -= SectorInterval(start_sector,
-                                        start_sector + num_sectors);
+      auto interval = SectorInterval(start_sector,
+                                     start_sector + num_sectors);
+      DLOG(INFO) << "Subtracting " << interval;
+      *in_use_sectors -= interval;
+
+      got_free_line = true;
+    } else {
+      DLOG(INFO) << "Skipping " << line;
     }
     // ignore any non-matching lines
   }
@@ -118,6 +129,11 @@ std::unique_ptr<const SectorSet> XfsMountableBlockDevice::GetInUseSectors() {
     // TODO throw
   } else if (WEXITSTATUS(status) != 0) {
     LOG(ERROR) << "xfs_db returned with bad status " << WEXITSTATUS(status);
+    // TODO throw
+  }
+
+  if (!got_free_line) {
+    LOG(ERROR) << "Never got a free line, output was invalid";
     // TODO throw
   }
 
