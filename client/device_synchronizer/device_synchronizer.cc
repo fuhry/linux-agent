@@ -148,9 +148,9 @@ void DeviceSynchronizer::DoSync(std::shared_ptr<CancellationToken> cancel_token)
     if (work_left_history.size() > MAX_SIZE_WORK_LEFT_HISTORY) {
       DLOG(INFO) << "Trimming history";
       int num_to_trim = work_left_history.size() -
-        MAX_SIZE_WORK_LEFT_HISTORY;
+          MAX_SIZE_WORK_LEFT_HISTORY;
       work_left_history.erase(work_left_history.begin(),
-          work_left_history.begin() + num_to_trim);
+                              work_left_history.begin() + num_to_trim);
     }
 
     if (!should_continue(work_left_history)) {
