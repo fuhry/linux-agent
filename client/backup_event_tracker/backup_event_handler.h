@@ -12,7 +12,7 @@ namespace datto_linux_client {
 
 class BackupEventHandler {
  public:
-  BackupEventHandler(const std::string &job_guid,
+  BackupEventHandler(const std::string &job_uuid
                      std::shared_ptr<std::mutex> to_lock_mutex,
                      std::shared_ptr<BackupStatusReply> reply);
 
@@ -31,7 +31,7 @@ class BackupEventHandler {
   BackupEventHandler(const BackupEventHandler &) = delete;
   BackupEventHandler& operator=(const BackupEventHandler &) = delete;
  private:
-  const std::string job_guid_;
+  const std::string job_uuid;
   std::shared_ptr<std::mutex> to_lock_mutex_;
   std::shared_ptr<BackupStatusReply> reply_;
 };

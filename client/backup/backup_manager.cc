@@ -42,7 +42,7 @@ Reply BackupManager::StartBackup(const StartBackupRequest &start_request) {
 
   Reply reply;
   reply.set_type(Reply::START_BACKUP);
-  reply.mutable_start_backup_reply()->set_job_guid(uuid);
+  reply.mutable_start_backup_reply()->set_job_uuid(uuid);
 
   // TODO Make all replies meaningful
   Reply dummy;
@@ -166,7 +166,7 @@ Reply BackupManager::StopBackup(const StopBackupRequest &stop_request) {
     std::lock_guard<std::mutex> c_lock(cancel_tokens_mutex_);
 
     std::shared_ptr<CancellationToken> cancel_token =
-      cancel_tokens_[stop_request.job_guid()].lock();
+      cancel_tokens_[stop_request.job_uuid()].lock();
 
     if (cancel_token) {
       cancel_token->Cancel();
@@ -182,7 +182,7 @@ Reply BackupManager::BackupStatus(const BackupStatusRequest &status_request) {
   Reply reply;
   try {
     auto status_reply =
-      backup_event_tracker_.GetReply(status_request.job_guid());
+      backup_event_tracker_.GetReply(status_request.job_uuid());
     // status_reply will be nullptr if it didn't exist
     if (status_reply) {
       reply.set_type(Reply::BACKUP_STATUS);
@@ -196,7 +196,7 @@ Reply BackupManager::BackupStatus(const BackupStatusRequest &status_request) {
     reply.set_type(Reply::ERROR);
     reply.mutable_error_reply()->set_short_error("Job didn't exist");
     reply.mutable_error_reply()->set_long_error(
-        "Couldn't find job uuid: " + status_request.job_guid());
+        "Couldn't find job uuid: " + status_request.job_uuid());
   }
 
   return reply;

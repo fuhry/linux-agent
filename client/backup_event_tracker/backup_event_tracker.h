@@ -16,12 +16,12 @@ class BackupEventTracker {
   BackupEventTracker();
   ~BackupEventTracker() {}
 
-  // Returns a nullptr when the job_guid doesn't have an associated reply
-  std::unique_ptr<BackupStatusReply> GetReply(const std::string &job_guid);
+  // Returns a nullptr when the job_uuiddoesn't have an associated reply
+  std::unique_ptr<BackupStatusReply> GetReply(const std::string &job_uuid;
 
-  // If an event handler for a job guid exists an exception is thrown
+  // If an event handler for a job uuid exists an exception is thrown
   std::unique_ptr<BackupEventHandler> CreateEventHandler(
-      const std::string &job_guid);
+      const std::string &job_uuid;
 
  private:
   std::shared_ptr<std::mutex> map_mutex_;

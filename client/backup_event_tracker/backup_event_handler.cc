@@ -3,10 +3,10 @@
 namespace datto_linux_client {
 
 BackupEventHandler::BackupEventHandler(
-    const std::string &job_guid,
+    const std::string &job_uuid,
     std::shared_ptr<std::mutex> to_lock_mutex,
     std::shared_ptr<BackupStatusReply> reply)
-  : job_guid_(job_guid),
+  : job_uuid(job_uuid),
     to_lock_mutex_(to_lock_mutex),
     reply_(reply) {
   std::lock_guard<std::mutex> lock(*to_lock_mutex_);
