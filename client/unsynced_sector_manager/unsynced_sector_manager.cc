@@ -21,7 +21,11 @@ UnsyncedSectorManager::~UnsyncedSectorManager() {
 }
 
 void UnsyncedSectorManager::FlushTracer() {
-  device_tracer_->FlushBuffers();
+  // Removed before launch.
+  // I have not once seen this produce any new trace data.
+  // As this adds many seconds to the finalization process, make this a no-op
+  // for now.
+  // device_tracer_->FlushBuffers();
 }
 
 void UnsyncedSectorManager::StartTracer() {
