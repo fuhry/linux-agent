@@ -105,7 +105,8 @@ DeviceSynchronizer::DeviceSynchronizer(
   }
 }
 
-void DeviceSynchronizer::DoSync(std::shared_ptr<CancellationToken> cancel_token) {
+void DeviceSynchronizer::DoSync(
+    std::shared_ptr<CancellationToken> cancel_token) {
   LOG(INFO) << "Starting sync ";
   uint64_t total_bytes_sent = 0;
   int source_fd = source_device_->Open();
@@ -147,8 +148,7 @@ void DeviceSynchronizer::DoSync(std::shared_ptr<CancellationToken> cancel_token)
     // Trim history if it gets too big
     if (work_left_history.size() > MAX_SIZE_WORK_LEFT_HISTORY) {
       DLOG(INFO) << "Trimming history";
-      int num_to_trim = work_left_history.size() -
-          MAX_SIZE_WORK_LEFT_HISTORY;
+      int num_to_trim = work_left_history.size() - MAX_SIZE_WORK_LEFT_HISTORY;
       work_left_history.erase(work_left_history.begin(),
                               work_left_history.begin() + num_to_trim);
     }
