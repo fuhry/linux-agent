@@ -43,7 +43,7 @@ def set_block_devices(reply):
         device.real_path = \
                 os.path.abspath(os.path.join(UUID_DIR, real_relative_path))
 
-        block_dev_output =
+        block_dev_output = \
             run_command(["blockdev", "--getbsz", "--getsz", device.real_path])
 
         # block_size
