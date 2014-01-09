@@ -65,8 +65,6 @@ def set_block_devices(reply):
         used_size = int(df_info_split[3]) * 1024
         mount_location = df_info_split[6]
 
-        # device_size
-        device.device_size = device_size
         # used_space
         device.used_space = used_size
         # file_system
