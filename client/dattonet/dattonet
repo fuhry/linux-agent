@@ -43,9 +43,14 @@ def set_block_devices(reply):
         device.real_path = \
                 os.path.abspath(os.path.join(UUID_DIR, real_relative_path))
 
-        block_size = run_command(["blockdev", "--getbsz", device.real_path])
+        block_dev_output = \
+            run_command(["blockdev", "--getbsz", "--getsz", device.real_path])
+
         # block_size
-        device.block_size = int(block_size)
+        device.block_size = int(block_dev_output.splitlines()[0])
+        # device_size
+        device.device_size = int(block_dev_output.splitlines()[1]) * 512
+
 
         # Example of df -T:
         # # df -T /dev/sda1
@@ -57,12 +62,9 @@ def set_block_devices(reply):
         df_output = run_command(["df", "-T", device.real_path])
         df_info_split = df_output.split("\n")[1].split()
         filesystem = df_info_split[1]
-        device_size = int(df_info_split[2]) * 1024
         used_size = int(df_info_split[3]) * 1024
         mount_location = df_info_split[6]
 
-        # device_size
-        device.device_size = device_size
         # used_space
         device.used_space = used_size
         # file_system
