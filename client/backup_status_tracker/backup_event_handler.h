@@ -18,7 +18,7 @@ class BackupEventHandler {
 
   void BackupCopying();
 
-  void BackupSucceeded();
+  void BackupFinished();
   void BackupCancelled();
   void BackupFailed(const std::string &failure_message);
 
@@ -30,7 +30,7 @@ class BackupEventHandler {
   BackupEventHandler(const BackupEventHandler &) = delete;
   BackupEventHandler& operator=(const BackupEventHandler &) = delete;
  private:
-  const std::string job_uuid;
+  const std::string job_uuid_;
   std::shared_ptr<std::mutex> to_lock_mutex_;
   std::shared_ptr<BackupStatusReply> reply_;
 };

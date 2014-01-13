@@ -6,15 +6,15 @@
 #include <mutex>
 #include <string>
 
-#include "backup_event_tracker/backup_event_handler.h"
+#include "backup_status_tracker/backup_event_handler.h"
 #include "backup_status_reply.pb.h"
 
 namespace datto_linux_client {
 
-class BackupEventTracker {
+class BackupStatusTracker {
  public:
-  BackupEventTracker();
-  ~BackupEventTracker() {}
+  BackupStatusTracker();
+  ~BackupStatusTracker() {}
 
   // Returns a nullptr when the job_uuid doesn't have an associated reply
   std::unique_ptr<BackupStatusReply> GetReply(const std::string &job_uuid);

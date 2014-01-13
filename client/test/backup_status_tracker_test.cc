@@ -1,50 +1,50 @@
-#include "backup_event_tracker/backup_event_tracker.h"
-#include "backup_event_tracker/backup_event_handler.h"
+#include "backup_status_tracker/backup_status_tracker.h"
+#include "backup_status_tracker/backup_event_handler.h"
 #include "backup_status_reply.pb.h"
 
 #include <gtest/gtest.h>
 
 namespace {
 
-using ::datto_linux_client::BackupEventTracker;
+using ::datto_linux_client::BackupStatusTracker;
 using ::datto_linux_client::BackupEventHandler;
 using ::datto_linux_client::BackupStatusReply;
 
-TEST(BackupEventTrackerTest, Constructor) {
-  BackupEventTracker tracker;
+TEST(BackupStatusTrackerTest, Constructor) {
+  BackupStatusTracker tracker;
 }
 
-TEST(BackupEventTrackerTest, NullPtrWhenNoReply) {
-  BackupEventTracker tracker;
+TEST(BackupStatusTrackerTest, NullPtrWhenNoReply) {
+  BackupStatusTracker tracker;
   auto result = tracker.GetReply("uuid-dne");
   EXPECT_EQ(nullptr, result);
 }
 
-TEST(BackupEventTrackerTest, ReplyIsCreated) {
-  BackupEventTracker tracker;
+TEST(BackupStatusTrackerTest, ReplyIsCreated) {
+  BackupStatusTracker tracker;
   auto handler = tracker.CreateEventHandler("test-uuid");
   auto reply = tracker.GetReply("test-uuid");
   EXPECT_NE(nullptr, reply);
 }
 
-TEST(BackupEventTrackerTest, ReplyIsUpdated) {
-  BackupEventTracker tracker;
+TEST(BackupStatusTrackerTest, ReplyIsUpdated) {
+  BackupStatusTracker tracker;
   auto handler = tracker.CreateEventHandler("test-uuid");
 
-  handler->BackupPreparing();
-  auto reply = tracker.GetReply("test-uuid");
-  EXPECT_EQ(BackupStatusReply::PREPARING, reply->status());
-
   handler->BackupCopying();
+  auto reply = tracker.GetReply("test-uuid");
+  EXPECT_EQ(BackupStatusReply::COPYING, reply->status());
+
+  handler->BackupFinished();
   // Old reply should not have changed
-  EXPECT_EQ(BackupStatusReply::PREPARING, reply->status());
+  EXPECT_EQ(BackupStatusReply::COPYING, reply->status());
   reply = tracker.GetReply("test-uuid");
   // New reply should have changed
-  EXPECT_EQ(BackupStatusReply::COPYING, reply->status());
+  EXPECT_EQ(BackupStatusReply::FINISHED, reply->status());
 }
 
-TEST(BackupEventTrackerTest, SyncCountsWork) {
-  BackupEventTracker tracker;
+TEST(BackupStatusTrackerTest, SyncCountsWork) {
+  BackupStatusTracker tracker;
   auto handler = tracker.CreateEventHandler("test-uuid");
 
   handler->UpdateSyncedCount(1234);
@@ -56,8 +56,8 @@ TEST(BackupEventTrackerTest, SyncCountsWork) {
   // TODO: EXPECT_EQ(4321, reply->???());
 }
 
-TEST(BackupEventTrackerTest, FailureMessage) {
-  BackupEventTracker tracker;
+TEST(BackupStatusTrackerTest, FailureMessage) {
+  BackupStatusTracker tracker;
   auto handler = tracker.CreateEventHandler("test-uuid");
 
   handler->BackupFailed("Test message");
@@ -66,13 +66,13 @@ TEST(BackupEventTrackerTest, FailureMessage) {
   EXPECT_EQ("Test message", reply->failure_message());
 }
 
-TEST(BackupEventTrackerTest, MultipleHandlers) {
-  BackupEventTracker tracker;
+TEST(BackupStatusTrackerTest, MultipleHandlers) {
+  BackupStatusTracker tracker;
   auto handler1 = tracker.CreateEventHandler("test-uuid1");
   auto handler2 = tracker.CreateEventHandler("test-uuid2");
 
   handler1->BackupFailed("Test message");
-  handler2->BackupSucceeded();
+  handler2->BackupFinished();
 
   auto reply1 = tracker.GetReply("test-uuid1");
   auto reply2 = tracker.GetReply("test-uuid2");

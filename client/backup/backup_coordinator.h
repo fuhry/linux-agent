@@ -8,7 +8,7 @@
 
 namespace datto_linux_client {
 
-// This class is keeps count of the number of working threads.
+// This class keeps count of the number of working threads.
 // When the initial count (initialized with num_workers) is 0, it will not
 // allow further increments. This way, once everything is synced we are done
 // and shouldn't allow further work.
@@ -31,6 +31,7 @@ class BackupCoordinator {
 
   void SetFatalError(const std::exception &exception);
   // null shared ptr means no fatal error
+  // TODO exception pointer type exists
   std::shared_ptr<std::exception> GetFatalError();
 
   void Cancel();
@@ -41,7 +42,7 @@ class BackupCoordinator {
   // Waits for all synchronization to be done
   //
   // Only positive timeouts are permitted.
-  // 
+  //
   // return value of true means synchronziation is complete, false means it
   // timed out
   bool WaitUntilFinished(int timeout_millis);

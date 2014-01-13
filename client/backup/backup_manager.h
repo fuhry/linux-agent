@@ -22,7 +22,8 @@ namespace datto_linux_client {
 
 class BackupManager {
  public:
-  BackupManager();
+  BackupManager(std::unique_ptr<BlockDeviceFactory> block_device_factory,
+                std::unique_ptr<BackupStatusTracker> status_tracker);
 
   Reply StartBackup(const StartBackupRequest &start_request);
   Reply StopBackup(const StopBackupRequest &stop_request);
@@ -34,16 +35,11 @@ class BackupManager {
   BackupManager& operator=(const BackupManager&) = delete;
 
  private:
-  InProgressPathSet in_progress_paths_;
-  BackupEventTracker backup_event_tracker_;
+  std::unique_ptr<BackupStatusTracker> status_tracker_;
 
-  std::mutex cancel_tokens_mutex_;
-  std::map<const std::string, std::weak_ptr<CancellationToken>>
-      cancel_tokens_;
-
-  std::mutex managers_mutex_;
+  std::mutex unsynced_sector_managers_mutex_;
   std::map<const std::string, std::shared_ptr<UnsyncedSectorManager>>
-      unsynced_managers_;
+      unsynced_sector_managers_;
 
   std::atomic<bool> destructor_called_;
 };

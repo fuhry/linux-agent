@@ -1,4 +1,4 @@
-#include "remote_block_device/nbd_block_device.h"
+#include "block_device/nbd_block_device.h"
 #include "test/loop_device.h"
 #include <glog/logging.h>
 

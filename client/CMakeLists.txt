@@ -40,59 +40,58 @@ add_custom_command(TARGET dattonet
                               ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/dattolib.py
                               ${CMAKE_CURRENT_BINARY_DIR})
 
-# dattod
-add_executable(dattod
-               backup/backup.cc
-               backup/backup_manager.cc
-               backup/full_backup.cc
-               backup/in_progress_path_set.cc
-               backup/incremental_backup.cc
-               backup_event_tracker/backup_event_handler.cc
-               backup_event_tracker/backup_event_tracker.cc
-               block_device/block_device.cc
-               block_device/mountable_block_device.cc
-               block_trace/cpu_tracer.cc
-               block_trace/device_tracer.cc
-               block_trace/trace_handler.cc
-               cancellation/cancellation_token.cc
-               dattod/dattod.cc
-               dattod/dattod.cc
-               dattod/flock.cc
-               dattod/signal_handler.cc
-               device_synchronizer/device_synchronizer.cc
-               fs_parsing/ext_file_system.cc
-               fs_parsing/ext_mountable_block_device.cc
-               remote_block_device/nbd_block_device.cc
-               remote_block_device/nbd_client.cc
-               request_listener/ipc_request_listener.cc
-               request_listener/request_handler.cc
-               request_listener/socket_reply_channel.cc
-               unsynced_sector_manager/unsynced_sector_manager.cc
-               unsynced_sector_manager/unsynced_sector_store.cc
-               ${PROTO_SRCS})
-target_link_libraries(dattod com_err)
-target_link_libraries(dattod ext2fs)
-target_link_libraries(dattod glog)
-target_link_libraries(dattod uuid)
-target_link_libraries(dattod ${PROTOBUF_LIBRARIES})
+# Doesn't build currently
+## dattod
+#add_executable(dattod
+#               backup/backup.cc
+#               backup/backup_manager.cc
+#               backup/full_backup.cc
+#               backup/in_progress_path_set.cc
+#               backup/incremental_backup.cc
+#               backup_event_tracker/backup_event_handler.cc
+#               backup_event_tracker/backup_event_tracker.cc
+#               block_device/block_device.cc
+#               block_device/mountable_block_device.cc
+#               block_trace/cpu_tracer.cc
+#               block_trace/device_tracer.cc
+#               block_trace/trace_handler.cc
+#               cancellation/cancellation_token.cc
+#               dattod/dattod.cc
+#               dattod/dattod.cc
+#               dattod/flock.cc
+#               dattod/signal_handler.cc
+#               device_synchronizer/device_synchronizer.cc
+#               fs_parsing/ext_file_system.cc
+#               fs_parsing/ext_mountable_block_device.cc
+#               remote_block_device/nbd_block_device.cc
+#               remote_block_device/nbd_client.cc
+#               request_listener/ipc_request_listener.cc
+#               request_listener/request_handler.cc
+#               request_listener/socket_reply_channel.cc
+#               unsynced_sector_manager/unsynced_sector_manager.cc
+#               unsynced_sector_manager/unsynced_sector_store.cc
+#               ${PROTO_SRCS})
+#target_link_libraries(dattod com_err)
+#target_link_libraries(dattod ext2fs)
+#target_link_libraries(dattod glog)
+#target_link_libraries(dattod uuid)
+#target_link_libraries(dattod ${PROTOBUF_LIBRARIES})
 
 # Unit tests
 include(cmake/test_setup.cmake)
 
-add_unit_test(unsynced_sector_store_test
-              unsynced_sector_manager/unsynced_sector_store.cc)
+add_unit_test(backup_coordinator_test
+              backup/backup_coordinator.cc)
 
-add_unit_test(flock_test
-              dattod/flock.cc)
+add_unit_test(block_device_test
+              test/loop_device.cc
+              block_device/block_device.cc)
 
-add_unit_test(backup_event_tracker_test
-              backup_event_tracker/backup_event_handler.cc
+add_unit_test(backup_status_tracker_test
+              backup_status_tracker/backup_event_handler.cc
               ${PROTO_SRCS}
-              backup_event_tracker/backup_event_tracker.cc)
-target_link_libraries(backup_event_tracker_test ${PROTOBUF_LIBRARIES})
-
-add_unit_test(signal_handler_test
-              dattod/signal_handler.cc)
+              backup_status_tracker/backup_status_tracker.cc)
+target_link_libraries(backup_status_tracker_test ${PROTOBUF_LIBRARIES})
 
 add_unit_test(device_tracer_test
               test/loop_device.cc
@@ -101,87 +100,66 @@ add_unit_test(device_tracer_test
               block_trace/trace_handler.cc
               unsynced_sector_manager/unsynced_sector_store.cc)
 
-add_unit_test(nbd_block_device_test
+add_unit_test(extfs_test
               test/loop_device.cc
+              block_device/ext_file_system.cc
+              block_device/mountable_block_device.cc
               block_device/block_device.cc
-              remote_block_device/nbd_client.cc
-              remote_block_device/nbd_block_device.cc)
+              block_device/ext_mountable_block_device.cc)
+target_link_libraries(extfs_test ext2fs com_err)
 
-add_unit_test(block_device_test
-              test/loop_device.cc
-              block_device/block_device.cc)
+add_unit_test(flock_test
+              dattod/flock.cc)
+
+# Out until backup_manager.h is fixed up
+#add_unit_test(ipc_request_listener_test
+#              request_listener/socket_reply_channel.cc
+#              ${PROTO_SRCS}
+#              request_listener/ipc_request_listener.cc)
+#target_link_libraries(ipc_request_listener_test ${PROTOBUF_LIBRARIES})
 
 add_unit_test(mountable_block_device_test
               test/loop_device.cc
               block_device/mountable_block_device.cc
               block_device/block_device.cc)
 
-add_unit_test(device_synchronizer_test
-              backup_event_tracker/backup_event_handler.cc
-              block_device/block_device.cc
-              block_device/mountable_block_device.cc
-              block_trace/cpu_tracer.cc
-              block_trace/device_tracer.cc
-              block_trace/trace_handler.cc
-              cancellation/cancellation_token.cc
+add_unit_test(nbd_block_device_test
               test/loop_device.cc
-              unsynced_sector_manager/unsynced_sector_manager.cc
-              unsynced_sector_manager/unsynced_sector_store.cc
-              ${PROTO_SRCS}
-              device_synchronizer/device_synchronizer.cc)
-target_link_libraries(device_synchronizer_test ${PROTOBUF_LIBRARIES})
+              block_device/block_device.cc
+              block_device/nbd_client.cc
+              block_device/nbd_block_device.cc)
+
+add_unit_test(signal_handler_test
+              dattod/signal_handler.cc)
 
 add_unit_test(unsynced_sector_manager_test
-              block_trace/device_tracer.cc
+              block_device/block_device.cc
               block_trace/cpu_tracer.cc
+              block_trace/device_tracer.cc
               block_trace/trace_handler.cc
               test/loop_device.cc
               unsynced_sector_manager/unsynced_sector_store.cc
               unsynced_sector_manager/unsynced_sector_manager.cc)
 
-add_unit_test(ipc_request_listener_test
-              request_listener/socket_reply_channel.cc
-              ${PROTO_SRCS}
-              request_listener/ipc_request_listener.cc)
-target_link_libraries(ipc_request_listener_test ${PROTOBUF_LIBRARIES})
-
-add_unit_test(extfs_test
+add_unit_test(unsynced_sector_store_test
               test/loop_device.cc
-              fs_parsing/ext_mountable_block_device.cc
-              fs_parsing/ext_file_system.cc
-              block_device/mountable_block_device.cc
-              block_device/block_device.cc)
-target_link_libraries(extfs_test ext2fs com_err)
-
-#add_unit_test(xfs_test
-#              test/xfs_test.cc
-#              fs_parsing/xfs_mountable_block_device.cc
-#              block_device/mountable_block_device.cc
-#              block_device/block_device.cc)
-
-# dattocli test
-#add_test(dattocli_test dattocli_test)
-#add_custom_target(ctest_dattocli_test
-#                  ${CMAKE_CURRENT_SOURCE_DIR}/test/dattocli_test.py
-#                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-
-#add_dependencies(ctest_dattocli_test dattocli)
-#add_dependencies(ctest_dattocli_test dattocli_test)
-#add_dependencies(check ctest_dattocli_test)
+              unsynced_sector_manager/unsynced_sector_store.cc)
 
 # Packaging
 set(CPACK_GENERATOR "DEB;RPM")
 set(CPACK_PACKAGE_CONTACT "Nick Garvey ngarvey@dattobackup.com")
 set(CPACK_PACKAGE_EXECUTABLES "Nick Garvey ngarvey@dattobackup.com")
+# XXX CMACK?
 set(CMACK_INSTALL_DIRECTORY "datto")
 
 file(GLOB python_protobufs ${CMAKE_CURRENT_BINARY_DIR}/*_pb2.py)
 file(GLOB python_libs ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/*.py)
 
-install(TARGETS dattod DESTINATION /usr/sbin)
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattocli DESTINATION /usr/lib/datto)
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattonet DESTINATION /usr/lib/datto)
-install(FILES ${python_protobufs} DESTINATION /usr/lib/datto)
-install(FILES ${python_libs} DESTINATION /usr/lib/datto)
+# Doesn't build currently
+#install(TARGETS dattod DESTINATION /usr/sbin)
+#install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattocli DESTINATION /usr/lib/datto)
+#install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattonet DESTINATION /usr/lib/datto)
+#install(FILES ${python_protobufs} DESTINATION /usr/lib/datto)
+#install(FILES ${python_libs} DESTINATION /usr/lib/datto)
 
 include(CPack)

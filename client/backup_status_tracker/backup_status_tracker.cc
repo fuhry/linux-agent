@@ -1,12 +1,12 @@
-#include "backup_event_tracker/backup_event_tracker.h"
+#include "backup_status_tracker/backup_status_tracker.h"
 
 namespace datto_linux_client {
 
-BackupEventTracker::BackupEventTracker() : map_mutex_(), reply_map_() {
+BackupStatusTracker::BackupStatusTracker() : map_mutex_(), reply_map_() {
   map_mutex_ = std::make_shared<std::mutex>();
 }
 
-std::unique_ptr<BackupStatusReply> BackupEventTracker::GetReply(
+std::unique_ptr<BackupStatusReply> BackupStatusTracker::GetReply(
     const std::string &job_uuid) {
   std::lock_guard<std::mutex> lock(*map_mutex_);
 
@@ -20,7 +20,7 @@ std::unique_ptr<BackupStatusReply> BackupEventTracker::GetReply(
   return std::move(reply);
 }
 
-std::unique_ptr<BackupEventHandler> BackupEventTracker::CreateEventHandler(
+std::unique_ptr<BackupEventHandler> BackupStatusTracker::CreateEventHandler(
     const std::string &job_uuid) {
 
   std::shared_ptr<BackupStatusReply> reply;
