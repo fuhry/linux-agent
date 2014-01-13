@@ -6,7 +6,6 @@
 #include <linux/fs.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
-#include <sys/sysmacros.h>
 
 #include <glog/logging.h>
 
@@ -14,7 +13,7 @@ namespace datto_linux_client {
 
 BlockDevice::BlockDevice(std::string a_path)
     : path_(a_path) {
-  // Init() is called by subclasses
+  // Init() is also called by subclasses
   Init();
 }
 
@@ -36,9 +35,7 @@ void BlockDevice::Init() {
     throw BlockDeviceException("Not a block device");
   }
 
-  // Need ::s here so we don't try to access the class methods major & minor()
-  major_ = ::major(statbuf.st_rdev);
-  minor_ = ::minor(statbuf.st_rdev);
+  dev_t_ = statbuf.st_rdev;
 
   int fd = open(path_.c_str(), O_RDONLY);
 

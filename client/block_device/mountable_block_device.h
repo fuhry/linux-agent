@@ -12,7 +12,6 @@
 namespace datto_linux_client {
 
 class MountableBlockDevice : public BlockDevice {
-
  public:
   explicit MountableBlockDevice(std::string a_path);
 

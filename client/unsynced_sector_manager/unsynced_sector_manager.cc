@@ -1,6 +1,7 @@
 #include "unsynced_sector_manager/unsynced_sector_manager.h"
 
 #include <glog/logging.h>
+#include <sys/sysmacros.h>
 
 #include "unsynced_sector_manager/unsynced_tracking_exception.h"
 #include "block_trace/trace_handler.h"
@@ -8,50 +9,52 @@
 
 namespace datto_linux_client {
 
-UnsyncedSectorManager::UnsyncedSectorManager(const std::string &block_dev_path)
-    : block_dev_path_(block_dev_path),
-      store_(),
-      device_tracer_(nullptr) {
-  store_ = std::make_shared<UnsyncedSectorStore>();
-}
+UnsyncedSectorManager::UnsyncedSectorManager() : store_map_(), tracer_map_() {}
 
 UnsyncedSectorManager::~UnsyncedSectorManager() {
   // The data structure destructors will cause the element destructors to run,
   // which will clean up everything
 }
 
-void UnsyncedSectorManager::FlushTracer() {
-  // Removed before launch.
-  // I have not once seen this produce any new trace data.
-  // As this adds many seconds to the finalization process, make this a no-op
-  // for now.
-  // device_tracer_->FlushBuffers();
-}
-
-void UnsyncedSectorManager::StartTracer() {
-  if (device_tracer_) {
-    LOG(ERROR) << "Already tracing " << block_dev_path_;
+void UnsyncedSectorManager::StartTracer(const BlockDevice &device) {
+  if (tracer_map_[device.dev_t()]) {
+    LOG(ERROR) << "Already tracing " << device.path();
     throw UnsyncedTrackingException("Already tracing block device");
   }
 
-  LOG(INFO) << "Starting tracing on " << block_dev_path_;
-  std::shared_ptr<TraceHandler> trace_handler(new TraceHandler(store_));
+  LOG(INFO) << "Starting tracing on " << device.path();
 
-  std::unique_ptr<DeviceTracer> device_tracer(
-      new DeviceTracer(block_dev_path_, trace_handler));
+  auto store = GetStore(device);
+  auto device_tracer = CreateDeviceTracer(device.path(), store);
 
-  device_tracer_ = std::move(device_tracer);
-
-  LOG(INFO) << "Started tracing on " << block_dev_path_;
+  store_map_[device.dev_t()] = store;
+  tracer_map_[device.dev_t()] = std::move(device_tracer);
 }
 
-void UnsyncedSectorManager::StopTracer() {
+void UnsyncedSectorManager::StopTracer(const BlockDevice &device) {
   // Tracer destructor will stop the tracer from running
-  device_tracer_.reset();
+  tracer_map_[device.dev_t()] = nullptr;
 }
 
-bool UnsyncedSectorManager::IsTracing() {
-  return device_tracer_.get() != nullptr;
+bool UnsyncedSectorManager::IsTracing(const BlockDevice &device) {
+  return tracer_map_[device.dev_t()] != nullptr;
+}
+
+std::shared_ptr<UnsyncedSectorStore> UnsyncedSectorManager::GetStore(
+    const BlockDevice &device) {
+  if (!store_map_[device.dev_t()]) {
+    store_map_[device.dev_t()] = std::make_shared<UnsyncedSectorStore>();
+  }
+  return store_map_.at(device.dev_t());
+}
+
+std::unique_ptr<DeviceTracer> UnsyncedSectorManager::CreateDeviceTracer(
+    std::string path,
+    std::shared_ptr<UnsyncedSectorStore> store) {
+  auto trace_handler = std::make_shared<TraceHandler>(store);
+  std::unique_ptr<DeviceTracer> device_tracer(
+      new DeviceTracer(path, trace_handler));
+  return device_tracer;
 }
 
 } // datto_linux_client

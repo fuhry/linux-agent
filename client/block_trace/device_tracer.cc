@@ -86,14 +86,16 @@ std::string DeviceTracer::BeginBlockTrace() {
 void DeviceTracer::CleanupBlockTrace() {
   DLOG(INFO) << "In CleanupBlockTrace";
 
-  if (ioctl(block_dev_fd_, BLKTRACESTOP) < 0) {
-    PLOG(ERROR) << "BLKTRACESTOP";
-    throw BlockTraceException("Unable to stop blocktrace");
-  }
+  if (block_dev_fd_ != -1) {
+    if (ioctl(block_dev_fd_, BLKTRACESTOP) < 0) {
+      PLOG(ERROR) << "BLKTRACESTOP";
+      throw BlockTraceException("Unable to stop blocktrace");
+    }
 
-  if (ioctl(block_dev_fd_, BLKTRACETEARDOWN) < 0) {
-    PLOG(ERROR) << "BLKTRACETEARDOWN";
-    throw BlockTraceException("Unable to teardown blocktrace");
+    if (ioctl(block_dev_fd_, BLKTRACETEARDOWN) < 0) {
+      PLOG(ERROR) << "BLKTRACETEARDOWN";
+      throw BlockTraceException("Unable to teardown blocktrace");
+    }
   }
 
 }
@@ -127,9 +129,7 @@ DeviceTracer::~DeviceTracer() {
     CleanupBlockTrace();
     close(block_dev_fd_);
   } catch (const std::exception &e) {
-    LOG(ERROR) << "Exception in DeviceTracer destructor" << e.what();
-  } catch (...) {
-    LOG(ERROR) << "Non-exception thrown in DeviceTracer destructor";
+    LOG(ERROR) << "Exception in DeviceTracer destructor: " << e.what();
   }
 }
 

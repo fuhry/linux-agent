@@ -34,12 +34,16 @@ class DeviceTracer {
 
   // Flush the trace buffers. This method returns once the buffers
   // have finished flushing and have been given to the TraceHandler
-  void FlushBuffers();
+  virtual void FlushBuffers();
 
-  ~DeviceTracer();
+  virtual ~DeviceTracer();
 
   DeviceTracer(const DeviceTracer &) = delete;
   DeviceTracer& operator=(const DeviceTracer &) = delete;
+
+ protected:
+  // For creating stubs in unit testing
+  DeviceTracer() : block_dev_fd_(-1) {}
 
  private:
   std::string BeginBlockTrace();
