@@ -10,15 +10,14 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+namespace {
+
 using ::datto_linux_client::NbdBlockDevice;
+using ::datto_linux_client_test::LoopDevice;
+using ::datto_linux_client::NbdServer;
 
 static const uint16_t LOCAL_TEST_PORT = 11235;
 static const char LOCAL_TEST_HOST[] = "localhost";
-
-namespace {
-
-using ::datto_linux_client_test::LoopDevice;
-using ::datto_linux_client::NbdServer;
 
 class NbdBlockDeviceTest : public ::testing::Test {
  public:
