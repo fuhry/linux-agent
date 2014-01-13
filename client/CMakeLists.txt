@@ -127,6 +127,7 @@ add_unit_test(nbd_block_device_test
               test/loop_device.cc
               block_device/block_device.cc
               block_device/nbd_client.cc
+              block_device/nbd_server.cc
               block_device/nbd_block_device.cc)
 
 add_unit_test(signal_handler_test

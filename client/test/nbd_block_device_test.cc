@@ -1,4 +1,5 @@
 #include "block_device/nbd_block_device.h"
+#include "block_device/nbd_server.h"
 #include "test/loop_device.h"
 #include <glog/logging.h>
 
@@ -17,61 +18,16 @@ static const char LOCAL_TEST_HOST[] = "localhost";
 namespace {
 
 using ::datto_linux_client_test::LoopDevice;
+using ::datto_linux_client::NbdServer;
 
 class NbdBlockDeviceTest : public ::testing::Test {
  public:
- protected:
-  class NbdServer {
-   public:
-    NbdServer(std::string file_to_serve) {
-      LOG(INFO) << "Starting nbd-server";
-      pid_t fork_ret = fork();
-      if (fork_ret == -1) {
-          PLOG(ERROR) << "fork";
-          throw std::runtime_error("fork failed");
-      }
-      else if (fork_ret == 0) {
-          // This is the same as 2>&1 1>/dev/null
-          int null_fd = open("/dev/null", O_RDWR);
-          dup2(null_fd, 1);
-          dup2(null_fd, 2);
-          close(null_fd);
-          // -d means it won't daemonize
-          // -C /dev/null disables using a configuration file
-          execl("/bin/nbd-server", "nbd-server",
-                std::to_string(LOCAL_TEST_PORT).c_str(),
-                file_to_serve.c_str(),
-                "-d",
-                "-C", "/dev/null",
-                nullptr);
-          // If we get here then exec failed
-          PLOG(ERROR) << "execl";
-          _exit(127);
-      }
-      else {
-          nbd_server_pid = fork_ret;
-          // Let the nbd_server start
-          sleep(1);
-      }
-    }
-
-    ~NbdServer() {
-      LOG(INFO) << "Killing nbd-server";
-      if (kill(nbd_server_pid, SIGTERM)) {
-        PLOG(ERROR) << "kill failed, check nbd-server was stopped correctly";
-      } else {
-        wait(nullptr);
-      }
-    }
-   private:
-    pid_t nbd_server_pid;
-  };
-
   NbdBlockDeviceTest() {
     loop_dev = std::unique_ptr<LoopDevice>(new LoopDevice());
     // Let the loop device settle, might not be needed
     sleep(1);
-    nbd_server = std::unique_ptr<NbdServer>(new NbdServer(loop_dev->path()));
+    nbd_server = std::unique_ptr<NbdServer>(new NbdServer(loop_dev->path(),
+                                                          LOCAL_TEST_PORT));
 
     nbd_block_device = std::unique_ptr<NbdBlockDevice>(
         new NbdBlockDevice(LOCAL_TEST_HOST, LOCAL_TEST_PORT));
