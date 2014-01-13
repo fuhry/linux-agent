@@ -35,7 +35,6 @@ std::map<std::string, std::string> GetMountedDevices() {
     char real_path_buf[PATH_MAX];
     if (realpath(path.c_str(), real_path_buf) == NULL) {
       int error = errno;
-      PLOG(INFO) << "Readlink on " << path;
       if (error == ENOENT) {
         continue;
       } else if (error == EACCES) {
