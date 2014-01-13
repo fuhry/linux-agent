@@ -62,8 +62,8 @@ void DeviceTracer::FlushBuffers() {
   std::vector<std::thread> flush_threads(cpu_tracers_.size());
 
   for (size_t i = 0; i < cpu_tracers_.size(); i++) {
-    flush_threads[i] = std::thread([=, &cpu_tracers_]() {
-      cpu_tracers_[i]->FlushBuffer();
+    flush_threads[i] = std::thread([=]() {
+      this->cpu_tracers_[i]->FlushBuffer();
     });
   }
 
