@@ -1,15 +1,15 @@
-#include "fs_parsing/ext_mountable_block_device.h"
+#include "block_device/ext_mountable_block_device.h"
 
 #include <fcntl.h>
 #include <unistd.h>
 
 #include <glog/logging.h>
 
-#include "fs_parsing/ext_file_system.h"
-#include "fs_parsing/ext_error_table-inl.h"
+#include "block_device/ext_file_system.h"
+#include "block_device/ext_error_table-inl.h"
 #include "block_device/block_device_exception.h"
 #include "unsynced_sector_manager/sector_interval.h"
-#include "fs_parsing/tools.h"
+#include "block_device/tools.h"
 
 namespace datto_linux_client {
 

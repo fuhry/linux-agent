@@ -1,5 +1,5 @@
-#include "remote_block_device/nbd_block_device.h"
-#include "remote_block_device/remote_block_device_exception.h"
+#include "block_device/nbd_block_device.h"
+#include "block_device/block_device_exception.h"
 
 #include <glog/logging.h>
 #include <unistd.h>

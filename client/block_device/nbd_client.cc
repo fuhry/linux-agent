@@ -1,4 +1,4 @@
-#include "remote_block_device/nbd_client.h"
+#include "block_device/nbd_client.h"
 
 #include <dirent.h>
 #include <endian.h>
@@ -10,7 +10,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#include "remote_block_device/nbd_exception.h"
+#include "block_device/nbd_exception.h"
 
 namespace {
 using ::datto_linux_client::NbdException;

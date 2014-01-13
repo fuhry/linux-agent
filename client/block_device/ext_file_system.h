@@ -1,10 +1,10 @@
-#ifndef DATTO_CLIENT_FS_PARSING_EXT_FILE_SYSTEM_H_
-#define DATTO_CLIENT_FS_PARSING_EXT_FILE_SYSTEM_H_
+#ifndef DATTO_CLIENT_BLOCK_DEVICE_EXT_FILE_SYSTEM_H_
+#define DATTO_CLIENT_BLOCK_DEVICE_EXT_FILE_SYSTEM_H_
 
 #include <string>
 #include <memory>
 
-#include "fs_parsing/ext_error_table-inl.h"
+#include "block_device/ext_error_table-inl.h"
 #include <ext2fs/ext2fs.h>
 
 namespace datto_linux_client {
@@ -43,4 +43,4 @@ class ExtFileSystem {
 
 } // datto_linux_client
 
-#endif // DATTO_CLIENT_FS_PARSING_EXT_FILE_SYSTEM_H_
+#endif // DATTO_CLIENT_BLOCK_DEVICE_EXT_FILE_SYSTEM_H_

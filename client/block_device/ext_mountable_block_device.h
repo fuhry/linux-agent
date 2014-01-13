@@ -1,5 +1,5 @@
-#ifndef DATTO_CLIENT_FS_PARSING_EXT_MOUNTABLE_BLOCK_DEVICE_H_
-#define DATTO_CLIENT_FS_PARSING_EXT_MOUNTABLE_BLOCK_DEVICE_H_
+#ifndef DATTO_CLIENT_BLOCK_DEVICE_EXT_MOUNTABLE_BLOCK_DEVICE_H_
+#define DATTO_CLIENT_BLOCK_DEVICE_EXT_MOUNTABLE_BLOCK_DEVICE_H_
 
 #include <memory>
 #include "block_device/mountable_block_device.h"
@@ -18,4 +18,4 @@ class ExtMountableBlockDevice : public MountableBlockDevice {
 };
 
 } // datto_linux_client
-#endif //  DATTO_CLIENT_FS_PARSING_EXT_MOUNTABLE_BLOCK_DEVICE_H_
+#endif //  DATTO_CLIENT_BLOCK_DEVICE_EXT_MOUNTABLE_BLOCK_DEVICE_H_

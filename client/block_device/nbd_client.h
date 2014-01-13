@@ -1,5 +1,5 @@
-#ifndef DATTO_CLIENT_REMOTE_BLOCK_DEVICE_NBD_CLIENT_H_
-#define DATTO_CLIENT_REMOTE_BLOCK_DEVICE_NBD_CLIENT_H_
+#ifndef DATTO_CLIENT_BLOCK_DEVICE_NBD_CLIENT_H_
+#define DATTO_CLIENT_BLOCK_DEVICE_NBD_CLIENT_H_
 
 #include <stdint.h>
 #include <atomic>
@@ -48,4 +48,4 @@ class NbdClient {
   std::string nbd_device_path_;
 };
 }
-#endif //  DATTO_CLIENT_REMOTE_BLOCK_DEVICE_NBD_CLIENT_H_
+#endif //  DATTO_CLIENT_BLOCK_DEVICE_NBD_CLIENT_H_
