@@ -2,6 +2,8 @@
 
 #include "block_trace/block_trace_exception.h"
 
+#include <thread>
+
 #include <fcntl.h>
 #include <glog/logging.h>
 #include <string.h>
@@ -57,8 +59,16 @@ DeviceTracer::DeviceTracer(const std::string &block_dev_path,
 }
 
 void DeviceTracer::FlushBuffers() {
-  for (auto &cpu_tracer : cpu_tracers_) {
-    cpu_tracer->FlushBuffer();
+  std::vector<std::thread> flush_threads(cpu_tracers_.size());
+
+  for (size_t i = 0; i < cpu_tracers_.size(); i++) {
+    flush_threads[i] = std::thread([=, &cpu_tracers_]() {
+      cpu_tracers_[i]->FlushBuffer();
+    });
+  }
+
+  for (auto &thread : flush_threads) {
+    thread.join();
   }
 }
 
