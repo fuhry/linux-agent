@@ -33,7 +33,8 @@ TEST(BlockDeviceFactoryTest, ReturnsExt3) {
 
   auto loop_block_dev = fact.CreateMountableBlockDevice(loop_dev.path());
 
-  EXPECT_STREQ("ExtMountableBlockDevice", typeid(loop_block_dev).name());
+  ASSERT_TRUE((bool)loop_block_dev);
+  EXPECT_NE(nullptr, dynamic_cast<ExtMountableBlockDevice*>(loop_block_dev.get()));
 }
 
 TEST(BlockDeviceFactoryTest, ReturnsXfs) {
@@ -44,7 +45,8 @@ TEST(BlockDeviceFactoryTest, ReturnsXfs) {
 
   auto loop_block_dev = fact.CreateMountableBlockDevice(loop_dev.path());
 
-  EXPECT_STREQ("XfsMountableBlockDevice", typeid(loop_block_dev).name());
+  ASSERT_TRUE((bool)loop_block_dev);
+  EXPECT_NE(nullptr, dynamic_cast<XfsMountableBlockDevice*>(loop_block_dev.get()));
 }
 
 TEST(BlockDeviceFactoryTest, ThrowsOnNoFS) {
@@ -68,7 +70,8 @@ TEST(BlockDeviceFactoryTest, ReturnsNbd) {
   auto nbd_block_dev = fact.CreateRemoteBlockDevice(LOCAL_TEST_HOST,
                                                     LOCAL_TEST_PORT);
 
-  EXPECT_STREQ("NbdBlockDevice", typeid(nbd_block_dev).name());
+  ASSERT_TRUE((bool)nbd_block_dev);
+  EXPECT_NE(nullptr, dynamic_cast<NbdBlockDevice*>(nbd_block_dev.get()));
 }
 
 TEST(BlockDeviceFactoryTest, ThrowsOnNoRemote) {

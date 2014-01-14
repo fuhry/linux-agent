@@ -91,7 +91,7 @@ add_unit_test(block_device_factory_test
               block_device/xfs_mountable_block_device.cc
               test/loop_device.cc
               block_device/block_device_factory.cc)
-target_link_libraries(block_device_factory_test ext2fs com_err boost_regex)
+target_link_libraries(block_device_factory_test ext2fs com_err boost_regex blkid)
 
 if (0)
 add_unit_test(backup_coordinator_test
