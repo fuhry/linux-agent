@@ -1,6 +1,6 @@
 #!/bin/bash
 # usage: ./run_tests [debug]
-build_type=${1:-release};
+build_type=${1:-release}
 mkdir -p build
 cd build
 
