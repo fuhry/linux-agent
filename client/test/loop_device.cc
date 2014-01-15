@@ -1,12 +1,13 @@
 #include "test/loop_device.h"
 
-#include <stdlib.h>
 #include <errno.h>
-#include <linux/fs.h>
 #include <fcntl.h>
 #include <fstream>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <linux/fs.h>
+#include <stdexcept>
+#include <stdlib.h>
 #include <string>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
