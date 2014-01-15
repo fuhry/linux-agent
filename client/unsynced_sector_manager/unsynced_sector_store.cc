@@ -42,7 +42,7 @@ SectorInterval UnsyncedSectorStore::GetContinuousUnsyncedSectors() const {
       // This way we always return something
       interval_to_return = interval;
     } else if (boost::icl::length(interval) > 
-               std::max(1024ULL, boost::icl::length(interval_to_return))) {
+               std::max((uint64_t)1024, boost::icl::length(interval_to_return))) {
       // Return the largest interval larger than 1024 if it exists
       interval_to_return = interval;
       found_big_or_after = true;
