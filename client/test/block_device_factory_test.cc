@@ -65,10 +65,10 @@ TEST(BlockDeviceFactoryTest, ThrowsOnNoFS) {
 TEST(BlockDeviceFactoryTest, ReturnsNbd) {
   BlockDeviceFactory fact;
   LoopDevice loop_dev;
-  NbdServer nbd_server(loop_dev.path(), LOCAL_TEST_PORT);
+  NbdServer nbd_server(loop_dev.path());
 
   auto nbd_block_dev = fact.CreateRemoteBlockDevice(LOCAL_TEST_HOST,
-                                                    LOCAL_TEST_PORT);
+                                                    nbd_server.port());
 
   ASSERT_TRUE((bool)nbd_block_dev);
   EXPECT_NE(nullptr, dynamic_cast<NbdBlockDevice*>(nbd_block_dev.get()));

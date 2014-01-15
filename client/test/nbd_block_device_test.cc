@@ -24,12 +24,10 @@ class NbdBlockDeviceTest : public ::testing::Test {
   NbdBlockDeviceTest() {
     loop_dev = std::unique_ptr<LoopDevice>(new LoopDevice());
     // Let the loop device settle, might not be needed
-    sleep(1);
-    nbd_server = std::unique_ptr<NbdServer>(new NbdServer(loop_dev->path(),
-                                                          LOCAL_TEST_PORT));
-
+    usleep(500000);
+    nbd_server = std::unique_ptr<NbdServer>(new NbdServer(loop_dev->path()));
     nbd_block_device = std::unique_ptr<NbdBlockDevice>(
-        new NbdBlockDevice(LOCAL_TEST_HOST, LOCAL_TEST_PORT));
+        new NbdBlockDevice(LOCAL_TEST_HOST, nbd_server->port()));
   }
 
   ~NbdBlockDeviceTest() { }
@@ -51,6 +49,7 @@ TEST_F(NbdBlockDeviceTest, KnowsWhenDisconnected) {
   EXPECT_FALSE(nbd_block_device->IsConnected());
 }
 
+// Notice it's TEST not TEST_F
 TEST(NbdBlockDeviceTestNoFixture, CantConnect) {
   try {
     auto nbd_block_device = std::unique_ptr<NbdBlockDevice>(

@@ -10,8 +10,20 @@
 #include <glog/logging.h>
 
 namespace datto_linux_client {
-NbdServer::NbdServer(const std::string &file_to_serve, const uint16_t port) {
-  LOG(INFO) << "Starting nbd-server";
+
+NbdServer::NbdServer(const std::string &file_to_serve) {
+  uint16_t port_a = rand() % 55535 + 10000;
+  Init(file_to_serve, port_a);
+
+}
+NbdServer::NbdServer(const std::string &file_to_serve, const uint16_t port_a) {
+  Init(file_to_serve, port_a);
+}
+
+void NbdServer::Init(const std::string &file_to_serve, const uint16_t port_a) {
+  port_ = port_a;
+
+  LOG(INFO) << "Starting nbd-server on " << port_;
   pid_t fork_ret = fork();
   if (fork_ret == -1) {
       PLOG(ERROR) << "fork";
@@ -26,7 +38,7 @@ NbdServer::NbdServer(const std::string &file_to_serve, const uint16_t port) {
       // -d means it won't daemonize
       // -C /dev/null disables using a configuration file
       execl("/bin/nbd-server", "nbd-server",
-            std::to_string(port).c_str(),
+            std::to_string(port_).c_str(),
             file_to_serve.c_str(),
             "-d",
             "-C", "/dev/null",
@@ -38,7 +50,7 @@ NbdServer::NbdServer(const std::string &file_to_serve, const uint16_t port) {
   else {
       nbd_server_pid_ = fork_ret;
       // Let the nbd_server start
-      sleep(1);
+      usleep(1000000);
   }
 }
 
