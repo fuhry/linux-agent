@@ -80,6 +80,7 @@ add_custom_command(TARGET dattonet
 # Unit tests
 include(cmake/test_setup.cmake)
 
+          #if (0)
 add_unit_test(block_device_factory_test
               block_device/block_device.cc
               block_device/ext_file_system.cc
@@ -93,7 +94,6 @@ add_unit_test(block_device_factory_test
               block_device/block_device_factory.cc)
 target_link_libraries(block_device_factory_test ext2fs com_err boost_regex blkid)
 
-if (0)
 add_unit_test(backup_coordinator_test
               backup/backup_coordinator.cc)
 
@@ -159,7 +159,7 @@ add_unit_test(unsynced_sector_manager_test
 add_unit_test(unsynced_sector_store_test
               test/loop_device.cc
               unsynced_sector_manager/unsynced_sector_store.cc)
-endif(0)
+          #endif(0)
 
 # Packaging
 set(CPACK_GENERATOR "DEB;RPM")
