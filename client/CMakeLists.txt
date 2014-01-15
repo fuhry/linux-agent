@@ -97,15 +97,30 @@ target_link_libraries(block_device_factory_test ext2fs com_err boost_regex blkid
 add_unit_test(backup_coordinator_test
               backup/backup_coordinator.cc)
 
-add_unit_test(block_device_test
-              test/loop_device.cc
-              block_device/block_device.cc)
-
 add_unit_test(backup_status_tracker_test
               backup_status_tracker/backup_event_handler.cc
               ${PROTO_SRCS}
               backup_status_tracker/backup_status_tracker.cc)
 target_link_libraries(backup_status_tracker_test ${PROTOBUF_LIBRARIES})
+
+add_unit_test(block_device_test
+              test/loop_device.cc
+              block_device/block_device.cc)
+
+#add_unit_test(device_synchronizer_test
+#              backup_event_tracker/backup_event_handler.cc
+#              block_device/block_device.cc
+#              block_device/mountable_block_device.cc
+#              block_trace/cpu_tracer.cc
+#              block_trace/device_tracer.cc
+#              block_trace/trace_handler.cc
+#              cancellation/cancellation_token.cc
+#              test/loop_device.cc
+#              unsynced_sector_manager/unsynced_sector_manager.cc
+#              unsynced_sector_manager/unsynced_sector_store.cc
+#              ${PROTO_SRCS}
+#              device_synchronizer/device_synchronizer.cc)
+#target_link_libraries(device_synchronizer_test ${PROTOBUF_LIBRARIES})
 
 add_unit_test(device_tracer_test
               test/loop_device.cc
@@ -159,7 +174,14 @@ add_unit_test(unsynced_sector_manager_test
 add_unit_test(unsynced_sector_store_test
               test/loop_device.cc
               unsynced_sector_manager/unsynced_sector_store.cc)
-          #endif(0)
+
+#add_unit_test(xfs_test
+#              test/loop_device.cc
+#              block_device/mountable_block_device.cc
+#              block_device/block_device.cc
+#              block_device/xfs_mountable_block_device.cc)
+
+#endif(0)
 
 # Packaging
 set(CPACK_GENERATOR "DEB;RPM")
