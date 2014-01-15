@@ -8,6 +8,8 @@
 #include <gtest/gtest.h>
 #include <glog/logging.h>
 
+#include <stdexcept>
+
 namespace {
 
 using ::datto_linux_client::Flock;
