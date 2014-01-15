@@ -1,13 +1,29 @@
-# This downloads and builds gtest
+# This builds gtest and gmock
 # Additionally, this defines the add_unit_test macro
 
 enable_testing()
 
 # Build GTest
-set(GTEST_DIR "/usr/src/gtest")
-include_directories(${GTEST_DIR})
-include_directories(${GTEST_DIR}/include)
-add_library(gtest ${GTEST_DIR}/src/gtest-all.cc)
+# On 12.04, gmock is already built and only gtest
+#           needs to be compiled
+# on 13.10, gmock and gtest need to be built, and
+#           gtest is a subdirectory of gmock
+# Not sure about anything else
+if (EXISTS "/usr/src/gtest/")
+    set(GTEST_DIR "/usr/src/gtest")
+    include_directories(${GTEST_DIR})
+    include_directories(${GTEST_DIR}/include)
+    add_library(gtest ${GTEST_DIR}/src/gtest-all.cc)
+ELSE (EXISTS "/usr/src/gmock/")
+    set(GTEST_DIR "/usr/src/gmock/gtest")
+    set(GMOCK_DIR "/usr/src/gmock")
+    include_directories(${GTEST_DIR})
+    include_directories(${GTEST_DIR}/include)
+    include_directories(${GMOCK_DIR})
+    include_directories(${GMOCK_DIR}/include)
+    add_library(gmock_main ${GMOCK_DIR}/src/gmock-all.cc ${GMOCK_DIR}/src/gmock_main.cc)
+    add_library(gtest ${GTEST_DIR}/src/gtest-all.cc)
+endif()
 
 add_custom_target(check)
 # usage: add_unit_test(test_name test_sources...)
@@ -20,7 +36,6 @@ macro(add_unit_test test_name)
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
     target_link_libraries(${test_name} glog)
     target_link_libraries(${test_name} gtest)
-    target_link_libraries(${test_name} gmock)
     target_link_libraries(${test_name} gmock_main)
 
     # TODO set_tests_properties should do this so we don't need to do the
