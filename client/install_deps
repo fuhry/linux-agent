@@ -3,11 +3,11 @@ if ! lsb_release -r | grep -q '^Release.*12\.04'; then
     echo "The primary build platform is Ubuntu 12.04, if things fail try building there."
     echo -n "Enter to continue..."
     read
+else
+    # Move configuration files over to let us get libgoogle-glog-dev and friends
+    # from Quantal repos
+    sudo rsync -r $(dirname $0)/dependency_files/ /
 fi
-
-# Move configuration files over to let us get libgoogle-glog-dev and friends
-# from Quantal repos
-sudo rsync -r $(dirname $0)/dependency_files/ /
 
 sudo apt-get update
 sudo apt-get install build-essential cmake libboost-dev libprotobuf-dev \
