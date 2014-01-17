@@ -2,6 +2,7 @@
 
 pushd $(dirname "$0") > /dev/null
 echo "Fetching gmock..."
-svn checkout http://googlemock.googlecode.com/svn/tags/release-1.7.0 gmock \
+# On 12.04: We need r403, but r433 breaks the build, so use r432
+svn checkout -r 432 http://googlemock.googlecode.com/svn/trunk gmock \
     | grep -v -e '^A' -e '^ U' -e '^$' # Suppress noise
 popd > /dev/null
