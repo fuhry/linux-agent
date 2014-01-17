@@ -28,14 +28,14 @@ bool BackupCoordinator::SignalMoreWorkToDo() {
   return true;
 }
 
-void BackupCoordinator::SetFatalError(const std::exception &exception) {
+void BackupCoordinator::SetFatalError(std::exception_ptr exception) {
   std::lock_guard<std::mutex> lock(mutex_);
-  fatal_error_ = std::make_shared<std::exception>(exception);
+  fatal_error_ = exception;
   cancelled_ = true;
   cond_variable_.notify_all();
 }
 
-std::shared_ptr<std::exception> BackupCoordinator::GetFatalError() {
+std::exception_ptr BackupCoordinator::GetFatalError() const {
   std::lock_guard<std::mutex> lock(mutex_);
   return fatal_error_;
 }
@@ -46,7 +46,7 @@ void BackupCoordinator::Cancel() {
   cond_variable_.notify_all();
 }
 
-bool BackupCoordinator::IsCancelled() {
+bool BackupCoordinator::IsCancelled() const {
   std::lock_guard<std::mutex> lock(mutex_);
   return cancelled_;
 }

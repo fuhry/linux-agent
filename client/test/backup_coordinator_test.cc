@@ -36,14 +36,21 @@ TEST(BackupCoordinatorTest, BasicFatalTest) {
   EXPECT_FALSE(bc.IsCancelled());
 
   auto error = bc.GetFatalError();
-  EXPECT_FALSE(error.get());
+  EXPECT_EQ(nullptr, error);
 
-  std::exception e;
+
+  std::exception_ptr e;
+  try {
+    throw std::runtime_error("Dummy");
+  } catch (...) {
+    e = std::current_exception();
+  }
+
   bc.SetFatalError(e);
   EXPECT_TRUE(bc.IsCancelled());
 
   error = bc.GetFatalError();
-  EXPECT_TRUE(error.get());
+  EXPECT_EQ(e, error);
 }
 
 TEST(BackupCoordinatorTest, SignalTest) {
