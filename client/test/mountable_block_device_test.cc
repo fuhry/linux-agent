@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <memory>
 #include <thread>
 #include <unistd.h>
@@ -27,6 +28,15 @@ void unmount_device(std::string path) {
   (void) suppress_warning;
 }
 
+
+class MockMountableBlockDevice : public MountableBlockDevice {
+ public:
+  explicit MockMountableBlockDevice(std::string b_block_path)
+      : MountableBlockDevice(b_block_path) { }
+
+  MOCK_METHOD0(GetInUseSectors, std::shared_ptr<const SectorSet>());
+};
+
 class MountableBlockDeviceTest : public ::testing::Test {
  protected:
   MountableBlockDeviceTest() {
@@ -48,17 +58,6 @@ class MountableBlockDeviceTest : public ::testing::Test {
   std::string temp_dir;
 };
 
-class MockMountableBlockDevice : public MountableBlockDevice {
- public:
-  MockMountableBlockDevice(std::string a_block_path)
-    : MountableBlockDevice(a_block_path) { }
-
-  std::unique_ptr<const SectorSet> GetInUseSectors();
-};
-
-std::unique_ptr<const SectorSet> MockMountableBlockDevice::GetInUseSectors() {
-  return nullptr;
-}
 
 TEST_F(MountableBlockDeviceTest, Constructor) {
   MockMountableBlockDevice bd(loop_device->path());
