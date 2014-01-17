@@ -22,8 +22,8 @@
 
 namespace {
 
-using ::datto_linux_client::BackupEventHandler;
 using ::datto_linux_client::BackupCoordinator;
+using ::datto_linux_client::BackupEventHandler;
 using ::datto_linux_client::BlockDevice;
 using ::datto_linux_client::DeviceSynchronizer;
 using ::datto_linux_client::DeviceTracer;
@@ -33,12 +33,12 @@ using ::datto_linux_client::SectorSet;
 using ::datto_linux_client::UnsyncedSectorManager;
 using ::datto_linux_client::UnsyncedSectorStore;
 using ::datto_linux_client_test::LoopDevice;
-using ::testing::AtLeast;
-using ::testing::Truly;
 using ::testing::Assign;
+using ::testing::AtLeast;
 using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::ReturnPointee;
+using ::testing::Truly;
 using ::testing::_;
 
 class MockBackupCoordinator : public BackupCoordinator {
@@ -109,8 +109,6 @@ class DeviceSynchronizerTest : public ::testing::Test {
   DeviceSynchronizerTest() {
     source_loop = std::make_shared<LoopDevice>();
     destination_loop = std::make_shared<LoopDevice>();
-
-    source_loop->FormatAsExt3();
 
     source_device =
         std::make_shared<MockMountableBlockDevice>(source_loop->path());
@@ -216,8 +214,7 @@ TEST_F(DeviceSynchronizerTest, SimpleSyncTest) {
   device_synchronizer->DoSync(coordinator, event_handler);
 }
 
-#if 0
-// TODO Make this test block size agnostic
+// This uses mostly real versions of things
 TEST_F(DeviceSynchronizerTest, SyncTest) {
   // Write garbage to the first 4k block then sync (which should overwrite it)
   // from source_device
@@ -229,6 +226,14 @@ TEST_F(DeviceSynchronizerTest, SyncTest) {
   // TODO Remove this once the block size is no longer hard coded
   ASSERT_EQ(4096UL, source_device->BlockSizeBytes());
 
+  auto real_source_device =
+      std::make_shared<NiceMock<MockMountableBlockDevice>>(
+          source_loop->path());
+  auto real_source_manager = std::make_shared<UnsyncedSectorManager>();
+  auto real_destination_device =
+      std::make_shared<BlockDevice>(destination_loop->path());
+  auto source_store = real_source_manager->GetStore(*real_source_device);
+
   for (int i = 0; i < 5; i += 1) {
     if (read(urandom_fd, buf.data(), 4096) == -1) {
       FAIL() << "Failed reading from urandom";
@@ -239,7 +244,7 @@ TEST_F(DeviceSynchronizerTest, SyncTest) {
     }
     // Only mark every other block to sync
     if (i % 2 == 0) {
-      // AddUnsyncedInterval(SectorInterval(i * 8, (i + 1) * 8));
+      source_store->AddUnsyncedInterval(SectorInterval(i * 8, (i + 1) * 8));
     }
   }
 
@@ -257,8 +262,18 @@ TEST_F(DeviceSynchronizerTest, SyncTest) {
   source_device->Close();
 
   // Do the Sync
-  ConstructSynchronizer();
-  device_synchronizer->DoSync(cancel_token);
+  device_synchronizer = std::make_shared<DeviceSynchronizer>(
+                            real_source_device,
+                            real_source_manager,
+                            destination_device);
+
+  // Run the sync
+  auto event_handler = std::make_shared<NiceMock<MockBackupEventHandler>>();
+  auto coordinator = std::make_shared<NiceMock<MockBackupCoordinator>>();
+  EXPECT_CALL(*coordinator, IsCancelled())
+      .WillRepeatedly(Return(false));
+
+  device_synchronizer->DoSync(coordinator, event_handler);
 
   // Make sure it worked
   source_fd = source_device->Open();
@@ -284,4 +299,3 @@ TEST_F(DeviceSynchronizerTest, SyncTest) {
     }
   }
 }
-#endif
