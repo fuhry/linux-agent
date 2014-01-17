@@ -12,32 +12,32 @@ namespace datto_linux_client {
 class UnsyncedSectorStore {
  public:
   UnsyncedSectorStore();
-  ~UnsyncedSectorStore();
+  virtual ~UnsyncedSectorStore();
 
-  void AddUnsyncedInterval(const SectorInterval &sector_interval);
+  virtual void AddUnsyncedInterval(const SectorInterval &sector_interval);
 
   // This must be called *before* syncing to prevent the situation where
   // the following order of events occurs:
   // 1. Sync the sector
   // 2. *Sector is modified*
   // 3. Mark the, now outdated sector, as synced
-  void MarkToSyncInterval(const SectorInterval &sector_interval);
+  virtual void MarkToSyncInterval(const SectorInterval &sector_interval);
 
   // Clears the entire Store
-  void ClearAll();
+  virtual void ClearAll();
 
   // Clears synced intervals
   // Should be called when a backup completes
-  void ClearSynced();
+  virtual void ClearSynced();
 
   // Loads the synced intervals into the unsynced intervals
   // This should be called when a backup is stopped or fails
-  void ResetUnsynced();
+  virtual void ResetUnsynced();
 
   // Returns an interval that is unsynced. 
-  SectorInterval GetContinuousUnsyncedSectors() const;
+  virtual SectorInterval GetContinuousUnsyncedSectors() const;
 
-  uint64_t UnsyncedSectorCount() const;
+  virtual uint64_t UnsyncedSectorCount() const;
  private:
   SectorSet unsynced_sector_set_;
   SectorSet synced_sector_set_;

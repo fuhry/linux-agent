@@ -36,8 +36,18 @@ void UnsyncedSectorManager::StopTracer(const BlockDevice &device) {
   tracer_map_[device.dev_t()] = nullptr;
 }
 
-bool UnsyncedSectorManager::IsTracing(const BlockDevice &device) {
-  return tracer_map_[device.dev_t()] != nullptr;
+void UnsyncedSectorManager::FlushTracer(const BlockDevice &device) {
+  if (tracer_map_.count(device.dev_t())) {
+    tracer_map_[device.dev_t()]->FlushBuffers();
+  }
+}
+
+bool UnsyncedSectorManager::IsTracing(const BlockDevice &device) const {
+  if (tracer_map_.count(device.dev_t())) {
+    return tracer_map_.at(device.dev_t()) != nullptr;
+  } else {
+    return false;
+  }
 }
 
 std::shared_ptr<UnsyncedSectorStore> UnsyncedSectorManager::GetStore(
@@ -48,11 +58,11 @@ std::shared_ptr<UnsyncedSectorStore> UnsyncedSectorManager::GetStore(
   return store_map_.at(device.dev_t());
 }
 
-std::unique_ptr<DeviceTracer> UnsyncedSectorManager::CreateDeviceTracer(
-    std::string path,
+std::shared_ptr<DeviceTracer> UnsyncedSectorManager::CreateDeviceTracer(
+    const std::string &path,
     std::shared_ptr<UnsyncedSectorStore> store) {
   auto trace_handler = std::make_shared<TraceHandler>(store);
-  std::unique_ptr<DeviceTracer> device_tracer(
+  std::shared_ptr<DeviceTracer> device_tracer(
       new DeviceTracer(path, trace_handler));
   return device_tracer;
 }

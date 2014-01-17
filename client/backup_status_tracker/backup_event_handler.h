@@ -15,20 +15,26 @@ class BackupEventHandler {
   BackupEventHandler(const std::string &job_uuid,
                      std::shared_ptr<std::mutex> to_lock_mutex,
                      std::shared_ptr<BackupStatusReply> reply);
+  virtual ~BackupEventHandler() {}
 
-  void BackupCopying();
+  virtual void BackupCopying();
 
-  void BackupFinished();
-  void BackupCancelled();
-  void BackupFailed(const std::string &failure_message);
+  virtual void BackupFinished();
+  virtual void BackupCancelled();
+  virtual void BackupFailed(const std::string &failure_message);
 
   // num_synced should be the total synced
-  void UpdateSyncedCount(uint64_t num_synced);
+  virtual void UpdateSyncedCount(uint64_t num_synced);
   // num_unsynced should be the total synced
-  void UpdateUnsyncedCount(uint64_t num_unsynced);
+  virtual void UpdateUnsyncedCount(uint64_t num_unsynced);
 
   BackupEventHandler(const BackupEventHandler &) = delete;
   BackupEventHandler& operator=(const BackupEventHandler &) = delete;
+
+ protected:
+  // For unit testing
+  BackupEventHandler() {}
+
  private:
   const std::string job_uuid_;
   std::shared_ptr<std::mutex> to_lock_mutex_;

@@ -1,10 +1,7 @@
 #include "device_synchronizer/device_synchronizer.h"
 
-#include "backup_event_tracker/backup_event_handler.h"
-#include "block_device/block_device.h"
-#include "block_device/mountable_block_device.h"
-#include "cancellation/cancellation_token.h"
-#include "request_listener/reply_channel.h"
+#include "backup/backup_coordinator.h"
+#include "backup_status_tracker/backup_event_handler.h"
 #include "test/loop_device.h"
 #include "unsynced_sector_manager/sector_interval.h"
 #include "unsynced_sector_manager/sector_set.h"
@@ -21,126 +18,157 @@
 #include <unistd.h>
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace {
 
 using ::datto_linux_client::BackupEventHandler;
-using ::datto_linux_client::BackupStatusReply;
-using ::datto_linux_client::CancellationToken;
+using ::datto_linux_client::BackupCoordinator;
+using ::datto_linux_client::BlockDevice;
 using ::datto_linux_client::DeviceSynchronizer;
+using ::datto_linux_client::DeviceTracer;
 using ::datto_linux_client::MountableBlockDevice;
-using ::datto_linux_client::Reply;
-using ::datto_linux_client::ReplyChannel;
 using ::datto_linux_client::SectorInterval;
 using ::datto_linux_client::SectorSet;
 using ::datto_linux_client::UnsyncedSectorManager;
+using ::datto_linux_client::UnsyncedSectorStore;
 using ::datto_linux_client_test::LoopDevice;
+using ::testing::AtLeast;
+using ::testing::Truly;
+using ::testing::Assign;
+using ::testing::NiceMock;
+using ::testing::Return;
+using ::testing::ReturnPointee;
+using ::testing::_;
 
-class DummyMountableBlockDevice : public MountableBlockDevice {
+class MockBackupCoordinator : public BackupCoordinator {
  public:
-  explicit DummyMountableBlockDevice(std::string b_block_path)
-      : MountableBlockDevice(b_block_path) { }
+  MockBackupCoordinator() {}
 
-  std::unique_ptr<const SectorSet> GetInUseSectors() {
-    return nullptr;
-  }
-
-  void Freeze() { }
-  void Thaw() { }
+  MOCK_METHOD0(SignalFinished, void());
+  MOCK_METHOD0(SignalMoreWorkToDo, bool());
+  MOCK_METHOD1(SetFatalError, void(const std::exception_ptr));
+  MOCK_CONST_METHOD0(GetFatalError, std::exception_ptr());
+  MOCK_METHOD0(Cancel, void());
+  MOCK_CONST_METHOD0(IsCancelled, bool());
+  MOCK_METHOD1(WaitUntilFinished, bool(int));
 };
 
-class DummyReplyChannel : public ReplyChannel {
+class MockBackupEventHandler : public BackupEventHandler {
  public:
-  DummyReplyChannel() : is_available_(true) { }
-  virtual void SendReply(const Reply &reply) { }
-  virtual bool IsAvailable() {
-    return is_available_;
-  }
-  void set_is_available(bool a_is_available) {
-    is_available_ = a_is_available;
-  }
+  MockBackupEventHandler() {}
 
-  virtual ~DummyReplyChannel() { }
+  MOCK_METHOD0(BackupCopying, void());
+  MOCK_METHOD0(BackupFinished, void());
+  MOCK_METHOD0(BackupCancelled, void());
+  MOCK_METHOD1(BackupFailed, void(const std::string &failure_message));
 
- private:
-  bool is_available_;
+  MOCK_METHOD1(UpdateSyncedCount, void(uint64_t num_synced));
+  MOCK_METHOD1(UpdateUnsyncedCount, void(uint64_t num_unsynced));
+};
+
+class MockMountableBlockDevice : public MountableBlockDevice {
+ public:
+  explicit MockMountableBlockDevice(std::string b_block_path)
+      : MountableBlockDevice(b_block_path) { }
+
+  MOCK_METHOD0(GetInUseSectors, std::shared_ptr<const SectorSet>());
+  MOCK_METHOD0(Freeze, void());
+  MOCK_METHOD0(Thaw, void());
+};
+
+class MockUnsyncedSectorManager : public UnsyncedSectorManager {
+ public:
+  MockUnsyncedSectorManager() {}
+  MOCK_METHOD1(StartTracer, void(const BlockDevice &));
+  MOCK_METHOD1(StopTracer, void(const BlockDevice &));
+  MOCK_CONST_METHOD1(IsTracing, bool(const BlockDevice &));
+  MOCK_METHOD1(FlushTracer, void(const BlockDevice &));
+  MOCK_METHOD1(GetStore,
+               std::shared_ptr<UnsyncedSectorStore>(const BlockDevice &));
+
+  MOCK_METHOD2(CreateDeviceTracer,
+      std::shared_ptr<DeviceTracer>(const std::string &,
+                                    std::shared_ptr<UnsyncedSectorStore>));
+};
+
+class MockUnsyncedSectorStore : public UnsyncedSectorStore {
+ public:
+  MockUnsyncedSectorStore() {}
+  MOCK_METHOD1(AddUnsyncedInterval, void(const SectorInterval &));
+  MOCK_METHOD1(MarkToSyncInterval, void(const SectorInterval &));
+  MOCK_METHOD0(ClearAll, void());
+  MOCK_METHOD0(ClearSynced, void());
+  MOCK_METHOD0(ResetUnsynced, void());
+  MOCK_CONST_METHOD0(GetContinuousUnsyncedSectors, SectorInterval());
+  MOCK_CONST_METHOD0(UnsyncedSectorCount, uint64_t());
 };
 
 class DeviceSynchronizerTest : public ::testing::Test {
  protected:
   DeviceSynchronizerTest() {
-    cancel_token = std::make_shared<CancellationToken>();
-
     source_loop = std::make_shared<LoopDevice>();
-    source_loop->FormatAsExt3();
-
     destination_loop = std::make_shared<LoopDevice>();
 
-    source_device = std::make_shared<DummyMountableBlockDevice>(
-                        source_loop->path());
+    source_loop->FormatAsExt3();
 
-    destination_device = std::make_shared<DummyMountableBlockDevice>(
-                            destination_loop->path());
+    source_device =
+        std::make_shared<MockMountableBlockDevice>(source_loop->path());
 
-    source_manager = std::make_shared<UnsyncedSectorManager>(
-                          source_loop->path());
+    source_manager = std::make_shared<MockUnsyncedSectorManager>();
 
-    auto mutex = std::make_shared<std::mutex>();
-    auto reply = std::make_shared<BackupStatusReply>();
+    destination_device =
+        std::make_shared<MockMountableBlockDevice>(destination_loop->path());
 
-    event_handler =
-      std::make_shared<BackupEventHandler>("dummy", mutex, reply);
+    is_source = [&](const BlockDevice &b) {
+      return b.dev_t() == source_device->dev_t();
+    };
   }
 
   void ConstructSynchronizer() {
-    source_manager->StartTracer();
     device_synchronizer = std::make_shared<DeviceSynchronizer>(
                               source_device,
                               source_manager,
-                              destination_device,
-                              event_handler);
-
+                              destination_device);
   }
+
+
 
   ~DeviceSynchronizerTest() { }
 
   // Order matters here, things will be destructed in opposite order
   // of declaration
 
-  std::shared_ptr<CancellationToken> cancel_token;
-
   std::shared_ptr<LoopDevice> source_loop;
-  std::shared_ptr<MountableBlockDevice> source_device;
-  std::shared_ptr<UnsyncedSectorManager> source_manager;
+  std::shared_ptr<MockMountableBlockDevice> source_device;
+  std::shared_ptr<MockUnsyncedSectorManager> source_manager;
+
+  std::function<bool(const BlockDevice&)> is_source;
 
   std::shared_ptr<LoopDevice> destination_loop;
-  std::shared_ptr<MountableBlockDevice> destination_device;
-
-  std::shared_ptr<BackupEventHandler> event_handler;
+  std::shared_ptr<MockMountableBlockDevice> destination_device;
 
   std::shared_ptr<DeviceSynchronizer> device_synchronizer;
 };
 
+} // anonymous namespace
+
+namespace boost { namespace icl {
+// This needs to be in global namespace because of difficulties resolving
+// the print method for SectorInterval
+void PrintTo(const SectorInterval &si, ::std::ostream *os) {
+  *os << si;
 }
+}}
+
 
 TEST_F(DeviceSynchronizerTest, CanConstruct) {
   // Make sure there is something to sync
-  source_manager->store()->AddUnsyncedInterval(SectorInterval(0, 1));
   ConstructSynchronizer();
   EXPECT_NE(nullptr, device_synchronizer);
 }
 
-TEST_F(DeviceSynchronizerTest, ConstructFailure1) {
-  try {
-    ConstructSynchronizer();
-    FAIL() << "Construction succeeded but there was no data to sync";
-  } catch (const std::runtime_error &e) {
-    // good
-  }
-}
-
-TEST_F(DeviceSynchronizerTest, ConstructFailure2) {
-  source_manager->store()->AddUnsyncedInterval(SectorInterval(0, 1));
+TEST_F(DeviceSynchronizerTest, ConstructFailure) {
   source_device = destination_device;
 
   try {
@@ -151,6 +179,48 @@ TEST_F(DeviceSynchronizerTest, ConstructFailure2) {
   }
 }
 
+TEST_F(DeviceSynchronizerTest, SimpleSyncTest) {
+  ConstructSynchronizer();
+
+  auto coordinator = std::make_shared<MockBackupCoordinator>();
+  auto event_handler = std::make_shared<NiceMock<MockBackupEventHandler>>();
+  auto mock_store = std::make_shared<MockUnsyncedSectorStore>();
+
+  uint64_t unsynced_count = 10;
+
+  EXPECT_CALL(*source_device, Thaw())
+      .Times(AtLeast(1));
+
+  EXPECT_CALL(*source_device, Freeze())
+      .Times(AtLeast(1));
+
+  EXPECT_CALL(*mock_store, UnsyncedSectorCount())
+      .Times(AtLeast(1))
+      .WillRepeatedly(ReturnPointee(&unsynced_count));
+
+  EXPECT_CALL(*mock_store, MarkToSyncInterval(SectorInterval(0, 10)))
+      .Times(1)
+      .WillOnce(Assign(&unsynced_count, 0));
+
+  EXPECT_CALL(*mock_store, GetContinuousUnsyncedSectors())
+      .Times(AtLeast(1))
+      .WillOnce(Return(SectorInterval(0, 10)))
+      .WillRepeatedly(Return(SectorInterval(0, 0)));
+
+  EXPECT_CALL(*source_manager, GetStore(Truly(is_source)))
+      .Times(AtLeast(1))
+      .WillRepeatedly(Return(mock_store));
+
+  EXPECT_CALL(*source_manager, FlushTracer(Truly(is_source)))
+      .Times(AtLeast(1));
+  
+  EXPECT_CALL(*coordinator, IsCancelled())
+      .WillRepeatedly(Return(false));
+
+  device_synchronizer->DoSync(coordinator, event_handler);
+}
+
+#if 0
 // TODO Make this test block size agnostic
 TEST_F(DeviceSynchronizerTest, SyncTest) {
   // Write garbage to the first 4k block then sync (which should overwrite it)
@@ -173,7 +243,7 @@ TEST_F(DeviceSynchronizerTest, SyncTest) {
     }
     // Only mark every other block to sync
     if (i % 2 == 0) {
-      source_manager->store()->AddUnsyncedInterval(SectorInterval(i * 8, (i + 1) * 8));
+      // AddUnsyncedInterval(SectorInterval(i * 8, (i + 1) * 8));
     }
   }
 
@@ -218,3 +288,4 @@ TEST_F(DeviceSynchronizerTest, SyncTest) {
     }
   }
 }
+#endif

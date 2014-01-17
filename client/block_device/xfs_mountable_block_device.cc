@@ -31,11 +31,11 @@ namespace datto_linux_client {
 XfsMountableBlockDevice::XfsMountableBlockDevice(std::string a_path)
     : MountableBlockDevice(a_path) { }
 
-std::unique_ptr<const SectorSet> XfsMountableBlockDevice::GetInUseSectors() {
+std::shared_ptr<const SectorSet> XfsMountableBlockDevice::GetInUseSectors() {
 
   // we are going to subtrace the free blocks later, so start with everything
   // in use
-  auto in_use_sectors = std::unique_ptr<SectorSet>(new SectorSet());
+  auto in_use_sectors = std::shared_ptr<SectorSet>(new SectorSet());
   *in_use_sectors += SectorInterval(0, DeviceSizeBytes() / 512);
 
   // open a pipe for the xfs_db process

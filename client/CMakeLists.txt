@@ -107,20 +107,20 @@ add_unit_test(block_device_test
               test/loop_device.cc
               block_device/block_device.cc)
 
-#add_unit_test(device_synchronizer_test
-#              backup_event_tracker/backup_event_handler.cc
-#              block_device/block_device.cc
-#              block_device/mountable_block_device.cc
-#              block_trace/cpu_tracer.cc
-#              block_trace/device_tracer.cc
-#              block_trace/trace_handler.cc
-#              cancellation/cancellation_token.cc
-#              test/loop_device.cc
-#              unsynced_sector_manager/unsynced_sector_manager.cc
-#              unsynced_sector_manager/unsynced_sector_store.cc
-#              ${PROTO_SRCS}
-#              device_synchronizer/device_synchronizer.cc)
-#target_link_libraries(device_synchronizer_test ${PROTOBUF_LIBRARIES})
+add_unit_test(device_synchronizer_test
+              backup_status_tracker/backup_event_handler.cc
+              backup/backup_coordinator.cc
+              block_device/block_device.cc
+              block_device/mountable_block_device.cc
+              block_trace/cpu_tracer.cc
+              block_trace/device_tracer.cc
+              block_trace/trace_handler.cc
+              test/loop_device.cc
+              unsynced_sector_manager/unsynced_sector_manager.cc
+              unsynced_sector_manager/unsynced_sector_store.cc
+              ${PROTO_SRCS}
+              device_synchronizer/device_synchronizer.cc)
+target_link_libraries(device_synchronizer_test ${PROTOBUF_LIBRARIES})
 
 add_unit_test(device_tracer_test
               test/loop_device.cc

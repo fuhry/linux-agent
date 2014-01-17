@@ -18,19 +18,21 @@ class UnsyncedSectorManager {
   UnsyncedSectorManager();
   virtual ~UnsyncedSectorManager();
 
-  void StartTracer(const BlockDevice &device);
-  void StopTracer(const BlockDevice &device);
-  bool IsTracing(const BlockDevice &device);
+  virtual void StartTracer(const BlockDevice &device);
+  virtual void StopTracer(const BlockDevice &device);
+  virtual bool IsTracing(const BlockDevice &device) const;
+  virtual void FlushTracer(const BlockDevice &device);
 
-  std::shared_ptr<UnsyncedSectorStore> GetStore(const BlockDevice &device);
+  virtual std::shared_ptr<UnsyncedSectorStore> GetStore(
+      const BlockDevice &device);
 
   UnsyncedSectorManager(const UnsyncedSectorManager&) = delete;
   UnsyncedSectorManager& operator=(const UnsyncedSectorManager&) = delete;
 
  protected:
   // Virtual to allow overriding in tests
-  virtual std::unique_ptr<DeviceTracer> CreateDeviceTracer(
-      std::string path, std::shared_ptr<UnsyncedSectorStore> store);
+  virtual std::shared_ptr<DeviceTracer> CreateDeviceTracer(
+      const std::string &path, std::shared_ptr<UnsyncedSectorStore> store);
 
  private:
   std::map<dev_t, std::shared_ptr<UnsyncedSectorStore>> store_map_;

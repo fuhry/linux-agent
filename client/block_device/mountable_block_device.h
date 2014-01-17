@@ -28,7 +28,7 @@ class MountableBlockDevice : public BlockDevice {
   virtual void Thaw();
 
   // These will be relative from the start of the partition
-  virtual std::unique_ptr<const SectorSet> GetInUseSectors() = 0;
+  virtual std::shared_ptr<const SectorSet> GetInUseSectors() = 0;
 
   // Return a file descriptor for the mount point
   // Throw an exception if one is already open, or if
@@ -49,4 +49,4 @@ class MountableBlockDevice : public BlockDevice {
 
 }
 
-#endif //  DATTO_CLIENT_BLOCK_DEVICE_MOUNTABLEBLOCK_DEVICE_H_
+#endif //  DATTO_CLIENT_BLOCK_DEVICE_MOUNTABLE_BLOCK_DEVICE_H_
