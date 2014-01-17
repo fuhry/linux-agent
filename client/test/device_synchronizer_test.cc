@@ -132,10 +132,6 @@ class DeviceSynchronizerTest : public ::testing::Test {
                               destination_device);
   }
 
-
-
-  ~DeviceSynchronizerTest() { }
-
   // Order matters here, things will be destructed in opposite order
   // of declaration
 
