@@ -10,8 +10,6 @@ UnsyncedSectorStore::UnsyncedSectorStore()
       start_of_last_continuous_(0),
       sector_set_mutex_() { }
 
-UnsyncedSectorStore::~UnsyncedSectorStore() { }
-
 void UnsyncedSectorStore::AddUnsyncedInterval(
     const SectorInterval &sector_interval) {
   std::lock_guard<std::mutex> set_lock(sector_set_mutex_);

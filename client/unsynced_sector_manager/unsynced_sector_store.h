@@ -12,7 +12,7 @@ namespace datto_linux_client {
 class UnsyncedSectorStore {
  public:
   UnsyncedSectorStore();
-  virtual ~UnsyncedSectorStore();
+  virtual ~UnsyncedSectorStore() {}
 
   virtual void AddUnsyncedInterval(const SectorInterval &sector_interval);
 
