@@ -3,26 +3,19 @@
 
 enable_testing()
 
-# Build GTest
-# On 12.04, gmock is already built and only gtest
-#           needs to be compiled
-# on 13.10, gmock and gtest need to be built, and
-#           gtest is a subdirectory of gmock
-# Not sure about anything else
-if (EXISTS "/usr/src/gtest/")
-    set(GTEST_DIR "/usr/src/gtest")
-    include_directories(${GTEST_DIR})
-    include_directories(${GTEST_DIR}/include)
-    add_library(gtest ${GTEST_DIR}/src/gtest-all.cc)
-ELSE (EXISTS "/usr/src/gmock/")
-    set(GTEST_DIR "/usr/src/gmock/gtest")
-    set(GMOCK_DIR "/usr/src/gmock")
+# Build GTest and GMock, fetch_testing_tools needs to have been run first
+set(GMOCK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/gmock/")
+set(GTEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/gmock/gtest/")
+if (EXISTS ${GMOCK_DIR} AND EXISTS ${GTEST_DIR})
     include_directories(${GTEST_DIR})
     include_directories(${GTEST_DIR}/include)
     include_directories(${GMOCK_DIR})
     include_directories(${GMOCK_DIR}/include)
     add_library(gtest ${GTEST_DIR}/src/gtest-all.cc)
-    add_library(gmock_main ${GMOCK_DIR}/src/gmock-all.cc ${GMOCK_DIR}/src/gmock_main.cc)
+    add_library(gmock_main ${GMOCK_DIR}/src/gmock-all.cc
+                           ${GMOCK_DIR}/src/gmock_main.cc)
+else()
+    add_library(FATAL_ERROR "gmock can't be found, run fetch_testing_tools")
 endif()
 
 add_custom_target(check)

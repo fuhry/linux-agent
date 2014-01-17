@@ -1,0 +1,7 @@
+#!/bin/bash
+
+pushd $(dirname "$0") > /dev/null
+echo "Fetching gmock..."
+svn checkout http://googlemock.googlecode.com/svn/tags/release-1.7.0 gmock \
+    | grep -v -e '^A' -e '^ U' -e '^$' # Suppress noise
+popd > /dev/null
