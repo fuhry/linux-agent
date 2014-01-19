@@ -11,7 +11,7 @@ BackupCoordinator::BackupCoordinator(int num_workers)
       mutex_(),
       cond_variable_(),
       cancelled_(false),
-      fatal_error_() {}
+      fatal_errors_() {}
 
 void BackupCoordinator::SignalFinished() {
   std::lock_guard<std::mutex> lock(mutex_);
@@ -28,16 +28,16 @@ bool BackupCoordinator::SignalMoreWorkToDo() {
   return true;
 }
 
-void BackupCoordinator::SetFatalError(std::exception_ptr exception) {
+void BackupCoordinator::AddFatalError(std::exception_ptr exception) {
   std::lock_guard<std::mutex> lock(mutex_);
-  fatal_error_ = exception;
+  fatal_errors_.push_back(exception);
   cancelled_ = true;
   cond_variable_.notify_all();
 }
 
-std::exception_ptr BackupCoordinator::GetFatalError() const {
+std::vector<std::exception_ptr> BackupCoordinator::GetFatalErrors() const {
   std::lock_guard<std::mutex> lock(mutex_);
-  return fatal_error_;
+  return fatal_errors_;
 }
 
 void BackupCoordinator::Cancel() {

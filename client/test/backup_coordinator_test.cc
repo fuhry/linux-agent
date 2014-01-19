@@ -35,9 +35,8 @@ TEST(BackupCoordinatorTest, BasicFatalTest) {
 
   EXPECT_FALSE(bc.IsCancelled());
 
-  auto error = bc.GetFatalError();
-  EXPECT_EQ(nullptr, error);
-
+  auto errors = bc.GetFatalErrors();
+  EXPECT_EQ(0, errors.size());
 
   std::exception_ptr e;
   try {
@@ -46,11 +45,12 @@ TEST(BackupCoordinatorTest, BasicFatalTest) {
     e = std::current_exception();
   }
 
-  bc.SetFatalError(e);
+  bc.AddFatalError(e);
   EXPECT_TRUE(bc.IsCancelled());
 
-  error = bc.GetFatalError();
-  EXPECT_EQ(e, error);
+  errors = bc.GetFatalErrors();
+  ASSERT_EQ(1, errors.size());
+  EXPECT_EQ(e, errors[0]);
 }
 
 TEST(BackupCoordinatorTest, SignalTest) {
@@ -72,7 +72,5 @@ TEST(BackupCoordinatorTest, SignalTest) {
   EXPECT_FALSE(bc.SignalMoreWorkToDo());
   EXPECT_TRUE(bc.WaitUntilFinished(100));
 }
-
-
 
 } // namespace

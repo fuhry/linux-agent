@@ -47,8 +47,8 @@ class MockBackupCoordinator : public BackupCoordinator {
 
   MOCK_METHOD0(SignalFinished, void());
   MOCK_METHOD0(SignalMoreWorkToDo, bool());
-  MOCK_METHOD1(SetFatalError, void(const std::exception_ptr));
-  MOCK_CONST_METHOD0(GetFatalError, std::exception_ptr());
+  MOCK_METHOD1(AddFatalError, void(const std::exception_ptr));
+  MOCK_CONST_METHOD0(GetFatalErrors, std::vector<std::exception_ptr>());
   MOCK_METHOD0(Cancel, void());
   MOCK_CONST_METHOD0(IsCancelled, bool());
   MOCK_METHOD1(WaitUntilFinished, bool(int));

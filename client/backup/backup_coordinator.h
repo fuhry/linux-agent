@@ -5,6 +5,7 @@
 #include <exception>
 #include <memory>
 #include <mutex>
+#include <vector>
 
 namespace datto_linux_client {
 
@@ -30,10 +31,10 @@ class BackupCoordinator {
   // process is complete.
   virtual bool SignalMoreWorkToDo();
 
-  virtual void SetFatalError(const std::exception_ptr exception);
-  // null shared ptr means no fatal error
-  // TODO exception pointer type exists
-  virtual std::exception_ptr GetFatalError() const;
+  virtual void AddFatalError(const std::exception_ptr exception);
+
+  // Multiple Fatal Errors can occur, so track them all
+  virtual std::vector<std::exception_ptr> GetFatalErrors() const;
 
   virtual void Cancel();
   // Returns true if explicitly cancelled with Cancel(), or if a 
@@ -47,6 +48,9 @@ class BackupCoordinator {
   // return value of true means synchronziation is complete, false means it
   // timed out
   virtual bool WaitUntilFinished(int timeout_millis);
+
+  BackupCoordinator(const BackupCoordinator &) = delete;
+  BackupCoordinator& operator=(const BackupCoordinator &) = delete;
  protected:
   // For unit testing
   BackupCoordinator() {}
@@ -56,8 +60,7 @@ class BackupCoordinator {
   mutable std::mutex mutex_;
   std::condition_variable cond_variable_;
   bool cancelled_;
-
-  std::exception_ptr fatal_error_;
+  std::vector<std::exception_ptr> fatal_errors_;
 };
 
 } // datto_linux_client
