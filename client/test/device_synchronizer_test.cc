@@ -1,7 +1,7 @@
 #include "device_synchronizer/device_synchronizer.h"
 
 #include "backup/backup_coordinator.h"
-#include "backup_status_tracker/backup_event_handler.h"
+#include "backup_status_tracker/sync_count_handler.h"
 #include "test/loop_device.h"
 #include "unsynced_sector_manager/sector_interval.h"
 #include "unsynced_sector_manager/sector_set.h"
@@ -23,13 +23,13 @@
 namespace {
 
 using ::datto_linux_client::BackupCoordinator;
-using ::datto_linux_client::BackupEventHandler;
 using ::datto_linux_client::BlockDevice;
 using ::datto_linux_client::DeviceSynchronizer;
 using ::datto_linux_client::DeviceTracer;
 using ::datto_linux_client::MountableBlockDevice;
 using ::datto_linux_client::SectorInterval;
 using ::datto_linux_client::SectorSet;
+using ::datto_linux_client::SyncCountHandler;
 using ::datto_linux_client::UnsyncedSectorManager;
 using ::datto_linux_client::UnsyncedSectorStore;
 using ::datto_linux_client_test::LoopDevice;
@@ -54,15 +54,9 @@ class MockBackupCoordinator : public BackupCoordinator {
   MOCK_METHOD1(WaitUntilFinished, bool(int));
 };
 
-class MockBackupEventHandler : public BackupEventHandler {
+class MockSyncCountHandler : public SyncCountHandler {
  public:
-  MockBackupEventHandler() {}
-
-  MOCK_METHOD0(BackupCopying, void());
-  MOCK_METHOD0(BackupFinished, void());
-  MOCK_METHOD0(BackupCancelled, void());
-  MOCK_METHOD1(BackupFailed, void(const std::string &failure_message));
-
+  MockSyncCountHandler() {}
   MOCK_METHOD1(UpdateSyncedCount, void(uint64_t num_synced));
   MOCK_METHOD1(UpdateUnsyncedCount, void(uint64_t num_unsynced));
 };
@@ -177,7 +171,7 @@ TEST_F(DeviceSynchronizerTest, SimpleSyncTest) {
   ConstructSynchronizer();
 
   auto coordinator = std::make_shared<MockBackupCoordinator>();
-  auto event_handler = std::make_shared<NiceMock<MockBackupEventHandler>>();
+  auto count_handler = std::make_shared<NiceMock<MockSyncCountHandler>>();
   auto mock_store = std::make_shared<MockUnsyncedSectorStore>();
 
   uint64_t unsynced_count = 10;
@@ -211,7 +205,7 @@ TEST_F(DeviceSynchronizerTest, SimpleSyncTest) {
   EXPECT_CALL(*coordinator, IsCancelled())
       .WillRepeatedly(Return(false));
 
-  device_synchronizer->DoSync(coordinator, event_handler);
+  device_synchronizer->DoSync(coordinator, count_handler);
 }
 
 // This uses mostly real versions of things
@@ -268,12 +262,12 @@ TEST_F(DeviceSynchronizerTest, SyncTest) {
                             destination_device);
 
   // Run the sync
-  auto event_handler = std::make_shared<NiceMock<MockBackupEventHandler>>();
+  auto count_handler = std::make_shared<NiceMock<MockSyncCountHandler>>();
   auto coordinator = std::make_shared<NiceMock<MockBackupCoordinator>>();
   EXPECT_CALL(*coordinator, IsCancelled())
       .WillRepeatedly(Return(false));
 
-  device_synchronizer->DoSync(coordinator, event_handler);
+  device_synchronizer->DoSync(coordinator, count_handler);
 
   // Make sure it worked
   source_fd = source_device->Open();

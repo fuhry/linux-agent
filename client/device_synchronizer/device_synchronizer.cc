@@ -75,12 +75,12 @@ inline void copy_block(int source_fd, int destination_fd,
 namespace datto_linux_client {
 
 DeviceSynchronizer::DeviceSynchronizer(
-    std::shared_ptr<MountableBlockDevice> source_device,
-    std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager,
-    std::shared_ptr<BlockDevice> destination_device)
-    : source_device_(source_device),
-      source_unsynced_manager_(source_unsynced_manager),
-      destination_device_(destination_device) {
+    std::shared_ptr<MountableBlockDevice> source_device_a,
+    std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager_a,
+    std::shared_ptr<BlockDevice> destination_device_a)
+    : source_device_(source_device_a),
+      source_unsynced_manager_(source_unsynced_manager_a),
+      destination_device_(destination_device_a) {
 
   if (source_device_->dev_t() == destination_device_->dev_t()) {
     LOG(ERROR) << "Attempt to synchronize a device with itself";
@@ -102,7 +102,7 @@ DeviceSynchronizer::DeviceSynchronizer(
 
 void DeviceSynchronizer::DoSync(
     std::shared_ptr<BackupCoordinator> coordinator,
-    std::shared_ptr<BackupEventHandler> event_handler) {
+    std::shared_ptr<SyncCountHandler> count_handler) {
   LOG(INFO) << "Starting sync ";
   uint64_t total_bytes_sent = 0;
   int source_fd = source_device_->Open();
@@ -121,7 +121,7 @@ void DeviceSynchronizer::DoSync(
     uint64_t unsynced_sector_count = source_store->UnsyncedSectorCount();
 
     // Let the event handler know how much is left
-    event_handler->UpdateUnsyncedCount(unsynced_sector_count);
+    count_handler->UpdateUnsyncedCount(unsynced_sector_count);
 
     if (flush_time > 0 && unsynced_sector_count == 0) {
       LOG(INFO) << "Sync complete";
@@ -158,7 +158,7 @@ void DeviceSynchronizer::DoSync(
 
     total_bytes_sent +=
         boost::icl::cardinality(to_sync_interval) * SECTOR_SIZE;
-    event_handler->UpdateSyncedCount(total_bytes_sent);
+    count_handler->UpdateSyncedCount(total_bytes_sent);
 
     // Update unsynced sector count after interval was synced
     unsynced_sector_count = source_store->UnsyncedSectorCount();

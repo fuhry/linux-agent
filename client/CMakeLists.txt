@@ -109,6 +109,7 @@ add_unit_test(block_device_test
 
 add_unit_test(device_synchronizer_test
               backup_status_tracker/backup_event_handler.cc
+              backup_status_tracker/sync_count_handler.cc
               backup/backup_coordinator.cc
               block_device/block_device.cc
               block_device/mountable_block_device.cc
