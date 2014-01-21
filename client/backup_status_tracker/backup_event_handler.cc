@@ -6,16 +6,16 @@ BackupEventHandler::BackupEventHandler(
     const std::string &job_uuid,
     std::shared_ptr<std::mutex> to_lock_mutex,
     std::shared_ptr<BackupStatusReply> reply)
-  : job_uuid_(job_uuid),
-    to_lock_mutex_(to_lock_mutex),
-    reply_(reply) {
+    : job_uuid_(job_uuid),
+      to_lock_mutex_(to_lock_mutex),
+      reply_(reply) {
   std::lock_guard<std::mutex> lock(*to_lock_mutex_);
   reply_->set_status(BackupStatusReply::NOT_STARTED);
 }
 
-void BackupEventHandler::BackupCopying() {
+void BackupEventHandler::BackupInProgress() {
   std::lock_guard<std::mutex> lock(*to_lock_mutex_);
-  reply_->set_status(BackupStatusReply::COPYING);
+  reply_->set_status(BackupStatusReply::IN_PROGRESS);
 }
 
 void BackupEventHandler::BackupCancelled() {
@@ -23,9 +23,9 @@ void BackupEventHandler::BackupCancelled() {
   reply_->set_status(BackupStatusReply::CANCELLED);
 }
 
-void BackupEventHandler::BackupFinished() {
+void BackupEventHandler::BackupSucceeded() {
   std::lock_guard<std::mutex> lock(*to_lock_mutex_);
-  reply_->set_status(BackupStatusReply::FINISHED);
+  reply_->set_status(BackupStatusReply::SUCCEEDED);
 }
 
 void BackupEventHandler::BackupFailed(const std::string &failure_message) {
@@ -34,13 +34,9 @@ void BackupEventHandler::BackupFailed(const std::string &failure_message) {
   reply_->set_failure_message(failure_message);
 }
 
-void BackupEventHandler::UpdateSyncedCount(uint64_t num_synced) {
-  std::lock_guard<std::mutex> lock(*to_lock_mutex_);
-  reply_->set_bytes_transferred(num_synced);
-}
-
-void BackupEventHandler::UpdateUnsyncedCount(uint64_t num_unsynced) {
-  // TODO: no-op right now
+std::shared_ptr<SyncCountHandler> BackupEventHandler::CreateSyncCountHandler(
+    const std::string &block_device_name) {
+  return nullptr;
 }
 
 } // datto_linux_client

@@ -31,29 +31,16 @@ TEST(BackupStatusTrackerTest, ReplyIsUpdated) {
   BackupStatusTracker tracker;
   auto handler = tracker.CreateEventHandler("test-uuid");
 
-  handler->BackupCopying();
+  handler->BackupInProgress();
   auto reply = tracker.GetReply("test-uuid");
-  EXPECT_EQ(BackupStatusReply::COPYING, reply->status());
+  EXPECT_EQ(BackupStatusReply::IN_PROGRESS, reply->status());
 
-  handler->BackupFinished();
+  handler->BackupSucceeded();
   // Old reply should not have changed
-  EXPECT_EQ(BackupStatusReply::COPYING, reply->status());
+  EXPECT_EQ(BackupStatusReply::IN_PROGRESS, reply->status());
   reply = tracker.GetReply("test-uuid");
   // New reply should have changed
-  EXPECT_EQ(BackupStatusReply::FINISHED, reply->status());
-}
-
-TEST(BackupStatusTrackerTest, SyncCountsWork) {
-  BackupStatusTracker tracker;
-  auto handler = tracker.CreateEventHandler("test-uuid");
-
-  handler->UpdateSyncedCount(1234);
-  auto reply = tracker.GetReply("test-uuid");
-  EXPECT_EQ(1234U, reply->bytes_transferred());
-
-  handler->UpdateUnsyncedCount(4321);
-  reply = tracker.GetReply("test-uuid");
-  // TODO: EXPECT_EQ(4321, reply->???());
+  EXPECT_EQ(BackupStatusReply::SUCCEEDED, reply->status());
 }
 
 TEST(BackupStatusTrackerTest, FailureMessage) {
@@ -72,13 +59,13 @@ TEST(BackupStatusTrackerTest, MultipleHandlers) {
   auto handler2 = tracker.CreateEventHandler("test-uuid2");
 
   handler1->BackupFailed("Test message");
-  handler2->BackupFinished();
+  handler2->BackupSucceeded();
 
   auto reply1 = tracker.GetReply("test-uuid1");
   auto reply2 = tracker.GetReply("test-uuid2");
 
   EXPECT_EQ(BackupStatusReply::FAILED, reply1->status());
-  EXPECT_EQ(BackupStatusReply::FINISHED, reply2->status());
+  EXPECT_EQ(BackupStatusReply::SUCCEEDED, reply2->status());
 }
 
 } // namespace

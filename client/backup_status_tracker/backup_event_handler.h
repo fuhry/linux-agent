@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "backup_status_reply.pb.h"
+#include "backup_status_tracker/sync_count_handler.h"
 
 namespace datto_linux_client {
 
@@ -17,16 +18,13 @@ class BackupEventHandler {
                      std::shared_ptr<BackupStatusReply> reply);
   virtual ~BackupEventHandler() {}
 
-  virtual void BackupCopying();
-
-  virtual void BackupFinished();
+  virtual void BackupInProgress();
+  virtual void BackupSucceeded();
   virtual void BackupCancelled();
   virtual void BackupFailed(const std::string &failure_message);
 
-  // num_synced should be the total synced
-  virtual void UpdateSyncedCount(uint64_t num_synced);
-  // num_unsynced should be the total synced
-  virtual void UpdateUnsyncedCount(uint64_t num_unsynced);
+  virtual std::shared_ptr<SyncCountHandler> CreateSyncCountHandler(
+      const std::string &block_device_name);
 
   BackupEventHandler(const BackupEventHandler &) = delete;
   BackupEventHandler& operator=(const BackupEventHandler &) = delete;
