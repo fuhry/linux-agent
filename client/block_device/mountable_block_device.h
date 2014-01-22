@@ -42,6 +42,10 @@ class MountableBlockDevice : public BlockDevice {
   // Should close the mount file descriptor and unfreeze
   virtual ~MountableBlockDevice();
 
+ protected:
+  // For unit testing
+  MountableBlockDevice() {}
+
  private:
   int mount_file_descriptor_;
   bool is_frozen_;

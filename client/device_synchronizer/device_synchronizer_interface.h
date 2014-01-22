@@ -14,9 +14,10 @@ namespace datto_linux_client {
 // Existance of this class allows for easier mocking in unit tests
 class DeviceSynchronizerInterface {
  public:
+  DeviceSynchronizerInterface() {}
   // Precondition: source_device must be both traced and mounted
   virtual void DoSync(std::shared_ptr<BackupCoordinator> coordinator,
-                      std::shared_ptr<SyncCountHandler> event_handler) = 0;
+                      std::shared_ptr<SyncCountHandler> count_handler) = 0;
 
   virtual std::shared_ptr<const MountableBlockDevice>
   source_device() const = 0;
@@ -27,6 +28,10 @@ class DeviceSynchronizerInterface {
   virtual std::shared_ptr<const BlockDevice> destination_device() const = 0;
 
   virtual ~DeviceSynchronizerInterface() {}
+
+  DeviceSynchronizerInterface(const DeviceSynchronizerInterface &) = delete;
+  DeviceSynchronizerInterface&
+  operator=(const DeviceSynchronizerInterface &) = delete;
 };
 }
 
