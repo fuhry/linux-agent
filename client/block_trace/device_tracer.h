@@ -2,7 +2,6 @@
 #define DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACE_H_
 
 #include "block_trace/cpu_tracer.h"
-#include "block_trace/interval_queue.h"
 #include "block_trace/trace_handler.h"
 
 #include <linux/fs.h>
