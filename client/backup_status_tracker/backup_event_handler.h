@@ -8,6 +8,7 @@
 
 #include "backup_status_reply.pb.h"
 #include "backup_status_tracker/sync_count_handler.h"
+#include "block_device/mountable_block_device.h"
 
 namespace datto_linux_client {
 
@@ -24,7 +25,7 @@ class BackupEventHandler {
   virtual void BackupFailed(const std::string &failure_message);
 
   virtual std::shared_ptr<SyncCountHandler> CreateSyncCountHandler(
-      const std::string &block_device_name);
+      const MountableBlockDevice &source_device);
 
   BackupEventHandler(const BackupEventHandler &) = delete;
   BackupEventHandler& operator=(const BackupEventHandler &) = delete;

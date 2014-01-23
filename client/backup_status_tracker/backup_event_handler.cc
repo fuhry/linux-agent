@@ -35,7 +35,7 @@ void BackupEventHandler::BackupFailed(const std::string &failure_message) {
 }
 
 std::shared_ptr<SyncCountHandler> BackupEventHandler::CreateSyncCountHandler(
-    const std::string &block_device_name) {
+    const MountableBlockDevice &source_device) {
   return nullptr;
 }
 
