@@ -178,13 +178,13 @@ TEST_F(DeviceSynchronizerTest, SimpleSyncTest) {
       .Times(AtLeast(1))
       .WillRepeatedly(ReturnPointee(&unsynced_count));
 
-  EXPECT_CALL(*mock_store, MarkToSyncInterval(SectorInterval(0, 10)))
+  EXPECT_CALL(*mock_store, MarkToSyncInterval(SectorInterval(0, unsynced_count)))
       .Times(1)
       .WillOnce(Assign(&unsynced_count, 0));
 
   EXPECT_CALL(*mock_store, GetContinuousUnsyncedSectors())
       .Times(AtLeast(1))
-      .WillOnce(Return(SectorInterval(0, 10)))
+      .WillOnce(Return(SectorInterval(0, unsynced_count)))
       .WillRepeatedly(Return(SectorInterval(0, 0)));
 
   EXPECT_CALL(*source_manager, GetStore(Truly(is_source)))
