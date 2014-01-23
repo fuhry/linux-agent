@@ -1,5 +1,5 @@
-#ifndef DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACE_H_
-#define DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACE_H_
+#ifndef DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACER_H_
+#define DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACER_H_
 
 #include "block_trace/cpu_tracer.h"
 #include "block_trace/trace_handler.h"
@@ -61,4 +61,4 @@ class DeviceTracer {
 
 }
 
-#endif //  DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACE_H_
+#endif //  DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACER_H_

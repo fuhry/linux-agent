@@ -1,11 +1,11 @@
+#ifndef DATTO_CLIENT_BLOCK_DEVICE_TOOLS_H_
+#define DATTO_CLIENT_BLOCK_DEVICE_TOOLS_H_
+
 /**
 	File:        tools.h
 	Author:      Charles Roydhouse
 	Description: Useful macros for filesystem reads
 */
-
-#ifndef DATTO_TOOLS_H
-#define DATTO_TOOLS_H
 
 #define _swapbits16(x) ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
 
@@ -20,4 +20,4 @@
 #define my_roundup(n, m) m * (((n - 1) / m) + 1)
 #define my_rounddown(n, m) ((n/m) * m)
 
-#endif
+#endif //  DATTO_CLIENT_BLOCK_DEVICE_TOOLS_H_

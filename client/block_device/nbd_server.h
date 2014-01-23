@@ -1,3 +1,6 @@
+#ifndef DATTO_CLIENT_BLOCK_DEVICE_NBD_SERVER_H_
+#define DATTO_CLIENT_BLOCK_DEVICE_NBD_SERVER_H_
+
 #include <string>
 
 #include <stdint.h>
@@ -22,3 +25,5 @@ class NbdServer {
   uint16_t port_;
 };
 } // datto_linux_client
+
+#endif //  DATTO_CLIENT_BLOCK_DEVICE_NBD_SERVER_H_
