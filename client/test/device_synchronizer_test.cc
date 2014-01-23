@@ -36,6 +36,7 @@ using ::datto_linux_client_test::LoopDevice;
 using ::testing::Assign;
 using ::testing::AtLeast;
 using ::testing::NiceMock;
+using ::testing::StrictMock;
 using ::testing::Return;
 using ::testing::ReturnPointee;
 using ::testing::Truly;
@@ -71,6 +72,7 @@ class MockMountableBlockDevice : public MountableBlockDevice {
 class MockUnsyncedSectorManager : public UnsyncedSectorManager {
  public:
   MockUnsyncedSectorManager() {}
+  MOCK_CONST_METHOD1(IsTracing, bool(const BlockDevice &));
   MOCK_METHOD1(FlushTracer, void(const BlockDevice &));
   MOCK_METHOD1(GetStore,
                std::shared_ptr<UnsyncedSectorStore>(const BlockDevice &));
@@ -97,7 +99,7 @@ class DeviceSynchronizerTest : public ::testing::Test {
     source_device =
         std::make_shared<MockMountableBlockDevice>(source_loop->path());
 
-    source_manager = std::make_shared<MockUnsyncedSectorManager>();
+    source_manager = std::make_shared<StrictMock<MockUnsyncedSectorManager>>();
 
     destination_device =
         std::make_shared<MockMountableBlockDevice>(destination_loop->path());
@@ -189,6 +191,9 @@ TEST_F(DeviceSynchronizerTest, SimpleSyncTest) {
       .Times(AtLeast(1))
       .WillRepeatedly(Return(mock_store));
 
+  EXPECT_CALL(*source_manager, IsTracing(_))
+      .WillRepeatedly(Return(true));
+
   EXPECT_CALL(*source_manager, FlushTracer(Truly(is_source)))
       .Times(AtLeast(1));
   
@@ -256,6 +261,8 @@ TEST_F(DeviceSynchronizerTest, SyncTest) {
   auto coordinator = std::make_shared<NiceMock<MockBackupCoordinator>>();
   EXPECT_CALL(*coordinator, IsCancelled())
       .WillRepeatedly(Return(false));
+
+  real_source_manager->StartTracer(*real_source_device);
 
   device_synchronizer->DoSync(coordinator, count_handler);
 

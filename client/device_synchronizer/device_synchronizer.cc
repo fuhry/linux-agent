@@ -104,6 +104,9 @@ void DeviceSynchronizer::DoSync(
     std::shared_ptr<BackupCoordinator> coordinator,
     std::shared_ptr<SyncCountHandler> count_handler) {
   LOG(INFO) << "Starting sync ";
+
+  CHECK(source_unsynced_manager_->IsTracing(*source_device_));
+
   uint64_t total_bytes_sent = 0;
   int source_fd = source_device_->Open();
   int destination_fd = destination_device_->Open();
