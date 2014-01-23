@@ -47,9 +47,6 @@ class MockBackupCoordinator : public BackupCoordinator {
 
   MOCK_METHOD0(SignalFinished, void());
   MOCK_METHOD0(SignalMoreWorkToDo, bool());
-  MOCK_METHOD1(AddFatalError, void(const std::exception_ptr));
-  MOCK_CONST_METHOD0(GetFatalErrors, std::vector<std::exception_ptr>());
-  MOCK_METHOD0(Cancel, void());
   MOCK_CONST_METHOD0(IsCancelled, bool());
   MOCK_METHOD1(WaitUntilFinished, bool(int));
 };
@@ -74,16 +71,9 @@ class MockMountableBlockDevice : public MountableBlockDevice {
 class MockUnsyncedSectorManager : public UnsyncedSectorManager {
  public:
   MockUnsyncedSectorManager() {}
-  MOCK_METHOD1(StartTracer, void(const BlockDevice &));
-  MOCK_METHOD1(StopTracer, void(const BlockDevice &));
-  MOCK_CONST_METHOD1(IsTracing, bool(const BlockDevice &));
   MOCK_METHOD1(FlushTracer, void(const BlockDevice &));
   MOCK_METHOD1(GetStore,
                std::shared_ptr<UnsyncedSectorStore>(const BlockDevice &));
-
-  MOCK_METHOD2(CreateDeviceTracer,
-      std::shared_ptr<DeviceTracer>(const std::string &,
-                                    std::shared_ptr<UnsyncedSectorStore>));
 };
 
 class MockUnsyncedSectorStore : public UnsyncedSectorStore {

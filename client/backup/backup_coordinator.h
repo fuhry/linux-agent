@@ -2,10 +2,11 @@
 #define DATTO_CLIENT_BACKUP_BACKUP_COORDINATOR_H_
 
 #include <condition_variable>
-#include <exception>
 #include <memory>
 #include <mutex>
 #include <vector>
+
+#include "backup_status_tracker/backup_error.h"
 
 namespace datto_linux_client {
 
@@ -31,10 +32,10 @@ class BackupCoordinator {
   // process is complete.
   virtual bool SignalMoreWorkToDo();
 
-  virtual void AddFatalError(const std::exception_ptr exception);
+  virtual void AddFatalError(const BackupError &backup_error);
 
   // Multiple Fatal Errors can occur, so track them all
-  virtual std::vector<std::exception_ptr> GetFatalErrors() const;
+  virtual std::vector<BackupError> GetFatalErrors() const;
 
   virtual void Cancel();
   // Returns true if explicitly cancelled with Cancel(), or if a 
@@ -60,7 +61,7 @@ class BackupCoordinator {
   mutable std::mutex mutex_;
   std::condition_variable cond_variable_;
   bool cancelled_;
-  std::vector<std::exception_ptr> fatal_errors_;
+  std::vector<BackupError> fatal_errors_;
 };
 
 } // datto_linux_client

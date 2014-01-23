@@ -1,4 +1,5 @@
 #include "backup/backup_coordinator.h"
+#include "backup_status_tracker/backup_error.h"
 
 #include <thread>
 
@@ -7,6 +8,7 @@
 namespace {
 
 using ::datto_linux_client::BackupCoordinator;
+using ::datto_linux_client::BackupError;
 
 TEST(BackupCoordinatorTest, Constructor) {
   BackupCoordinator bc(0);
@@ -36,15 +38,9 @@ TEST(BackupCoordinatorTest, BasicFatalTest) {
   EXPECT_FALSE(bc.IsCancelled());
 
   auto errors = bc.GetFatalErrors();
-  EXPECT_EQ(0, errors.size());
+  EXPECT_EQ(0U, errors.size());
 
-  std::exception_ptr e;
-  try {
-    throw std::runtime_error("Dummy");
-  } catch (...) {
-    e = std::current_exception();
-  }
-
+  BackupError e("dummy");
   bc.AddFatalError(e);
   EXPECT_TRUE(bc.IsCancelled());
 

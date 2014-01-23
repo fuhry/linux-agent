@@ -28,14 +28,14 @@ bool BackupCoordinator::SignalMoreWorkToDo() {
   return true;
 }
 
-void BackupCoordinator::AddFatalError(std::exception_ptr exception) {
+void BackupCoordinator::AddFatalError(const BackupError &backup_error) {
   std::lock_guard<std::mutex> lock(mutex_);
-  fatal_errors_.push_back(exception);
+  fatal_errors_.push_back(backup_error);
   cancelled_ = true;
   cond_variable_.notify_all();
 }
 
-std::vector<std::exception_ptr> BackupCoordinator::GetFatalErrors() const {
+std::vector<BackupError> BackupCoordinator::GetFatalErrors() const {
   std::lock_guard<std::mutex> lock(mutex_);
   return fatal_errors_;
 }
