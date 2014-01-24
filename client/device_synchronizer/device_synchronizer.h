@@ -9,7 +9,7 @@ class DeviceSynchronizer : public DeviceSynchronizerInterface {
  public:
   DeviceSynchronizer(
       std::shared_ptr<MountableBlockDevice> source_device,
-      std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager,
+      std::shared_ptr<UnsyncedSectorManager> sector_manager,
       std::shared_ptr<BlockDevice> destination_device);
 
   // Precondition: source_device must be both traced and mounted
@@ -21,8 +21,8 @@ class DeviceSynchronizer : public DeviceSynchronizerInterface {
   }
 
   std::shared_ptr<const UnsyncedSectorManager>
-  source_unsynced_manager() const {
-    return source_unsynced_manager_;
+  sector_manager() const {
+    return sector_manager_;
   }
 
   std::shared_ptr<const BlockDevice> destination_device() const {
@@ -33,7 +33,7 @@ class DeviceSynchronizer : public DeviceSynchronizerInterface {
 
  private:
   std::shared_ptr<MountableBlockDevice> source_device_;
-  std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager_;
+  std::shared_ptr<UnsyncedSectorManager> sector_manager_;
   std::shared_ptr<BlockDevice> destination_device_;
 };
 }

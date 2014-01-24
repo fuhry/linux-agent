@@ -76,10 +76,10 @@ namespace datto_linux_client {
 
 DeviceSynchronizer::DeviceSynchronizer(
     std::shared_ptr<MountableBlockDevice> source_device_a,
-    std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager_a,
+    std::shared_ptr<UnsyncedSectorManager> sector_manager_a,
     std::shared_ptr<BlockDevice> destination_device_a)
     : source_device_(source_device_a),
-      source_unsynced_manager_(source_unsynced_manager_a),
+      sector_manager_(sector_manager_a),
       destination_device_(destination_device_a) {
 
   if (source_device_->dev_t() == destination_device_->dev_t()) {
@@ -105,7 +105,7 @@ void DeviceSynchronizer::DoSync(
     std::shared_ptr<SyncCountHandler> count_handler) {
   LOG(INFO) << "Starting sync ";
 
-  CHECK(source_unsynced_manager_->IsTracing(*source_device_));
+  CHECK(sector_manager_->IsTracing(*source_device_));
 
   uint64_t total_bytes_sent = 0;
   int source_fd = source_device_->Open();
@@ -115,7 +115,7 @@ void DeviceSynchronizer::DoSync(
   int sectors_per_block = block_size_bytes / SECTOR_SIZE;
   DLOG(INFO) << "Sectors per block: " << sectors_per_block;
 
-  auto source_store = source_unsynced_manager_->GetStore(*source_device_);
+  auto source_store = sector_manager_->GetStore(*source_device_);
 
   time_t flush_time = 0;
   time_t freeze_time = 0;
@@ -180,7 +180,7 @@ void DeviceSynchronizer::DoSync(
       }
       if (time(NULL) - flush_time > SECONDS_BETWEEN_FLUSHES) {
         source_device_->Flush();
-        source_unsynced_manager_->FlushTracer(*source_device_);
+        sector_manager_->FlushTracer(*source_device_);
         flush_time = time(NULL);
       }
     }

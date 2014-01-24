@@ -22,7 +22,7 @@ class DeviceSynchronizerInterface {
   source_device() const = 0;
 
   virtual std::shared_ptr<const UnsyncedSectorManager>
-  source_unsynced_manager() const = 0;
+  sector_manager() const = 0;
 
   virtual std::shared_ptr<const BlockDevice> destination_device() const = 0;
 

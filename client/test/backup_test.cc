@@ -38,13 +38,10 @@ class MockDeviceSynchronizer : public DeviceSynchronizerInterface {
  public:
   MOCK_METHOD2(DoSync, void(std::shared_ptr<BackupCoordinator> coordinator,
                             std::shared_ptr<SyncCountHandler> count_handler));
-
   MOCK_CONST_METHOD0(source_device,
                      std::shared_ptr<const MountableBlockDevice>());
-
-  MOCK_CONST_METHOD0(source_unsynced_manager,
+  MOCK_CONST_METHOD0(sector_manager,
                      std::shared_ptr<const UnsyncedSectorManager>());
-
   MOCK_CONST_METHOD0(destination_device,
                      std::shared_ptr<const BlockDevice>());
 };
