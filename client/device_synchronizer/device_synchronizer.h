@@ -20,8 +20,7 @@ class DeviceSynchronizer : public DeviceSynchronizerInterface {
     return source_device_;
   }
 
-  std::shared_ptr<const UnsyncedSectorManager>
-  sector_manager() const {
+  std::shared_ptr<const UnsyncedSectorManager> sector_manager() const {
     return sector_manager_;
   }
 
