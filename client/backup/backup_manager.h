@@ -1,20 +1,19 @@
 #ifndef DATTO_CLIENT_BACKUP_BACKUP_MANAGER_H_
 #define DATTO_CLIENT_BACKUP_BACKUP_MANAGER_H_
 
-#include <map>
-#include <memory>
 #include <atomic>
-#include <mutex>
-#include <string>
+#include <memory>
 
 #include "backup/backup.h"
+#include "backup/backup_builder.h"
 #include "backup/in_progress_path_set.h"
-#include "backup_event_tracker/backup_event_tracker.h"
-#include "block_device/block_device.h"
+#include "backup_status_tracker/backup_status_tracker.h"
 #include "unsynced_sector_manager/unsynced_sector_manager.h"
 
+#include "device_pair.pb.h"
 #include "request.pb.h"
 #include "reply.pb.h"
+#include "backup_status_request.pb.h"
 #include "start_backup_request.pb.h"
 #include "stop_backup_request.pb.h"
 
@@ -22,8 +21,13 @@ namespace datto_linux_client {
 
 class BackupManager {
  public:
-  BackupManager(std::unique_ptr<BlockDeviceFactory> block_device_factory,
-                std::unique_ptr<BackupStatusTracker> status_tracker);
+  BackupManager(std::shared_ptr<BackupBuilder> backup_builder,
+                std::shared_ptr<UnsyncedSectorManager> sector_manager,
+                std::shared_ptr<BackupStatusTracker> status_tracker)
+      : backup_builder_(backup_builder),
+        sector_manager_(sector_manager),
+        status_tracker_(status_tracker),
+        destructor_called_(false) {}
 
   Reply StartBackup(const StartBackupRequest &start_request);
   Reply StopBackup(const StopBackupRequest &stop_request);
@@ -35,11 +39,9 @@ class BackupManager {
   BackupManager& operator=(const BackupManager&) = delete;
 
  private:
-  std::unique_ptr<BackupStatusTracker> status_tracker_;
-
-  std::mutex unsynced_sector_managers_mutex_;
-  std::map<const std::string, std::shared_ptr<UnsyncedSectorManager>>
-      unsynced_sector_managers_;
+  std::shared_ptr<BackupBuilder> backup_builder_;
+  std::shared_ptr<UnsyncedSectorManager> sector_manager_;
+  std::shared_ptr<BackupStatusTracker> status_tracker_;
 
   std::atomic<bool> destructor_called_;
 };

@@ -17,10 +17,10 @@ class BackupStatusTracker {
   ~BackupStatusTracker() {}
 
   // Returns a nullptr when the job_uuid doesn't have an associated reply
-  std::unique_ptr<BackupStatusReply> GetReply(const std::string &job_uuid);
+  std::shared_ptr<BackupStatusReply> GetReply(const std::string &job_uuid);
 
   // If an event handler for a job uuid exists an exception is thrown
-  std::unique_ptr<BackupEventHandler> CreateEventHandler(
+  std::shared_ptr<BackupEventHandler> CreateEventHandler(
       const std::string &job_uuid);
 
  private:

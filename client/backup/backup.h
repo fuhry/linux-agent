@@ -26,6 +26,9 @@ class Backup {
   // For unit testing
   void InsertBackupCoordinator(
       std::shared_ptr<BackupCoordinator> coordinator);
+ protected:
+  // For unit testing
+  Backup() {}
  private:
   std::vector<std::shared_ptr<DeviceSynchronizerInterface>> syncs_to_do_;
   std::shared_ptr<BackupCoordinator> coordinator_;

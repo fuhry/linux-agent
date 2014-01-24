@@ -1,0 +1,54 @@
+#include "backup/backup_builder.h"
+
+#include <glog/logging.h>
+
+namespace datto_linux_client {
+
+std::shared_ptr<Backup> BackupBuilder::CreateBackup(
+    const std::vector<DevicePair> &device_pairs,
+    bool is_full) {
+  std::vector<std::shared_ptr<DeviceSynchronizerInterface>> syncs_to_do;
+
+  for (auto device_pair : device_pairs) {
+    syncs_to_do.push_back(CreateDeviceSynchronizer(device_pair, is_full));
+  }
+
+  return std::make_shared<Backup>(syncs_to_do);
+}
+
+std::shared_ptr<DeviceSynchronizerInterface>
+BackupBuilder::CreateDeviceSynchronizer(const DevicePair &device_pair,
+                                        bool is_full) {
+  auto source_device =
+      block_device_factory_->CreateMountableBlockDevice(device_pair.path());
+
+  std::string host = device_pair.host();
+  uint16_t host = (uint16_t)device_pair.host();
+
+  auto remote_device =
+      block_device_factory_->CreateRemoteBlockDevice(host, port);
+
+  if (!sector_manager_->IsTracing(*source_device)) {
+    if (is_full) {
+      sector_manager_->StartTracer(*source_device);
+    } else {
+      LOG(ERROR) << source_device->path() << " has no trace data."
+                 << " Must do a full.";
+      throw BackupException("No trace data exists for source");
+    }
+  }
+
+  if (is_full) {
+    auto store = unsynced_sector_manager_->GetStore(source_device);
+    store->ClearAll();
+    for (auto interval : source_device->GetInUseSectors()) {
+      store->AddUnsyncedInterval(interval);
+    }
+  }
+
+  return std::make_shared<DeviceSynchronizer>(source_device,
+                                              sector_manager_,
+                                              remote_device);
+}
+
+} // datto_linux_client
