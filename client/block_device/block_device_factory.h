@@ -14,10 +14,10 @@ class BlockDeviceFactory {
   BlockDeviceFactory() {}
   virtual ~BlockDeviceFactory() {}
 
-  virtual std::unique_ptr<MountableBlockDevice> CreateMountableBlockDevice(
+  virtual std::shared_ptr<MountableBlockDevice> CreateMountableBlockDevice(
       std::string path);
 
-  virtual std::unique_ptr<RemoteBlockDevice> CreateRemoteBlockDevice(
+  virtual std::shared_ptr<RemoteBlockDevice> CreateRemoteBlockDevice(
       std::string hostname, uint16_t port_num);
 };
 

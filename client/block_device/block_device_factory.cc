@@ -29,17 +29,15 @@ std::string GetFilesystem(std::string path) {
 
 namespace datto_linux_client {
 
-std::unique_ptr<MountableBlockDevice>
+std::shared_ptr<MountableBlockDevice>
 BlockDeviceFactory::CreateMountableBlockDevice(std::string path) {
-  std::unique_ptr<MountableBlockDevice> block_dev;
+  std::shared_ptr<MountableBlockDevice> block_dev;
 
   std::string fs = GetFilesystem(path);
   if (fs == "ext4" || fs == "ext3" || fs == "ext2") {
-    block_dev = std::unique_ptr<MountableBlockDevice>(
-        new ExtMountableBlockDevice(path));
+    block_dev = std::make_shared<ExtMountableBlockDevice>(path);
   } else if (fs == "xfs") {
-    block_dev = std::unique_ptr<MountableBlockDevice>(
-        new XfsMountableBlockDevice(path));
+    block_dev = std::make_shared<XfsMountableBlockDevice>(path);
   } else {
     LOG(ERROR) << "Unknown filesystem '" << fs << "' for " << path;
     throw BlockDeviceException("Unknown filesystem");
@@ -47,13 +45,10 @@ BlockDeviceFactory::CreateMountableBlockDevice(std::string path) {
   return block_dev;
 }
 
-std::unique_ptr<RemoteBlockDevice>
+std::shared_ptr<RemoteBlockDevice>
 BlockDeviceFactory::CreateRemoteBlockDevice(std::string hostname,
                                             uint16_t port_num) {
-  auto block_dev = std::unique_ptr<RemoteBlockDevice>(
-      new NbdBlockDevice(hostname, port_num));
-
-  return block_dev;
+  return std::make_shared<NbdBlockDevice>(hostname, port_num);
 }
 
 } // datto_linux_client
