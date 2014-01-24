@@ -45,7 +45,7 @@ TEST(BackupCoordinatorTest, BasicFatalTest) {
   EXPECT_TRUE(bc.IsCancelled());
 
   errors = bc.GetFatalErrors();
-  ASSERT_EQ(1, errors.size());
+  ASSERT_EQ(1U, errors.size());
   EXPECT_EQ(e, errors[0]);
 }
 
