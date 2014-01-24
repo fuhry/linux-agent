@@ -5,15 +5,17 @@ import socket
 import struct
 import threading
 import os
+from re import sub
+from multiprocessing import cpu_count
 from dattolib import make_request_to_dattod
 from request_pb2 import Request
 from reply_pb2 import Reply
 
 LISTEN_ADDRESS = ("0.0.0.0", 2856)
 
-PASSOF_LIST = [Request.START_BACKUP, Request.STOP_BACKUP,
-               Request.PAUSE_BACKUP, Request.RESUME_BACKUP,
-               Request.BACKUP_STATUS]
+PASSOFF_LIST = [Request.START_BACKUP, Request.STOP_BACKUP,
+                Request.PAUSE_BACKUP, Request.RESUME_BACKUP,
+                Request.BACKUP_STATUS]
 
 def run_command(command):
     p = subprocess.Popen(command, stdout=subprocess.PIPE)
@@ -76,17 +78,19 @@ def get_complete_info():
     reply = Reply()
     reply.type = Reply.COMPLETE_INFO
     # TODO version
-    reply.complete_info_reply.agent_version = "v2.0"
+    reply.complete_info_reply.agent_version = "2.0"
     reply.complete_info_reply.hostname = run_command(["hostname"])
-    reply.complete_info_reply.uname_a = run_command(["uname", "-a"])
+    reply.complete_info_reply.os_name = run_command(["uname", "-v"])
+    reply.complete_info_reply.kernel = run_command(["uname", "-r"])
+    reply.complete_info_reply.arch = run_command(["uname", "-p"])
+    reply.complete_info_reply.cpus = cpu_count()
+    
     reply.complete_info_reply.lsb_release_a = \
             run_command(["lsb_release", "-a"])
 
     with open("/proc/meminfo") as meminfo:
-        reply.complete_info_reply.meminfo = meminfo.read()
-
-    with open("/proc/cpuinfo") as cpuinfo:
-        reply.complete_info_reply.cpuinfo = cpuinfo.read()
+        totalRam = int(re.sub('[^0-9]', '' , meminfo.readline())) * 1024
+        reply.complete_info_reply.memory = str(totalRam)
 
     try:
         with open("/var/datto/dattod.pid") as datto_pid_file:
@@ -128,7 +132,7 @@ def handle_connection(connection):
         request.ParseFromString(data)
 
         # Handle or pass off
-        if request.type in PASSOF_LIST:
+        if request.type in PASSOFF_LIST:
             reply = make_request_to_dattod(request)
         elif request.type == Request.BASIC_INFO:
             reply = get_basic_info()
