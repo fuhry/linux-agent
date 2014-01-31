@@ -6,11 +6,11 @@ BackupStatusTracker::BackupStatusTracker() : map_mutex_(), reply_map_() {
   map_mutex_ = std::make_shared<std::mutex>();
 }
 
-std::unique_ptr<BackupStatusReply> BackupStatusTracker::GetReply(
+std::shared_ptr<BackupStatusReply> BackupStatusTracker::GetReply(
     const std::string &job_uuid) {
   std::lock_guard<std::mutex> lock(*map_mutex_);
 
-  std::unique_ptr<BackupStatusReply> reply(nullptr);
+  std::shared_ptr<BackupStatusReply> reply(nullptr);
 
   if (reply_map_.count(job_uuid)) {
     // Create a copy of the reply
@@ -20,7 +20,7 @@ std::unique_ptr<BackupStatusReply> BackupStatusTracker::GetReply(
   return std::move(reply);
 }
 
-std::unique_ptr<BackupEventHandler> BackupStatusTracker::CreateEventHandler(
+std::shared_ptr<BackupEventHandler> BackupStatusTracker::CreateEventHandler(
     const std::string &job_uuid) {
 
   std::shared_ptr<BackupStatusReply> reply;
@@ -36,7 +36,7 @@ std::unique_ptr<BackupEventHandler> BackupStatusTracker::CreateEventHandler(
     reply_map_[job_uuid] = reply;
   }
   
-  std::unique_ptr<BackupEventHandler> handler(
+  std::shared_ptr<BackupEventHandler> handler(
       new BackupEventHandler(job_uuid, map_mutex_, reply));
 
   return std::move(handler);
