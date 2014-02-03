@@ -102,7 +102,7 @@ add_unit_test(backup_test
               block_device/mountable_block_device.cc
               ${PROTO_SRCS}
               backup/backup.cc)
-target_link_libraries(backup_test ${PROTOBUF_LIBRARIES})
+target_link_libraries(backup_test uuid ${PROTOBUF_LIBRARIES})
 
 add_unit_test(backup_coordinator_test
               backup/backup_coordinator.cc)
@@ -131,7 +131,7 @@ add_unit_test(device_synchronizer_test
               unsynced_sector_manager/unsynced_sector_store.cc
               ${PROTO_SRCS}
               device_synchronizer/device_synchronizer.cc)
-target_link_libraries(device_synchronizer_test ${PROTOBUF_LIBRARIES})
+target_link_libraries(device_synchronizer_test uuid ${PROTOBUF_LIBRARIES})
 
 add_unit_test(device_tracer_test
               test/loop_device.cc

@@ -23,7 +23,7 @@ class BackupBuilder {
 
   // This blocks until the backup is done. This won't throw an exception.
   virtual std::shared_ptr<Backup> CreateBackup(
-      std::vector<DevicePair> device_pairs);
+      const std::vector<DevicePair> &device_pairs, bool is_full);
 
   BackupBuilder(const BackupBuilder &) = delete;
   BackupBuilder& operator=(const BackupBuilder &) = delete;
@@ -31,7 +31,7 @@ class BackupBuilder {
  protected:
   // For unit testing
   virtual std::shared_ptr<DeviceSynchronizerInterface>
-  CreateDeviceSynchronizer(const DevicePair &device_pair);
+  CreateDeviceSynchronizer(const DevicePair &device_pair, bool is_full);
 
   BackupBuilder() {}
 

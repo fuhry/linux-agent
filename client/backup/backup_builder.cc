@@ -1,5 +1,8 @@
 #include "backup/backup_builder.h"
 
+#include "backup/backup_exception.h"
+#include "device_synchronizer/device_synchronizer.h"
+
 #include <glog/logging.h>
 
 namespace datto_linux_client {
@@ -20,10 +23,11 @@ std::shared_ptr<DeviceSynchronizerInterface>
 BackupBuilder::CreateDeviceSynchronizer(const DevicePair &device_pair,
                                         bool is_full) {
   auto source_device =
-      block_device_factory_->CreateMountableBlockDevice(device_pair.path());
+      block_device_factory_->CreateMountableBlockDevice(
+          device_pair.block_device_uuid());
 
-  std::string host = device_pair.host();
-  uint16_t host = (uint16_t)device_pair.host();
+  std::string host = device_pair.destination_host();
+  uint16_t port = (uint16_t)device_pair.destination_port();
 
   auto remote_device =
       block_device_factory_->CreateRemoteBlockDevice(host, port);
@@ -39,9 +43,9 @@ BackupBuilder::CreateDeviceSynchronizer(const DevicePair &device_pair,
   }
 
   if (is_full) {
-    auto store = unsynced_sector_manager_->GetStore(source_device);
+    auto store = sector_manager_->GetStore(*source_device);
     store->ClearAll();
-    for (auto interval : source_device->GetInUseSectors()) {
+    for (auto interval : *(source_device->GetInUseSectors())) {
       store->AddUnsyncedInterval(interval);
     }
   }

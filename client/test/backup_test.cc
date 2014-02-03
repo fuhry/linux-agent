@@ -94,7 +94,9 @@ class BackupTest : public ::testing::Test {
 } // anonymous namespace
 
 TEST_F(BackupTest, Constructor) {
-  Backup b(std::vector<std::shared_ptr<DeviceSynchronizerInterface>>());
+  std::vector<std::shared_ptr<DeviceSynchronizerInterface>> syncs_to_do;
+  Backup b(syncs_to_do);
+  EXPECT_EQ(36U, b.uuid().length());
 }
 
 TEST_F(BackupTest, NothingToDo) {

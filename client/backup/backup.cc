@@ -1,17 +1,31 @@
 #include "backup/backup.h"
-#include "backup/backup_exception.h"
-#include "backup_status_tracker/sync_count_handler.h"
 
 #include <thread>
 
+#include <uuid/uuid.h>
 #include <glog/logging.h>
+
+#include "backup/backup_exception.h"
+#include "backup_status_tracker/sync_count_handler.h"
+
+namespace {
+std::string make_uuid() {
+  uuid_t uuid;
+  uuid_generate_time(uuid);
+  char uuid_c_str[36];
+  uuid_unparse(uuid, uuid_c_str);
+  return std::string(uuid_c_str);
+}
+} // anonymous namespace
 
 namespace datto_linux_client {
 
 Backup::Backup(
     std::vector<std::shared_ptr<DeviceSynchronizerInterface>> syncs_to_do)
     : syncs_to_do_(syncs_to_do),
-      coordinator_(nullptr) {}
+      coordinator_(nullptr) {
+  uuid_ = make_uuid();
+}
 
 void Backup::DoBackup(std::shared_ptr<BackupEventHandler> event_handler) {
   if (!coordinator_) {
