@@ -5,13 +5,14 @@
 
 #include <blkid/blkid.h>
 #include <glog/logging.h>
+#include <unistd.h>
+#include <linux/limits.h>
 
 #include "block_device/nbd_block_device.h"
 #include "block_device/ext_mountable_block_device.h"
 #include "block_device/xfs_mountable_block_device.h"
 
 namespace {
-
 using datto_linux_client::BlockDeviceException;
 
 std::string GetFilesystem(std::string path) {
@@ -24,16 +25,24 @@ std::string GetFilesystem(std::string path) {
   free(fs);
   return fs_str;
 }
-
 }
 
 namespace datto_linux_client {
 
 std::shared_ptr<MountableBlockDevice>
-BlockDeviceFactory::CreateMountableBlockDevice(std::string path) {
+BlockDeviceFactory::CreateMountableBlockDevice(std::string uuid) {
   std::shared_ptr<MountableBlockDevice> block_dev;
 
+  char real_path_buf[PATH_MAX];
+  char *ret = realpath(("/dev/disk/by-uuid/" + uuid).c_str(), real_path_buf);
+  if (ret == NULL) {
+    PLOG(ERROR) << "Couldn't find UUID '" << uuid << "'";
+    throw BlockDeviceException("Unable to find block device for UUID");
+  }
+
+  std::string path(real_path_buf);
   std::string fs = GetFilesystem(path);
+
   if (fs == "ext4" || fs == "ext3" || fs == "ext2") {
     block_dev = std::make_shared<ExtMountableBlockDevice>(path);
   } else if (fs == "xfs") {

@@ -47,7 +47,6 @@ std::map<std::string, std::string> GetMountedDevices() {
       }
     }
     std::string real_path = std::string(real_path_buf);
-    LOG(INFO) << path << " is actually " << real_path;
 
     // TODO this replace only handles the character ' ' in a path.
     // There are other characters that aren't as they seem (e.g. \),
