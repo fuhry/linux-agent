@@ -42,40 +42,37 @@ add_custom_command(TARGET dattonet
 
 # Doesn't build currently
 ## dattod
-#add_executable(dattod
-#               backup/backup.cc
-#               backup/backup_manager.cc
-#               backup/full_backup.cc
-#               backup/in_progress_path_set.cc
-#               backup/incremental_backup.cc
-#               backup_event_tracker/backup_event_handler.cc
-#               backup_event_tracker/backup_event_tracker.cc
-#               block_device/block_device.cc
-#               block_device/mountable_block_device.cc
-#               block_trace/cpu_tracer.cc
-#               block_trace/device_tracer.cc
-#               block_trace/trace_handler.cc
-#               cancellation/cancellation_token.cc
-#               dattod/dattod.cc
-#               dattod/dattod.cc
-#               dattod/flock.cc
-#               dattod/signal_handler.cc
-#               device_synchronizer/device_synchronizer.cc
-#               fs_parsing/ext_file_system.cc
-#               fs_parsing/ext_mountable_block_device.cc
-#               remote_block_device/nbd_block_device.cc
-#               remote_block_device/nbd_client.cc
-#               request_listener/ipc_request_listener.cc
-#               request_listener/request_handler.cc
-#               request_listener/socket_reply_channel.cc
-#               unsynced_sector_manager/unsynced_sector_manager.cc
-#               unsynced_sector_manager/unsynced_sector_store.cc
-#               ${PROTO_SRCS})
-#target_link_libraries(dattod com_err)
-#target_link_libraries(dattod ext2fs)
-#target_link_libraries(dattod glog)
-#target_link_libraries(dattod uuid)
-#target_link_libraries(dattod ${PROTOBUF_LIBRARIES})
+add_executable(dattod
+               backup/backup.cc
+               backup/backup_builder.cc
+               backup/backup_coordinator.cc
+               backup/backup_manager.cc
+               backup_status_tracker/backup_event_handler.cc
+               backup_status_tracker/backup_status_tracker.cc
+               backup_status_tracker/sync_count_handler.cc
+               block_device/block_device.cc
+               block_device/block_device_factory.cc
+               block_device/ext_file_system.cc
+               block_device/ext_mountable_block_device.cc
+               block_device/mountable_block_device.cc
+               block_device/nbd_block_device.cc
+               block_device/nbd_client.cc
+               block_device/xfs_mountable_block_device.cc
+               block_trace/cpu_tracer.cc
+               block_trace/device_tracer.cc
+               block_trace/trace_handler.cc
+               dattod/dattod.cc
+               dattod/flock.cc
+               dattod/signal_handler.cc
+               device_synchronizer/device_synchronizer.cc
+               request_listener/ipc_request_listener.cc
+               request_listener/request_handler.cc
+               request_listener/socket_reply_channel.cc
+               unsynced_sector_manager/unsynced_sector_manager.cc
+               unsynced_sector_manager/unsynced_sector_store.cc
+               ${PROTO_SRCS})
+target_link_libraries(dattod com_err ext2fs glog blkid boost_regex uuid
+                      ${PROTOBUF_LIBRARIES})
 
 # Unit tests
 include(cmake/test_setup.cmake)
