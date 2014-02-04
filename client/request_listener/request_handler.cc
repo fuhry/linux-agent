@@ -27,7 +27,7 @@ void RequestHandler::Handle(const Request &request,
     }
   } catch (const std::exception &e) {
     reply.set_type(Reply::ERROR);
-    reply.mutable_error_reply()->set_long_error(e.what());
+    reply.mutable_error_reply()->set_short_error(e.what());
   }
   reply_channel->SendReply(reply);
 }
