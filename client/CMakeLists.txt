@@ -167,12 +167,11 @@ target_link_libraries(extfs_test ext2fs com_err)
 add_unit_test(flock_test
               dattod/flock.cc)
 
-# Out until backup_manager.h is fixed up
-#add_unit_test(ipc_request_listener_test
-#              request_listener/socket_reply_channel.cc
-#              ${PROTO_SRCS}
-#              request_listener/ipc_request_listener.cc)
-#target_link_libraries(ipc_request_listener_test ${PROTOBUF_LIBRARIES})
+add_unit_test(ipc_request_listener_test
+              request_listener/socket_reply_channel.cc
+              ${PROTO_SRCS}
+              request_listener/ipc_request_listener.cc)
+target_link_libraries(ipc_request_listener_test ${PROTOBUF_LIBRARIES})
 
 add_unit_test(mountable_block_device_test
               test/loop_device.cc
