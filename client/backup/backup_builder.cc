@@ -9,6 +9,7 @@ namespace datto_linux_client {
 
 std::shared_ptr<Backup> BackupBuilder::CreateBackup(
     const std::vector<DevicePair> &device_pairs,
+    const std::shared_ptr<BackupCoordinator> &coordinator,
     bool is_full) {
   std::vector<std::shared_ptr<DeviceSynchronizerInterface>> syncs_to_do;
 
@@ -16,7 +17,7 @@ std::shared_ptr<Backup> BackupBuilder::CreateBackup(
     syncs_to_do.push_back(CreateDeviceSynchronizer(device_pair, is_full));
   }
 
-  return std::make_shared<Backup>(syncs_to_do);
+  return std::make_shared<Backup>(syncs_to_do, coordinator);
 }
 
 std::shared_ptr<DeviceSynchronizerInterface>

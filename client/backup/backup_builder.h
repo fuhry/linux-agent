@@ -23,7 +23,9 @@ class BackupBuilder {
 
   // This blocks until the backup is done. This won't throw an exception.
   virtual std::shared_ptr<Backup> CreateBackup(
-      const std::vector<DevicePair> &device_pairs, bool is_full);
+      const std::vector<DevicePair> &device_pairs,
+      const std::shared_ptr<BackupCoordinator> &coordinator,
+      bool is_full);
 
   BackupBuilder(const BackupBuilder &) = delete;
   BackupBuilder& operator=(const BackupBuilder &) = delete;
