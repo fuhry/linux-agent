@@ -21,9 +21,10 @@ def startbackup(args):
     request = Request()
     request.type = Request.START_BACKUP
     request.start_backup_request.type = args.backup_type
-    request.start_backup_request.block_path = args.block_device
-    request.start_backup_request.destination_host = args.destination_host
-    request.start_backup_request.destination_port = args.destination_port
+    device_pair = request.start_backup_request.device_pairs.add()
+    device_pair.block_device_uuid = args.block_device_uuid
+    device_pair.destination_host = args.destination_host
+    device_pair.destination_port = args.destination_port
     return request
 
 def stopbackup(args):
@@ -41,7 +42,8 @@ def parse_args():
     start_parser = subparsers.add_parser('startbackup')
     start_parser.set_defaults(func=startbackup)
 
-    start_parser.add_argument('block_device', help="Block device to backup") 
+    start_parser.add_argument('block_device_uuid',
+                              help="Block device UUID to backup") 
 
     start_group = start_parser.add_mutually_exclusive_group(required=True)
     start_group.add_argument('-f', '--full', dest="backup_type",
@@ -60,7 +62,7 @@ def parse_args():
 
     stop_parser = subparsers.add_parser('stopbackup')
     stop_parser.set_defaults(func=stopbackup)
-    stop_parser.add_argument('job_uuid,
+    stop_parser.add_argument('job_uuid',
                              help="job uuid that should be stopped") 
 
     args = parser.parse_args()
