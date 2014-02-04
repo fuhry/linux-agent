@@ -133,7 +133,7 @@ void DeviceSynchronizer::DoSync(
     }
 
     // Thaw if it's been more than a couple seconds since we froze
-    if (time(NULL) - freeze_time > SECONDS_TO_FREEZE) {
+    if (freeze_time > 0 && time(NULL) - freeze_time > SECONDS_TO_FREEZE) {
       LOG(WARNING) << "Unfreezing due to time";
       source_device_->Thaw();
       freeze_time = 0;
