@@ -26,19 +26,25 @@ std::string BackupManager::StartBackup(
   auto coordinator = std::make_shared<BackupCoordinator>(num_device_pairs);
   bool is_full = start_request.type() == StartBackupRequest::FULL_BACKUP;
 
+  LOG(INFO) << "Creating backup object";
   std::shared_ptr<Backup> backup = backup_builder_->CreateBackup(device_pairs,
                                                                  coordinator,
                                                                  is_full);
   std::string backup_uuid = backup->uuid();
+  LOG(INFO) << "Created backup object";
 
   std::shared_ptr<BackupEventHandler> event_handler =
       status_tracker_->CreateEventHandler(backup_uuid);
 
+  LOG(INFO) << "Adding to in progress set";
   this->AddToInProgressSet(backup->uuid(), start_request, coordinator);
+  LOG(INFO) << "Finished adding";
 
   // mutable in order to release the backup shared_ptr
   std::thread backup_thread([=]() mutable {
+    LOG(INFO) << "Starting backup " << backup_uuid;
     backup->DoBackup(event_handler);
+    LOG(INFO) << "Finished backup " << backup_uuid;
     // Release the pointer when done to avoid a race on program exit
     // as we detach below
     backup.reset();
@@ -49,6 +55,7 @@ std::string BackupManager::StartBackup(
 
   backup_thread.detach();
 
+  LOG(INFO) << "Returning from StartBackup " << backup_uuid;
   return backup_uuid;
 }
 
