@@ -7,6 +7,7 @@
 
 #include "request_listener/reply_channel.h"
 #include "request.pb.h"
+#include "reply.pb.h"
 
 namespace datto_linux_client {
 class RequestHandler {
