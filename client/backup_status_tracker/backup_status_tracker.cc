@@ -2,7 +2,7 @@
 
 namespace datto_linux_client {
 
-BackupStatusTracker::BackupStatusTracker() : map_mutex_(), reply_map_() {
+BackupStatusTracker::BackupStatusTracker() : reply_map_() {
   map_mutex_ = std::make_shared<std::mutex>();
 }
 
