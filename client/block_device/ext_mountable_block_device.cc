@@ -74,7 +74,7 @@ std::shared_ptr<const SectorSet> ExtMountableBlockDevice::GetInUseSectors() {
   LOG(INFO) << "ext file system is size "
             << boost::icl::cardinality(*sectors) * 512;
 
-  return std::move(sectors);
+  return sectors;
 }
 
 } // namespace datto_linux_client
