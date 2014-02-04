@@ -7,6 +7,7 @@
 #include "backup/backup.h"
 #include "block_device/block_device_factory.h"
 #include "device_synchronizer/device_synchronizer_interface.h"
+#include "unsynced_sector_manager/unsynced_sector_manager.h"
 
 #include "device_pair.pb.h"
 
