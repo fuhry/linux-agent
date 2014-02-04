@@ -1,3 +1,6 @@
+#ifndef DATTO_CLIENT_TEST_LOOP_DEVICE_H_
+#define DATTO_CLIENT_TEST_LOOP_DEVICE_H_
+
 #include <string>
 #include <sys/types.h>
 #include <unistd.h>
@@ -14,6 +17,7 @@ class LoopDevice {
   explicit LoopDevice(std::string backing_file_path);
 
   void FormatAsExt3();
+  void FormatAsXfs();
   
   void Sync();
 
@@ -39,3 +43,5 @@ class LoopDevice {
 };
 
 }
+
+#endif //  DATTO_CLIENT_TEST_LOOP_DEVICE_H_

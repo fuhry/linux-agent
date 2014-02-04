@@ -12,7 +12,6 @@
 namespace datto_linux_client {
 
 class MountableBlockDevice : public BlockDevice {
-
  public:
   explicit MountableBlockDevice(std::string a_path);
 
@@ -29,7 +28,7 @@ class MountableBlockDevice : public BlockDevice {
   virtual void Thaw();
 
   // These will be relative from the start of the partition
-  virtual std::unique_ptr<const SectorSet> GetInUseSectors() = 0;
+  virtual std::shared_ptr<const SectorSet> GetInUseSectors() = 0;
 
   // Return a file descriptor for the mount point
   // Throw an exception if one is already open, or if
@@ -40,14 +39,23 @@ class MountableBlockDevice : public BlockDevice {
   // Don't throw if one isn't open
   void CloseMount();
 
+  virtual std::string uuid() const {
+    return uuid_;
+  }
+
   // Should close the mount file descriptor and unfreeze
   virtual ~MountableBlockDevice();
 
+ protected:
+  // For unit testing
+  MountableBlockDevice() {}
+
  private:
   int mount_file_descriptor_;
+  std::string uuid_;
   bool is_frozen_;
 };
 
 }
 
-#endif //  DATTO_CLIENT_BLOCK_DEVICE_MOUNTABLEBLOCK_DEVICE_H_
+#endif //  DATTO_CLIENT_BLOCK_DEVICE_MOUNTABLE_BLOCK_DEVICE_H_

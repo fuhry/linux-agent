@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <string>
 
+#include <linux/types.h>
+
 #include "block_device/block_device_exception.h"
 
 namespace datto_linux_client {
@@ -16,20 +18,13 @@ class BlockDevice {
   // block_path doesn't exist or isn't the path for a block_device
   explicit BlockDevice(std::string block_path);
 
-  // If a method is lowercase, then it is should be just an accessor and
-  // nothing more. See
-  // google-styleguide.googlecode.com/svn/trunk/cppguide.xml#Function_Names
   std::string path() const {
     return path_;
   }
 
-  uint32_t major() const {
-    return major_;
+  ::dev_t dev_t() const {
+    return dev_t_;
   };
-
-  uint32_t minor() const {
-    return minor_;
-  }
 
   // BLKGETSIZE64
   uint64_t DeviceSizeBytes() const {
@@ -76,12 +71,11 @@ class BlockDevice {
   BlockDevice() { }
   std::string path_;
 
-  //  Do the actual initialization of the object
+  // Do the actual initialization of the object
   void Init();
 
  private:
-  uint32_t major_;
-  uint32_t minor_;
+  ::dev_t dev_t_;
 
   uint64_t device_size_bytes_;
   uint32_t block_size_bytes_;

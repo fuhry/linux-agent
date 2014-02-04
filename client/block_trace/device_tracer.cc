@@ -2,6 +2,8 @@
 
 #include "block_trace/block_trace_exception.h"
 
+#include <thread>
+
 #include <fcntl.h>
 #include <glog/logging.h>
 #include <string.h>
@@ -57,8 +59,16 @@ DeviceTracer::DeviceTracer(const std::string &block_dev_path,
 }
 
 void DeviceTracer::FlushBuffers() {
-  for (auto &cpu_tracer : cpu_tracers_) {
-    cpu_tracer->FlushBuffer();
+  std::vector<std::thread> flush_threads(cpu_tracers_.size());
+
+  for (size_t i = 0; i < cpu_tracers_.size(); i++) {
+    flush_threads[i] = std::thread([=]() {
+      this->cpu_tracers_[i]->FlushBuffer();
+    });
+  }
+
+  for (auto &thread : flush_threads) {
+    thread.join();
   }
 }
 
@@ -86,14 +96,16 @@ std::string DeviceTracer::BeginBlockTrace() {
 void DeviceTracer::CleanupBlockTrace() {
   DLOG(INFO) << "In CleanupBlockTrace";
 
-  if (ioctl(block_dev_fd_, BLKTRACESTOP) < 0) {
-    PLOG(ERROR) << "BLKTRACESTOP";
-    throw BlockTraceException("Unable to stop blocktrace");
-  }
+  if (block_dev_fd_ != -1) {
+    if (ioctl(block_dev_fd_, BLKTRACESTOP) < 0) {
+      PLOG(ERROR) << "BLKTRACESTOP";
+      throw BlockTraceException("Unable to stop blocktrace");
+    }
 
-  if (ioctl(block_dev_fd_, BLKTRACETEARDOWN) < 0) {
-    PLOG(ERROR) << "BLKTRACETEARDOWN";
-    throw BlockTraceException("Unable to teardown blocktrace");
+    if (ioctl(block_dev_fd_, BLKTRACETEARDOWN) < 0) {
+      PLOG(ERROR) << "BLKTRACETEARDOWN";
+      throw BlockTraceException("Unable to teardown blocktrace");
+    }
   }
 
 }
@@ -127,9 +139,7 @@ DeviceTracer::~DeviceTracer() {
     CleanupBlockTrace();
     close(block_dev_fd_);
   } catch (const std::exception &e) {
-    LOG(ERROR) << "Exception in DeviceTracer destructor" << e.what();
-  } catch (...) {
-    LOG(ERROR) << "Non-exception thrown in DeviceTracer destructor";
+    LOG(ERROR) << "Exception in DeviceTracer destructor: " << e.what();
   }
 }
 

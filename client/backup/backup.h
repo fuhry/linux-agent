@@ -2,37 +2,37 @@
 #define DATTO_CLIENT_BACKUP_BACKUP_H_
 
 #include <memory>
+#include <vector>
 
-#include "backup_event_tracker/backup_event_handler.h"
-#include "block_device/block_device.h"
-#include "block_device/mountable_block_device.h"
-#include "cancellation/cancellation_token.h"
-#include "unsynced_sector_manager/unsynced_sector_manager.h"
+#include "backup/backup_coordinator.h"
+#include "backup_status_tracker/backup_event_handler.h"
+#include "device_synchronizer/device_synchronizer_interface.h"
 
 namespace datto_linux_client {
 
 class Backup {
  public:
-  Backup(std::shared_ptr<MountableBlockDevice> source_device,
-         std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager,
-         std::shared_ptr<BlockDevice> destination_device,
-         std::shared_ptr<BackupEventHandler> event_handler);
+  explicit Backup(
+      std::vector<std::shared_ptr<DeviceSynchronizerInterface>> syncs_to_do,
+      std::shared_ptr<BackupCoordinator> coordinator);
 
   // This blocks until the backup is done. This won't throw an exception.
-  void DoBackup(std::shared_ptr<CancellationToken> cancel_token);
+  virtual void DoBackup(std::shared_ptr<BackupEventHandler> event_handler);
+
+  virtual std::string uuid() { return uuid_; }
 
   virtual ~Backup();
 
   Backup(const Backup &) = delete;
   Backup& operator=(const Backup &) = delete;
- protected:
-  virtual void Prepare(std::shared_ptr<CancellationToken> cancel_token) = 0;
-  virtual void Copy(std::shared_ptr<CancellationToken> cancel_token);
 
-  std::shared_ptr<MountableBlockDevice> source_device_;
-  std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager_;
-  std::shared_ptr<BlockDevice> destination_device_;
-  std::shared_ptr<BackupEventHandler> event_handler_;
+ protected:
+  // For unit testing
+  Backup() {}
+ private:
+  std::vector<std::shared_ptr<DeviceSynchronizerInterface>> syncs_to_do_;
+  std::shared_ptr<BackupCoordinator> coordinator_;
+  std::string uuid_;
 };
 
 } // datto_linux_client

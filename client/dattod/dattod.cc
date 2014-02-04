@@ -1,28 +1,34 @@
+#include <memory>
+#include <signal.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include <glog/logging.h>
+
+#include "backup/backup_builder.h"
+#include "backup/backup_manager.h"
+#include "backup_status_tracker/backup_status_tracker.h"
+#include "block_device/block_device_factory.h"
 #include "dattod/flock.h"
 #include "dattod/signal_handler.h"
 #include "request_listener/ipc_request_listener.h"
 #include "request_listener/request_handler.h"
-#include "backup/backup_manager.h"
-
-#include <glog/logging.h>
-
-#include <memory>
-
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <string.h>
-#include <signal.h>
 
 const char DATTO_VAR_DIR[] = "/var/datto";
 const char DATTO_SOCKET[] = "/var/datto/dattod_ipc";
 const char FLOCK_PATH[] = "/var/datto/dattod.pid";
 
 namespace {
+using datto_linux_client::BackupBuilder;
+using datto_linux_client::BackupManager;
+using datto_linux_client::BackupStatusTracker;
+using datto_linux_client::BlockDeviceFactory;
 using datto_linux_client::Flock;
+using datto_linux_client::IpcRequestListener;
 using datto_linux_client::RequestHandler;
 using datto_linux_client::SignalHandler;
-using datto_linux_client::BackupManager;
-using datto_linux_client::IpcRequestListener;
+using datto_linux_client::UnsyncedSectorManager;
 }
 
 int main(int argc, char *argv[]) {
@@ -73,8 +79,16 @@ int main(int argc, char *argv[]) {
   SignalHandler signal_handler(signals_to_block);
   signal_handler.BlockSignals();
 
+  auto block_device_factory = std::make_shared<BlockDeviceFactory>();
+  auto sector_manager = std::make_shared<UnsyncedSectorManager>();
+  auto backup_builder = std::make_shared<BackupBuilder>(block_device_factory,
+                                                        sector_manager);
+  auto status_tracker = std::make_shared<BackupStatusTracker>();
+
   // Create the backup manager
-  std::shared_ptr<BackupManager> backup_manager(new BackupManager());
+  auto backup_manager = std::make_shared<BackupManager>(backup_builder,
+                                                        sector_manager,
+                                                        status_tracker);
   // Create the request handler
   std::unique_ptr<RequestHandler> request_handler(
       new RequestHandler(backup_manager));

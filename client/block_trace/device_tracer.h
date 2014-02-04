@@ -1,8 +1,7 @@
-#ifndef DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACE_H_
-#define DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACE_H_
+#ifndef DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACER_H_
+#define DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACER_H_
 
 #include "block_trace/cpu_tracer.h"
-#include "block_trace/interval_queue.h"
 #include "block_trace/trace_handler.h"
 
 #include <linux/fs.h>
@@ -34,12 +33,16 @@ class DeviceTracer {
 
   // Flush the trace buffers. This method returns once the buffers
   // have finished flushing and have been given to the TraceHandler
-  void FlushBuffers();
+  virtual void FlushBuffers();
 
-  ~DeviceTracer();
+  virtual ~DeviceTracer();
 
   DeviceTracer(const DeviceTracer &) = delete;
   DeviceTracer& operator=(const DeviceTracer &) = delete;
+
+ protected:
+  // For creating stubs in unit testing
+  DeviceTracer() : block_dev_fd_(-1) {}
 
  private:
   std::string BeginBlockTrace();
@@ -58,4 +61,4 @@ class DeviceTracer {
 
 }
 
-#endif //  DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACE_H_
+#endif //  DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACER_H_

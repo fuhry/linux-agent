@@ -1,7 +1,22 @@
-# This downloads and builds gtest
+# This builds gtest and gmock
 # Additionally, this defines the add_unit_test macro
 
 enable_testing()
+
+# Build GTest and GMock, fetch_testing_tools needs to have been run first
+set(GMOCK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/gmock/")
+set(GTEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/gmock/gtest/")
+if (EXISTS ${GMOCK_DIR} AND EXISTS ${GTEST_DIR})
+    include_directories(${GTEST_DIR})
+    include_directories(${GTEST_DIR}/include)
+    include_directories(${GMOCK_DIR})
+    include_directories(${GMOCK_DIR}/include)
+    add_library(gtest ${GTEST_DIR}/src/gtest-all.cc)
+    add_library(gmock_main ${GMOCK_DIR}/src/gmock-all.cc
+                           ${GMOCK_DIR}/src/gmock_main.cc)
+else()
+    add_library(FATAL_ERROR "gmock can't be found, run fetch_testing_tools")
+endif()
 
 add_custom_target(check)
 # usage: add_unit_test(test_name test_sources...)
@@ -11,9 +26,13 @@ macro(add_unit_test test_name)
     add_executable(${test_name} EXCLUDE_FROM_ALL test/${test_name}.cc ${ARGN})
     add_dependencies(${test_name} gtest)
 
+    include_directories(${CMAKE_CURRENT_BINARY_DIR})
     target_link_libraries(${test_name} glog)
-    target_link_libraries(${test_name} ${GTEST_BINARIES}/libgtest.a)
-    target_link_libraries(${test_name} ${GTEST_BINARIES}/libgtest_main.a)
+    target_link_libraries(${test_name} gtest)
+    if (NOT EXISTS ${GMOCK_DIR})
+        target_link_libraries(${test_name} gmock)
+    endif()
+    target_link_libraries(${test_name} gmock_main)
 
     # TODO set_tests_properties should do this so we don't need to do the
     # bash -c hack here, but can't seem to get it to work
@@ -30,27 +49,3 @@ macro(add_unit_test test_name)
     add_dependencies(check ctest_${test_name})
 endmacro()
 
-### http://stackoverflow.com/a/9695234/965648
-include(ExternalProject)
-# Add gtest
-externalproject_add(
-    gtest
-    SVN_REPOSITORY http://googletest.googlecode.com/svn/trunk/
-    SVN_REVISION -r 660
-    TIMEOUT 10
-    PREFIX "${CMAKE_CURRENT_BINARY_DIR}/gtest"
-    # Disable install step
-    INSTALL_COMMAND ""
-    # Wrap download, configure and build steps in a script to log output
-    LOG_DOWNLOAD ON
-    LOG_CONFIGURE ON
-    LOG_BUILD ON)
-
-externalproject_get_property(gtest source_dir)
-externalproject_get_property(gtest binary_dir)
-set(GTEST_INCLUDES "${source_dir}/include")
-set(GTEST_BINARIES "${binary_dir}")
-set(GTEST_LIBRARIES "${binary_dir}/libgtest.a ${binary_dir}/libgtest-main.a")
-
-
-include_directories("${GTEST_INCLUDES}")

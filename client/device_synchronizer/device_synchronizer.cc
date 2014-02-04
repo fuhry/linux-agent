@@ -1,8 +1,9 @@
 #include "device_synchronizer/device_synchronizer.h"
 
 #include <stdint.h>
-#include <unistd.h>
+#include <sys/types.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <glog/logging.h>
 
@@ -13,25 +14,30 @@ namespace {
 
 using ::datto_linux_client::DeviceSynchronizerException;
 
-int SECTOR_SIZE = 512;
-std::vector<uint64_t>::size_type MAX_SIZE_WORK_LEFT_HISTORY = 3 * 60;
+uint32_t SECTOR_SIZE = 512;
+uint32_t ONE_MEGABYTE = 1024 * 1024;
 
-// TODO Make this slightly more intelligent
-// Keep this simple for now
-inline bool should_continue(const std::vector<uint64_t> &work_left_history) {
-  // If we have less than a minute of data, don't do anything
-  if (work_left_history.size() < 60) {
-    return true;
+time_t SECONDS_BETWEEN_FLUSHES = 2;
+time_t SECONDS_TO_FREEZE = 2;
+
+void seek_devices_to(off_t seek_pos, int source_fd, int dest_fd) {
+  off_t seek_ret = lseek(source_fd, seek_pos, SEEK_SET);
+  if (seek_ret == -1) {
+    PLOG(ERROR) << "Error while seeking source to " << seek_pos;
+    throw DeviceSynchronizerException("Unable to seek source");
   }
-  DLOG(INFO) << "Determining if the process should stop";
-  DLOG(INFO) << "Back: " << work_left_history.back()
-             << " Front: " << work_left_history.front();
-  return true;
+  seek_ret = lseek(dest_fd, seek_pos, SEEK_SET);
+  if (seek_ret == -1) {
+    PLOG(ERROR) << "Error while seeking destination to " << seek_pos;
+    throw DeviceSynchronizerException("Unable to seek destination");
+  }
 }
 
-// It is up to the caller to ensure buf is large enough
+
 inline void copy_block(int source_fd, int destination_fd,
-                       void *buf, int block_size_bytes) {
+                       int block_size_bytes) {
+  char buf[block_size_bytes];
+
   DLOG_EVERY_N(INFO, 500) << "Copying block " << google::COUNTER;
   ssize_t total_copied = 0;
   // Loop until we copy a full block
@@ -69,19 +75,17 @@ inline void copy_block(int source_fd, int destination_fd,
 namespace datto_linux_client {
 
 DeviceSynchronizer::DeviceSynchronizer(
-    std::shared_ptr<MountableBlockDevice> source_device,
-    std::shared_ptr<UnsyncedSectorManager> source_unsynced_manager,
-    std::shared_ptr<BlockDevice> destination_device,
-    std::shared_ptr<BackupEventHandler> event_handler)
-    : source_device_(source_device),
-      source_unsynced_manager_(source_unsynced_manager),
-      destination_device_(destination_device),
-      event_handler_(event_handler) {
+    std::shared_ptr<MountableBlockDevice> source_device_a,
+    std::shared_ptr<UnsyncedSectorManager> sector_manager_a,
+    std::shared_ptr<BlockDevice> destination_device_a)
+    : source_device_(source_device_a),
+      sector_manager_(sector_manager_a),
+      destination_device_(destination_device_a) {
 
-  if (source_device_->major() == destination_device_->major()
-      && source_device_->minor() == destination_device_->minor()) {
-    LOG(ERROR) << "Major: " << source_device_->major();
-    LOG(ERROR) << "Minor: " << source_device_->minor();
+  if (source_device_->dev_t() == destination_device_->dev_t()) {
+    LOG(ERROR) << "Attempt to synchronize a device with itself";
+    LOG(ERROR) << "device: " << ::minor(source_device_->dev_t())
+               << ":" << major(source_device_->dev_t());
     throw DeviceSynchronizerException("Refusing to synchronize a device"
                                       " with itself");
   }
@@ -94,140 +98,92 @@ DeviceSynchronizer::DeviceSynchronizer(
                << destination_device_->DeviceSizeBytes();
     throw DeviceSynchronizerException("Destination device is too small");
   }
-
-  uint64_t unsynced_count =
-      source_unsynced_manager_->store()->UnsyncedSectorCount();
-
-  event_handler_->UpdateUnsyncedCount(unsynced_count);
-
-  if (unsynced_count == 0) {
-    throw DeviceSynchronizerException("The source device is already synced");
-  }
 }
 
-void DeviceSynchronizer::DoSync(std::shared_ptr<CancellationToken> cancel_token) {
+void DeviceSynchronizer::DoSync(
+    std::shared_ptr<BackupCoordinator> coordinator,
+    std::shared_ptr<SyncCountHandler> count_handler) {
   LOG(INFO) << "Starting sync ";
+
+  CHECK(sector_manager_->IsTracing(*source_device_));
+
   uint64_t total_bytes_sent = 0;
   int source_fd = source_device_->Open();
   int destination_fd = destination_device_->Open();
 
   int block_size_bytes = source_device_->BlockSizeBytes();
   int sectors_per_block = block_size_bytes / SECTOR_SIZE;
+  DLOG(INFO) << "Sectors per block: " << sectors_per_block;
 
-  char buf[block_size_bytes];
+  auto source_store = sector_manager_->GetStore(*source_device_);
 
-  // We keep track of how much work is left after we sent it, so that way
-  // we can detect if we are in a situation where data is changing after
-  // than we can back it up
-  //
-  // The most recent data is at the end. This means trimming is probably
-  // the most expensive operation, as the old data at the front needs to be
-  // removed. I doubt this will be an issue though, vectors are extremely
-  // efficient in C++
-  std::vector<uint64_t> work_left_history;
-
-  time_t last_history = time(NULL);
-
-  auto source_store = source_unsynced_manager_->store();
-
+  time_t flush_time = 0;
   time_t freeze_time = 0;
 
-  while (!cancel_token->ShouldCancel()) {
-    // Unthaw if it's been more than a couple seconds
-    if (freeze_time && (time(NULL) - freeze_time > 2)) {
-      PLOG(WARNING) << "Unfreezing due to time";
-      source_device_->Thaw();
-      freeze_time = 0;
-    }
+  while (!coordinator->IsCancelled()) {
+    uint64_t unsynced_sector_count = source_store->UnsyncedSectorCount();
 
     // Let the event handler know how much is left
-    uint64_t unsynced_count = source_store->UnsyncedSectorCount();
-    event_handler_->UpdateUnsyncedCount(unsynced_count);
+    count_handler->UpdateUnsyncedCount(unsynced_sector_count);
 
-    // Trim history if it gets too big
-    if (work_left_history.size() > MAX_SIZE_WORK_LEFT_HISTORY) {
-      DLOG(INFO) << "Trimming history";
-      int num_to_trim = work_left_history.size() -
-        MAX_SIZE_WORK_LEFT_HISTORY;
-      work_left_history.erase(work_left_history.begin(),
-          work_left_history.begin() + num_to_trim);
+    if (flush_time > 0 && unsynced_sector_count == 0) {
+      LOG(INFO) << "Sync complete";
+      source_device_->Thaw();
+      break;
     }
 
-    if (!should_continue(work_left_history)) {
-      DLOG(WARNING) << "Giving up";
-      throw DeviceSynchronizerException("Unable to copy data faster"
-          " than it is changing");
+    // Thaw if it's been more than a couple seconds since we froze
+    if (freeze_time > 0 && time(NULL) - freeze_time > SECONDS_TO_FREEZE) {
+      LOG(WARNING) << "Unfreezing due to time";
+      source_device_->Thaw();
+      freeze_time = 0;
     }
 
     // to_sync_interval is sectors, not blocks
     SectorInterval to_sync_interval =
       source_store->GetContinuousUnsyncedSectors();
 
-    DLOG(INFO) << "Syncing interval: " << to_sync_interval;
-
-    // If the only interval is size zero, we are done
-    if (boost::icl::cardinality(to_sync_interval) == 0) {
-      // Freeze if we can (so things are consistent on disk)
-      try {
-        if (!freeze_time) {
-          source_device_->Freeze();
-          freeze_time = time(NULL);
-          source_device_->Flush();
-          source_unsynced_manager_->FlushTracer();
-          continue;
-        }
-        source_device_->Thaw();
-      } catch (const BlockDeviceException &e) {
-        LOG(WARNING) << "Unable to freeze " << source_device_->path();
-      }
-      LOG(INFO) << "Got size 0 interval (process is finished)";
-      break;
-    }
+    DLOG(INFO) << "Cardinality is: "
+               << boost::icl::cardinality(to_sync_interval);
+    source_store->MarkToSyncInterval(to_sync_interval);
 
     off_t seek_pos = to_sync_interval.lower() * SECTOR_SIZE;
+    seek_devices_to(seek_pos, source_fd, destination_fd);
 
-    off_t seek_ret = lseek(source_fd, seek_pos, SEEK_SET);
-
-    if (seek_ret == -1) {
-      PLOG(ERROR) << "Error while seeking source to " << seek_pos;
-      throw DeviceSynchronizerException("Unable to seek source");
-    }
-
-    seek_ret = lseek(destination_fd, seek_pos, SEEK_SET);
-
-    if (seek_ret == -1) {
-      PLOG(ERROR) << "Error while seeking destination to " << seek_pos;
-      throw DeviceSynchronizerException("Unable to seek destination");
-    }
-
-    DLOG(INFO) << "Marking interval " << to_sync_interval;
-    DLOG(INFO) << "Cardinality is: "
-      << boost::icl::cardinality(to_sync_interval);
-    DLOG(INFO) << "Sectors per block: " << sectors_per_block;
-    source_store->MarkToSyncInterval(to_sync_interval);
     // Loop until we copy all of the blocks of the sector interval
+    DLOG(INFO) << "Syncing interval: " << to_sync_interval;
     for (uint64_t i = 0;
         i < boost::icl::cardinality(to_sync_interval);
         i += sectors_per_block) {
-
-      copy_block(source_fd, destination_fd, buf, block_size_bytes);
-
-      // Get one history entry per second
-      time_t now = time(NULL);
-      if (now > last_history + 1) {
-        if (now > last_history + 2) {
-          LOG(WARNING) << "Writing a block took more than a second";
-        }
-        uint64_t unsynced = source_store->UnsyncedSectorCount();
-        work_left_history.push_back(unsynced);
-        last_history = now;
-      }
-    } // copy all blocks in interval
+      copy_block(source_fd, destination_fd, block_size_bytes);
+    }
     DLOG(INFO) << "Finished copying interval " << to_sync_interval;
 
-    total_bytes_sent += boost::icl::cardinality(to_sync_interval) * 512;
-    DLOG(INFO) << "Total sent: " << total_bytes_sent;
-    event_handler_->UpdateSyncedCount(total_bytes_sent);
+    total_bytes_sent +=
+        boost::icl::cardinality(to_sync_interval) * SECTOR_SIZE;
+    count_handler->UpdateSyncedCount(total_bytes_sent);
+
+    // Update unsynced sector count after interval was synced
+    unsynced_sector_count = source_store->UnsyncedSectorCount();
+
+    // If there is under 1MB left, freeze and flush the filesystem so things
+    // are consistent while it wraps up
+    if (unsynced_sector_count < ONE_MEGABYTE / SECTOR_SIZE) {
+      if (!freeze_time) {
+        try {
+          source_device_->Freeze();
+          freeze_time = time(NULL);
+        } catch (const BlockDeviceException &e) {
+          LOG(WARNING) << "Unable to freeze "
+                       << source_device_->path() << ": " << e.what();
+        }
+      }
+      if (time(NULL) - flush_time > SECONDS_BETWEEN_FLUSHES) {
+        source_device_->Flush();
+        sector_manager_->FlushTracer(*source_device_);
+        flush_time = time(NULL);
+      }
+    }
   }
   DLOG(INFO) << "Sync completed";
   source_device_->Close();

@@ -1,6 +1,5 @@
 #!/bin/bash
-# TODO: Make run_tests and this share code
-build_type=${1:-release};
+build_type=${1:-release}
 mkdir -p build
 cd build
 

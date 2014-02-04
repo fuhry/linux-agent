@@ -52,7 +52,7 @@ TEST_F(BlockDeviceTest, Open) {
 
 TEST_F(BlockDeviceTest, Major) {
   BlockDevice bd(loop_device->path());
-  int major = bd.major();
+  int major = ::major(bd.dev_t());
   // 7 is the loop device major
   EXPECT_EQ(7, major);
 }

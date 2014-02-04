@@ -1,12 +1,13 @@
 #include "test/loop_device.h"
 
-#include <stdlib.h>
 #include <errno.h>
-#include <linux/fs.h>
 #include <fcntl.h>
 #include <fstream>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <linux/fs.h>
+#include <stdexcept>
+#include <stdlib.h>
 #include <string>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
@@ -78,6 +79,12 @@ void LoopDevice::Init() {
 
 void LoopDevice::FormatAsExt3() {
   if (system(("mkfs.ext3 " + path_ + " 2>&1 1>/dev/null").c_str())) {
+    throw std::runtime_error("error creating fs");
+  }
+}
+
+void LoopDevice::FormatAsXfs() {
+  if (system(("mkfs.xfs " + path_ + " 2>&1 1>/dev/null").c_str())) {
     throw std::runtime_error("error creating fs");
   }
 }
