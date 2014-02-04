@@ -107,6 +107,22 @@ target_link_libraries(backup_test uuid ${PROTOBUF_LIBRARIES})
 add_unit_test(backup_coordinator_test
               backup/backup_coordinator.cc)
 
+add_unit_test(backup_manager_test
+              ${PROTO_SRCS}
+              backup/backup.cc
+              backup/backup_builder.cc
+              backup/backup_coordinator.cc
+              backup_status_tracker/backup_event_handler.cc
+              backup_status_tracker/backup_status_tracker.cc
+              block_trace/cpu_tracer.cc
+              block_trace/device_tracer.cc
+              block_trace/trace_handler.cc
+              device_synchronizer/device_synchronizer.cc
+              unsynced_sector_manager/unsynced_sector_manager.cc
+              unsynced_sector_manager/unsynced_sector_store.cc
+              backup/backup_manager.cc)
+target_link_libraries(backup_manager_test uuid ${PROTOBUF_LIBRARIES})
+
 add_unit_test(backup_status_tracker_test
               backup_status_tracker/backup_event_handler.cc
               ${PROTO_SRCS}
@@ -191,7 +207,6 @@ add_unit_test(unsynced_sector_store_test
 #              block_device/mountable_block_device.cc
 #              block_device/block_device.cc
 #              block_device/xfs_mountable_block_device.cc)
-
 
 # Packaging
 set(CPACK_GENERATOR "DEB;RPM")
