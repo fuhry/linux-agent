@@ -95,7 +95,7 @@ class BackupTest : public ::testing::Test {
 
 TEST_F(BackupTest, Constructor) {
   std::vector<std::shared_ptr<DeviceSynchronizerInterface>> syncs_to_do;
-  Backup b(syncs_to_do);
+  Backup b(syncs_to_do, coordinator);
   EXPECT_EQ(36U, b.uuid().length());
 }
 
@@ -111,8 +111,7 @@ TEST_F(BackupTest, NothingToDo) {
   EXPECT_CALL(*event_handler, BackupSucceeded());
 
   auto work = std::vector<std::shared_ptr<DeviceSynchronizerInterface>>();
-  Backup b(work);
-  b.InsertBackupCoordinator(coordinator);
+  Backup b(work, coordinator);
   b.DoBackup(event_handler);
 }
 
@@ -135,8 +134,7 @@ TEST_F(BackupTest, SingleSyncToDo) {
   std::vector<std::shared_ptr<DeviceSynchronizerInterface>> work =
       {device_sync};
 
-  Backup b(work);
-  b.InsertBackupCoordinator(coordinator);
+  Backup b(work, coordinator);
   b.DoBackup(event_handler);
 }
 
@@ -171,8 +169,7 @@ TEST_F(BackupTest, HandlesException) {
   std::vector<std::shared_ptr<DeviceSynchronizerInterface>> work =
       {device_sync};
 
-  Backup b(work);
-  b.InsertBackupCoordinator(coordinator);
+  Backup b(work, coordinator);
   b.DoBackup(event_handler);
 }
 
@@ -204,7 +201,6 @@ TEST_F(BackupTest, HandlesMany) {
   std::vector<std::shared_ptr<DeviceSynchronizerInterface>> work =
       {device_sync1, device_sync2};
 
-  Backup b(work);
-  b.InsertBackupCoordinator(coordinator);
+  Backup b(work, coordinator);
   b.DoBackup(event_handler);
 }

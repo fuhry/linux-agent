@@ -21,17 +21,14 @@ std::string make_uuid() {
 namespace datto_linux_client {
 
 Backup::Backup(
-    std::vector<std::shared_ptr<DeviceSynchronizerInterface>> syncs_to_do)
+    std::vector<std::shared_ptr<DeviceSynchronizerInterface>> syncs_to_do,
+    std::shared_ptr<BackupCoordinator> coordinator)
     : syncs_to_do_(syncs_to_do),
-      coordinator_(nullptr) {
+      coordinator_(coordinator) {
   uuid_ = make_uuid();
 }
 
 void Backup::DoBackup(std::shared_ptr<BackupEventHandler> event_handler) {
-  if (!coordinator_) {
-    coordinator_ = std::make_shared<BackupCoordinator>(syncs_to_do_.size());
-  }
-
   event_handler->BackupInProgress();
   std::vector<std::thread> in_progess_threads;
   for (auto sync : syncs_to_do_) {
@@ -81,12 +78,6 @@ void Backup::DoBackup(std::shared_ptr<BackupEventHandler> event_handler) {
     event_handler->BackupSucceeded();
   }
 }
-
-void Backup::InsertBackupCoordinator(
-    std::shared_ptr<BackupCoordinator> coordinator) {
-  coordinator_ = coordinator;
-}
-
 
 Backup::~Backup() { }
 

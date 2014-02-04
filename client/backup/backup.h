@@ -13,7 +13,8 @@ namespace datto_linux_client {
 class Backup {
  public:
   explicit Backup(
-      std::vector<std::shared_ptr<DeviceSynchronizerInterface>> syncs_to_do);
+      std::vector<std::shared_ptr<DeviceSynchronizerInterface>> syncs_to_do,
+      std::shared_ptr<BackupCoordinator> coordinator);
 
   // This blocks until the backup is done. This won't throw an exception.
   virtual void DoBackup(std::shared_ptr<BackupEventHandler> event_handler);
@@ -25,9 +26,6 @@ class Backup {
   Backup(const Backup &) = delete;
   Backup& operator=(const Backup &) = delete;
 
-  // For unit testing
-  void InsertBackupCoordinator(
-      std::shared_ptr<BackupCoordinator> coordinator);
  protected:
   // For unit testing
   Backup() {}
