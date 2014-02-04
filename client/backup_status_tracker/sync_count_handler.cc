@@ -2,7 +2,7 @@
 
 namespace datto_linux_client {
 
-SyncCountHandler::SyncCountHandler(std::shared_ptr<BlockDeviceStatus> status) {
+SyncCountHandler::SyncCountHandler(BlockDeviceStatus *status) {
 
 }
 

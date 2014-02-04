@@ -37,7 +37,7 @@ std::shared_ptr<BackupEventHandler> BackupStatusTracker::CreateEventHandler(
   }
   
   std::shared_ptr<BackupEventHandler> handler(
-      new BackupEventHandler(job_uuid, map_mutex_, reply));
+      new BackupEventHandler(map_mutex_, reply));
 
   return std::move(handler);
 }

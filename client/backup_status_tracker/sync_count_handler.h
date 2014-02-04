@@ -10,7 +10,7 @@ namespace datto_linux_client {
 
 class SyncCountHandler {
  public:
-  explicit SyncCountHandler(std::shared_ptr<BlockDeviceStatus> status);
+  explicit SyncCountHandler(BlockDeviceStatus *status);
   virtual ~SyncCountHandler() {}
 
   // num_synced should be the total synced
