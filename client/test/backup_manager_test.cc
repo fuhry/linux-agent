@@ -49,7 +49,6 @@ std::string DUMMY_BACKUP_UUID1 = "5b8893ed-c64f-4ea6-b1bb-0ac27f846864";
 class MockBackup : public Backup {
  public:
   MOCK_METHOD1(DoBackup, void(std::shared_ptr<BackupEventHandler>));
-  MOCK_METHOD0(uuid, std::string());
 };
 
 class MockBackupCoordinator : public BackupCoordinator {
@@ -123,9 +122,6 @@ TEST_F(BackupManagerTest, Constructor) {
 TEST_F(BackupManagerTest, StartBackupRequest) {
   auto backup = std::make_shared<MockBackup>();
 
-  EXPECT_CALL(*backup, uuid())
-    .WillRepeatedly(Return(DUMMY_BACKUP_UUID0));
-
   EXPECT_CALL(*backup, DoBackup(_))
     .WillOnce(InvokeWithoutArgs(sleep_func));
 
@@ -137,14 +133,10 @@ TEST_F(BackupManagerTest, StartBackupRequest) {
 
   BackupManager bm(backup_builder, sector_manager, status_tracker);
   std::string uuid = bm.StartBackup(start_request);
-  EXPECT_EQ(uuid, DUMMY_BACKUP_UUID0);
 }
 
 TEST_F(BackupManagerTest, StartBackupRequestFailsOnRepeat) {
   auto backup = std::make_shared<MockBackup>();
-
-  EXPECT_CALL(*backup, uuid())
-    .WillRepeatedly(Return(DUMMY_BACKUP_UUID0));
 
   EXPECT_CALL(*backup, DoBackup(_))
     .WillOnce(InvokeWithoutArgs(sleep_func));
@@ -182,9 +174,6 @@ TEST_F(BackupManagerTest, StopBackupRequest) {
 
   auto backup = std::make_shared<MockBackup>();
 
-  EXPECT_CALL(*backup, uuid())
-    .WillRepeatedly(Return(DUMMY_BACKUP_UUID1));
-
   EXPECT_CALL(*backup, DoBackup(_))
     .WillOnce(InvokeWithoutArgs(sleep_func));
 
@@ -195,7 +184,6 @@ TEST_F(BackupManagerTest, StopBackupRequest) {
   auto start_request = make_start_backup_request();
   BackupManager bm(backup_builder, sector_manager, status_tracker);
   std::string backup_uuid = bm.StartBackup(start_request);
-  ASSERT_EQ(backup_uuid, DUMMY_BACKUP_UUID1);
 
   EXPECT_FALSE(coordinator->IsCancelled());
 

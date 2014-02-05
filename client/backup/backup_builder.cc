@@ -46,7 +46,8 @@ BackupBuilder::CreateDeviceSynchronizer(const DevicePair &device_pair,
   if (is_full) {
     auto store = sector_manager_->GetStore(*source_device);
     store->ClearAll();
-    std::shared_ptr<const SectorSet> in_use_set = source_device->GetInUseSectors();
+    std::shared_ptr<const SectorSet> in_use_set =
+        source_device->GetInUseSectors();
     for (const SectorInterval &interval : *in_use_set) {
       DLOG(INFO) << "Adding interval " << interval;
       store->AddUnsyncedInterval(interval);

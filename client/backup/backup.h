@@ -19,8 +19,6 @@ class Backup {
   // This blocks until the backup is done. This won't throw an exception.
   virtual void DoBackup(std::shared_ptr<BackupEventHandler> event_handler);
 
-  virtual std::string uuid() { return uuid_; }
-
   virtual ~Backup();
 
   Backup(const Backup &) = delete;
@@ -32,7 +30,6 @@ class Backup {
  private:
   std::vector<std::shared_ptr<DeviceSynchronizerInterface>> syncs_to_do_;
   std::shared_ptr<BackupCoordinator> coordinator_;
-  std::string uuid_;
 };
 
 } // datto_linux_client

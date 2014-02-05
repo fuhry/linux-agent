@@ -96,7 +96,6 @@ class BackupTest : public ::testing::Test {
 TEST_F(BackupTest, Constructor) {
   std::vector<std::shared_ptr<DeviceSynchronizerInterface>> syncs_to_do;
   Backup b(syncs_to_do, coordinator);
-  EXPECT_EQ(36U, b.uuid().length());
 }
 
 TEST_F(BackupTest, NothingToDo) {

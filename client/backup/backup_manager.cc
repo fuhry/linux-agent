@@ -7,6 +7,16 @@
 
 #include "backup/backup_exception.h"
 
+namespace {
+std::string make_uuid() {
+  uuid_t uuid;
+  uuid_generate_time(uuid);
+  char uuid_c_str[36];
+  uuid_unparse(uuid, uuid_c_str);
+  return std::string(uuid_c_str);
+}
+} // anonymous namespace
+
 namespace datto_linux_client {
 
 std::string BackupManager::StartBackup(
@@ -25,20 +35,20 @@ std::string BackupManager::StartBackup(
 
   auto coordinator = std::make_shared<BackupCoordinator>(num_device_pairs);
   bool is_full = start_request.type() == StartBackupRequest::FULL_BACKUP;
-
-  LOG(INFO) << "Creating backup object";
-  std::shared_ptr<Backup> backup = backup_builder_->CreateBackup(device_pairs,
-                                                                 coordinator,
-                                                                 is_full);
-  std::string backup_uuid = backup->uuid();
-  LOG(INFO) << "Created backup object";
+  std::string backup_uuid = make_uuid();
 
   std::shared_ptr<BackupEventHandler> event_handler =
       status_tracker_->CreateEventHandler(backup_uuid);
 
   LOG(INFO) << "Adding to in progress set";
-  this->AddToInProgressSet(backup->uuid(), start_request, coordinator);
+  this->AddToInProgressSet(backup_uuid, start_request, coordinator);
   LOG(INFO) << "Finished adding";
+
+  LOG(INFO) << "Creating backup object";
+  std::shared_ptr<Backup> backup = backup_builder_->CreateBackup(device_pairs,
+                                                                 coordinator,
+                                                                 is_full);
+  LOG(INFO) << "Created backup object";
 
   // mutable in order to release the backup shared_ptr
   std::thread backup_thread([=]() mutable {
