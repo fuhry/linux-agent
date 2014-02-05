@@ -15,4 +15,4 @@ sudo apt-get install build-essential cmake libboost-dev libprotobuf-dev \
     protobuf-compiler python-protobuf e2fslibs-dev libboost-regex-dev \
     libblkid-dev subversion
 
-fetch_testing_tools
+./fetch_testing_tools
