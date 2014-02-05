@@ -88,8 +88,6 @@ int GetNewConnection(int socket_fd) {
   return connection_fd;
 }
 
-// TODO Determine if copy constructor here is okay
-//      during diff backups
 Request ReadProtobufRequest(int connection_fd) {
   uint32_t message_length;
   ssize_t bytes_read;
