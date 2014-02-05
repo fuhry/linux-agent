@@ -11,7 +11,7 @@
 namespace datto_linux_client {
 
 // This class keeps count of the number of working threads.
-// When the initial count (initialized with num_workers) is 0, it will not
+// When the count (initialized with num_workers) is 0, it will not
 // allow further increments. This way, once everything is synced we are done
 // and shouldn't allow further work.
 //

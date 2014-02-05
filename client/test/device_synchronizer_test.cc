@@ -199,6 +199,11 @@ TEST_F(DeviceSynchronizerTest, SimpleSyncTest) {
   
   EXPECT_CALL(*coordinator, IsCancelled())
       .WillRepeatedly(Return(false));
+  EXPECT_CALL(*coordinator, SignalFinished());
+  EXPECT_CALL(*coordinator, SignalMoreWorkToDo())
+      .Times(0);
+  EXPECT_CALL(*coordinator, WaitUntilFinished(_))
+      .WillRepeatedly(Return(true));
 
   device_synchronizer->DoSync(coordinator, count_handler);
 }
@@ -261,6 +266,11 @@ TEST_F(DeviceSynchronizerTest, SyncTest) {
   auto coordinator = std::make_shared<NiceMock<MockBackupCoordinator>>();
   EXPECT_CALL(*coordinator, IsCancelled())
       .WillRepeatedly(Return(false));
+  EXPECT_CALL(*coordinator, SignalFinished());
+  EXPECT_CALL(*coordinator, SignalMoreWorkToDo())
+      .Times(0);
+  EXPECT_CALL(*coordinator, WaitUntilFinished(_))
+      .WillRepeatedly(Return(true));
 
   real_source_manager->StartTracer(*real_source_device);
 

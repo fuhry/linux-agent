@@ -43,6 +43,7 @@ void Backup::DoBackup(std::shared_ptr<BackupEventHandler> event_handler) {
                           sync->source_device()->uuid());
         coordinator_->AddFatalError(error);
       }
+      LOG(INFO) << "DeviceSynchronizer::DoSync returned";
     });
 
     in_progess_threads.push_back(std::move(sync_thread));

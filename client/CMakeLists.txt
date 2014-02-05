@@ -111,6 +111,7 @@ add_unit_test(backup_manager_test
               backup/backup_coordinator.cc
               backup_status_tracker/backup_event_handler.cc
               backup_status_tracker/backup_status_tracker.cc
+              backup_status_tracker/sync_count_handler.cc
               block_trace/cpu_tracer.cc
               block_trace/device_tracer.cc
               block_trace/trace_handler.cc
@@ -122,6 +123,7 @@ target_link_libraries(backup_manager_test uuid ${PROTOBUF_LIBRARIES})
 
 add_unit_test(backup_status_tracker_test
               backup_status_tracker/backup_event_handler.cc
+              backup_status_tracker/sync_count_handler.cc
               ${PROTO_SRCS}
               backup_status_tracker/backup_status_tracker.cc)
 target_link_libraries(backup_status_tracker_test ${PROTOBUF_LIBRARIES})

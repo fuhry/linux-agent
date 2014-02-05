@@ -55,6 +55,7 @@ bool BackupCoordinator::WaitUntilFinished(int timeout_millis) {
   CHECK_GT(timeout_millis, 0) << "timeout is not positive: " << timeout_millis;
 
   std::unique_lock<std::mutex> lock(mutex_);
+  DLOG(INFO) << "BackupCoordinator count is " << count_;
   auto condition = [&]() { return count_ == 0 || cancelled_; };
   auto timeout = std::chrono::milliseconds(timeout_millis);
   return cond_variable_.wait_for(lock, timeout, condition);

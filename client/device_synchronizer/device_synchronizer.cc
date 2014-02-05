@@ -120,6 +120,8 @@ void DeviceSynchronizer::DoSync(
   time_t flush_time = 0;
   time_t freeze_time = 0;
 
+  bool was_done = false;
+
   while (!coordinator->IsCancelled()) {
     uint64_t unsynced_sector_count = source_store->UnsyncedSectorCount();
 
@@ -129,7 +131,15 @@ void DeviceSynchronizer::DoSync(
     if (flush_time > 0 && unsynced_sector_count == 0) {
       LOG(INFO) << "Sync complete";
       source_device_->Thaw();
+      coordinator->SignalFinished();
+      was_done = true;
+      if (!coordinator->WaitUntilFinished(500)) {
+        continue;
+      }
       break;
+    } else if (was_done) {
+      was_done = false;
+      coordinator->SignalMoreWorkToDo();
     }
 
     // Thaw if it's been more than a couple seconds since we froze
@@ -185,9 +195,9 @@ void DeviceSynchronizer::DoSync(
       }
     }
   }
-  DLOG(INFO) << "Sync completed";
   source_device_->Close();
   destination_device_->Close();
+  DLOG(INFO) << "Sync completed";
 }
 
 DeviceSynchronizer::~DeviceSynchronizer() {
