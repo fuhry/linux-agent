@@ -89,6 +89,15 @@ void BackupManager::StopBackup(const StopBackupRequest &stop_request) {
   coordinator->Cancel();
 }
 
+void BackupManager::CancelAll() {
+  std::lock_guard<std::mutex> map_lock(in_progress_map_mutex_);
+
+  for (auto map_pair : in_progress_map_) {
+    // map_pair.second is the (uuid_list, coordinator) pair
+    map_pair.second.second->Cancel();
+  }
+}
+
 void BackupManager::AddToInProgressSet(
     std::string backup_uuid,
     const StartBackupRequest &start_backup_request,
@@ -122,6 +131,7 @@ void BackupManager::AddToInProgressSet(
 
 BackupManager::~BackupManager() {
   destructor_called_ = true;
+  CancelAll();
   while (in_progress_map_.size() != 0U) {
     std::this_thread::yield();
   }

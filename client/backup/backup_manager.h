@@ -46,6 +46,7 @@ class BackupManager {
   void AddToInProgressSet(std::string backup_uuid,
                           const StartBackupRequest &start_backup_request,
                           std::shared_ptr<BackupCoordinator> coordinator);
+  void CancelAll();
 
   std::mutex start_backup_mutex_;
 
