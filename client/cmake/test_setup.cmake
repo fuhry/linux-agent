@@ -15,7 +15,7 @@ if (EXISTS ${GMOCK_DIR} AND EXISTS ${GTEST_DIR})
     add_library(gmock_main ${GMOCK_DIR}/src/gmock-all.cc
                            ${GMOCK_DIR}/src/gmock_main.cc)
 else()
-    add_library(FATAL_ERROR "gmock can't be found, run fetch_testing_tools")
+    add_library(FATAL_ERROR "gmock can't be found, run ./fetch_testing_tools")
 endif()
 
 add_custom_target(check)
