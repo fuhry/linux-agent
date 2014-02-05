@@ -43,12 +43,17 @@ std::string BackupManager::StartBackup(
   LOG(INFO) << "Adding to in progress set";
   this->AddToInProgressSet(backup_uuid, start_request, coordinator);
   LOG(INFO) << "Finished adding";
-
-  LOG(INFO) << "Creating backup object";
-  std::shared_ptr<Backup> backup = backup_builder_->CreateBackup(device_pairs,
-                                                                 coordinator,
-                                                                 is_full);
-  LOG(INFO) << "Created backup object";
+  std::shared_ptr<Backup> backup;
+  try {
+    LOG(INFO) << "Creating backup object";
+     backup = backup_builder_->CreateBackup(device_pairs, coordinator,
+                                            is_full);
+    LOG(INFO) << "Created backup object";
+  } catch (...) {
+    std::lock_guard<std::mutex> map_lock(in_progress_map_mutex_);
+    this->in_progress_map_.erase(backup_uuid);
+    throw;
+  }
 
   // mutable in order to release the backup shared_ptr
   std::thread backup_thread([=]() mutable {
