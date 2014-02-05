@@ -43,8 +43,10 @@ BlockDeviceFactory::CreateMountableBlockDevice(std::string uuid) {
   std::string path(real_path_buf);
   std::string fs = GetFilesystem(path);
 
-  if (fs == "ext4" || fs == "ext3" || fs == "ext2") {
-    block_dev = std::make_shared<ExtMountableBlockDevice>(path);
+  if (fs == "ext4" || fs == "ext3") {
+    block_dev = std::make_shared<ExtMountableBlockDevice>(path, false);
+  } else if (fs == "ext2") {
+    block_dev = std::make_shared<ExtMountableBlockDevice>(path, true);
   } else if (fs == "xfs") {
     block_dev = std::make_shared<XfsMountableBlockDevice>(path);
   } else {

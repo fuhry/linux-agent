@@ -13,8 +13,8 @@
 
 namespace datto_linux_client {
 
-ExtMountableBlockDevice::ExtMountableBlockDevice(std::string a_path)
-    : MountableBlockDevice(a_path) { }
+ExtMountableBlockDevice::ExtMountableBlockDevice(std::string a_path, bool is_ext2)
+    : MountableBlockDevice(a_path), is_ext2_(is_ext2) { }
 
 std::shared_ptr<const SectorSet> ExtMountableBlockDevice::GetInUseSectors() {
   std::shared_ptr<SectorSet> sectors(new SectorSet());
@@ -75,6 +75,18 @@ std::shared_ptr<const SectorSet> ExtMountableBlockDevice::GetInUseSectors() {
             << boost::icl::cardinality(*sectors) * 512;
 
   return sectors;
+}
+
+void ExtMountableBlockDevice::Freeze() {
+  if (!is_ext2_) {
+    MountableBlockDevice::Freeze();
+  }
+}
+
+void ExtMountableBlockDevice::Thaw() {
+  if (!is_ext2_) {
+    MountableBlockDevice::Thaw();
+  }
 }
 
 } // namespace datto_linux_client

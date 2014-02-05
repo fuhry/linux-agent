@@ -73,7 +73,7 @@ TEST_F(ExtFSTest, Construct) {
 
   LoopDevice loop_dev(test_out);
 
-  ExtMountableBlockDevice bdev(loop_dev.path());
+  ExtMountableBlockDevice bdev(loop_dev.path(), false);
 
   SectorSet expected = map_to_sector_set("test/data/filesystems/ext2fs.map");
   SectorSet actual = *bdev.GetInUseSectors();

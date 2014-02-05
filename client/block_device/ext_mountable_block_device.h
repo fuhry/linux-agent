@@ -12,8 +12,12 @@ namespace datto_linux_client {
 
 class ExtMountableBlockDevice : public MountableBlockDevice {
  public:
-  explicit ExtMountableBlockDevice(std::string path);
+  explicit ExtMountableBlockDevice(std::string path, bool is_ext2);
   virtual std::shared_ptr<const SectorSet> GetInUseSectors();
+  virtual void Freeze();
+  virtual void Thaw();
+ private:
+  bool is_ext2_;
 
 };
 
