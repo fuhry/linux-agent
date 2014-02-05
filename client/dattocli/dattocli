@@ -21,10 +21,15 @@ def startbackup(args):
     request = Request()
     request.type = Request.START_BACKUP
     request.start_backup_request.type = args.backup_type
-    device_pair = request.start_backup_request.device_pairs.add()
-    device_pair.block_device_uuid = args.block_device_uuid
-    device_pair.destination_host = args.destination_host
-    device_pair.destination_port = args.destination_port
+    for block_uuid, nbd_host, nbd_port in args.device_pair:
+        device_pair = request.start_backup_request.device_pairs.add()
+        device_pair.block_device_uuid = block_uuid
+        device_pair.destination_host = nbd_host
+        try:
+            device_pair.destination_port = int(nbd_port)
+        except ValueError as e:
+            raise ValueError(nbd_port + " is not a valid port number")
+
     return request
 
 def stopbackup(args):
@@ -42,9 +47,7 @@ def parse_args():
     start_parser = subparsers.add_parser('startbackup')
     start_parser.set_defaults(func=startbackup)
 
-    start_parser.add_argument('block_device_uuid',
-                              help="Block device UUID to backup") 
-
+    # Add full/incremental to the parser group
     start_group = start_parser.add_mutually_exclusive_group(required=True)
     start_group.add_argument('-f', '--full', dest="backup_type",
                              action="store_const",
@@ -55,10 +58,12 @@ def parse_args():
                              const=StartBackupRequest.INCREMENTAL_BACKUP,
                              help="Do an incremental backup")
 
-    start_parser.add_argument('destination_host',
-                              help="Destination NBD server hostname")
-    start_parser.add_argument('destination_port', type=int,
-                              help="Destination NBD server port")
+    # Add device-pair to parser
+    start_parser.add_argument('--device-pair', nargs=3, required=True,
+                              action="append",
+                              metavar=('block_uuid', 'nbd_host', 'nbd_port'),
+                              help="Source and destination information")
+
 
     stop_parser = subparsers.add_parser('stopbackup')
     stop_parser.set_defaults(func=stopbackup)
@@ -72,6 +77,7 @@ def parse_args():
 if __name__ == "__main__":
     # parse_args should only return if it has a message
     message = parse_args()
+    print message
     reply = make_request_to_dattod(message)
     print reply
 

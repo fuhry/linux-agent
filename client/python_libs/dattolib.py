@@ -10,6 +10,9 @@ from reply_pb2 import Reply
 
 IPC_SOCKET_PATH = "/var/datto/dattod_ipc"
 
+class DattodConnectionError(Exception):
+    pass
+
 # Send a Request to dattod over the unix socket IPC_SOCKET_PATH
 def make_request_to_dattod(request):
     # check if socket path exists, bail if not
@@ -37,5 +40,7 @@ def make_request_to_dattod(request):
         # Interpret the data as a Reply object
         reply.ParseFromString(data)
         return reply
+    except socket.error as e:
+        raise DattodConnectionError("Unable to connect to dattod: " + str(e))
     finally:
         s.close()
