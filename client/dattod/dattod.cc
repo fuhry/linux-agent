@@ -99,6 +99,5 @@ int main(int argc, char *argv[]) {
   // Listen for signals
   signal_handler.WaitForSignal([&](int) {} );
 
-  // TODO: Stop everything that needs to be stopped
   return 0;
 }
