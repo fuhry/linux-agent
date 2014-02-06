@@ -15,7 +15,7 @@
 namespace {
 using datto_linux_client::BlockDeviceException;
 
-std::string GetFilesystem(std::string path) {
+std::string GetFilesystemFromPath(std::string path) {
   char *fs = ::blkid_get_tag_value(NULL, "TYPE", path.c_str());
   if (!fs) {
     LOG(ERROR) << "Couldn't get \"TYPE\" tag for " << path;
@@ -26,7 +26,7 @@ std::string GetFilesystem(std::string path) {
   return fs_str;
 }
 
-std::string GetPath(std::string uuid) {
+std::string GetPathFromUuid(std::string uuid) {
   char real_path_buf[PATH_MAX];
   char *ret = realpath(("/dev/disk/by-uuid/" + uuid).c_str(), real_path_buf);
   if (ret == NULL) {
@@ -43,8 +43,8 @@ std::shared_ptr<MountableBlockDevice>
 BlockDeviceFactory::CreateMountableBlockDevice(std::string uuid) {
   std::shared_ptr<MountableBlockDevice> block_dev;
 
-  std::string path = GetPath(uuid);
-  std::string fs = GetFilesystem(path);
+  std::string path = GetPathFromUuid(uuid);
+  std::string fs = GetFilesystemFromPath(path);
 
   if (fs == "ext4" || fs == "ext3") {
     block_dev = std::make_shared<ExtMountableBlockDevice>(path, false);
