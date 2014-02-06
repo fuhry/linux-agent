@@ -12,7 +12,8 @@
 namespace datto_linux_client {
 class RequestHandler {
  public:
-  RequestHandler(std::shared_ptr<BackupManager> backup_manager);
+  RequestHandler(std::shared_ptr<BackupManager> backup_manager,
+                 std::shared_ptr<BackupStatusTracker> status_tracker);
   virtual void Handle(const Request &request,
                       std::shared_ptr<ReplyChannel> reply_channel);
   virtual ~RequestHandler() {}
@@ -25,6 +26,7 @@ class RequestHandler {
 
  private:
   std::shared_ptr<BackupManager> backup_manager_;
+  std::shared_ptr<BackupStatusTracker> status_tracker_;
 };
 }
 

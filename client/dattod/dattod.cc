@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
                                                         status_tracker);
   // Create the request handler
   std::unique_ptr<RequestHandler> request_handler(
-      new RequestHandler(backup_manager));
+      new RequestHandler(backup_manager, status_tracker));
   // Create (and start) the request listener
   IpcRequestListener request_listener(DATTO_SOCKET,
                                       std::move(request_handler));

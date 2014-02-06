@@ -6,8 +6,11 @@
 
 namespace datto_linux_client {
 
-RequestHandler::RequestHandler(std::shared_ptr<BackupManager> backup_manager)
-    : backup_manager_(backup_manager) {}
+RequestHandler::RequestHandler(
+    std::shared_ptr<BackupManager> backup_manager,
+    std::shared_ptr<BackupStatusTracker> status_tracker)
+    : backup_manager_(backup_manager),
+      status_tracker_(status_tracker) {}
 
 void RequestHandler::Handle(const Request &request,
                             std::shared_ptr<ReplyChannel> reply_channel) {
@@ -15,12 +18,23 @@ void RequestHandler::Handle(const Request &request,
   Reply reply;
   try {
     if (request.type() == Request::START_BACKUP) {
-      std::string backup_uuid = backup_manager_->StartBackup(request.start_backup_request());
+      std::string backup_uuid =
+          backup_manager_->StartBackup(request.start_backup_request());
       reply.set_type(Reply::START_BACKUP);
       reply.mutable_start_backup_reply()->set_job_uuid(backup_uuid);
     } else if (request.type() == Request::STOP_BACKUP) {
       backup_manager_->StopBackup(request.stop_backup_request());
       reply.set_type(Reply::STOP_BACKUP);
+    } else if (request.type() == Request::BACKUP_STATUS) {
+      // Set the type and allocate the status reply
+      reply.set_type(Reply::BACKUP_STATUS);
+      BackupStatusReply *status_reply =
+        reply.mutable_backup_status_reply();
+
+      // Get a shared_ptr<BackupStatusReply> and copy its value into
+      // the allocated status reply
+      std::string job_uuid = request.backup_status_request().job_uuid();
+      *status_reply = *status_tracker_->GetReply(job_uuid);
     } else {
       // TODO
       throw RequestListenerException("Not implemented");

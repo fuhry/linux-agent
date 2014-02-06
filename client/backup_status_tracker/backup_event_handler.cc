@@ -7,7 +7,6 @@ BackupEventHandler::BackupEventHandler(
     std::shared_ptr<BackupStatusReply> reply)
     : to_lock_mutex_(to_lock_mutex),
       reply_(reply) {
-  std::lock_guard<std::mutex> lock(*to_lock_mutex_);
   reply_->set_status(BackupStatusReply::NOT_STARTED);
 }
 
@@ -34,9 +33,11 @@ void BackupEventHandler::BackupFailed(const std::string &failure_message) {
 
 std::shared_ptr<SyncCountHandler> BackupEventHandler::CreateSyncCountHandler(
     const MountableBlockDevice &source_device) {
-  auto sync_count_handler =
-      std::make_shared<SyncCountHandler>(reply_->add_device_statuses());
-  return sync_count_handler;
+
+  BlockDeviceStatus *device_status = reply_->add_device_statuses();
+  device_status->set_uuid(source_device.uuid());
+
+  return std::make_shared<SyncCountHandler>(device_status);
 }
 
 } // datto_linux_client
