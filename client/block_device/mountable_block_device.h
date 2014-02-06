@@ -39,9 +39,7 @@ class MountableBlockDevice : public BlockDevice {
   // Don't throw if one isn't open
   void CloseMount();
 
-  virtual std::string uuid() const {
-    return uuid_;
-  }
+  virtual std::string GetUuid() const;
 
   // Should close the mount file descriptor and unfreeze
   virtual ~MountableBlockDevice();

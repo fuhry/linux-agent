@@ -1,5 +1,6 @@
 #include "block_device/mountable_block_device.h"
 
+#include <blkid/blkid.h>
 #include <fcntl.h>
 #include <fstream>
 #include <glog/logging.h>
@@ -133,6 +134,17 @@ int MountableBlockDevice::OpenMount() {
 
 void MountableBlockDevice::CloseMount() {
   close(mount_file_descriptor_);
+}
+
+std::string MountableBlockDevice::GetUuid() const {
+  char *uuid = ::blkid_get_tag_value(NULL, "UUID", path_.c_str());
+  if (!uuid) {
+    LOG(ERROR) << "Couldn't get \"UUID\" tag for " << path_;
+    throw BlockDeviceException("Unable to probe block device UUID");
+  }
+  std::string uuid_str(uuid);
+  free(uuid);
+  return uuid_str;
 }
 
 MountableBlockDevice::~MountableBlockDevice() {

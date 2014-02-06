@@ -35,7 +35,7 @@ std::shared_ptr<SyncCountHandler> BackupEventHandler::CreateSyncCountHandler(
     const MountableBlockDevice &source_device) {
 
   BlockDeviceStatus *device_status = reply_->add_device_statuses();
-  device_status->set_uuid(source_device.uuid());
+  device_status->set_uuid(source_device.GetUuid());
 
   return std::make_shared<SyncCountHandler>(device_status);
 }

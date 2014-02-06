@@ -26,8 +26,14 @@ void Backup::DoBackup(std::shared_ptr<BackupEventHandler> event_handler) {
       try {
         sync->DoSync(coordinator_, sync_count_handler);
       } catch (const std::exception &e) {
-        BackupError error(std::string(e.what()),
-                          sync->source_device()->uuid());
+        std::string source_uuid;
+        try {
+          source_uuid = sync->source_device()->GetUuid();
+        } catch (const std::exception &uuid_e) {
+          LOG(ERROR) << uuid_e.what();
+          source_uuid = "uuid_error";
+        }
+        BackupError error(std::string(e.what()), source_uuid);
         coordinator_->AddFatalError(error);
       }
       LOG(INFO) << "DeviceSynchronizer::DoSync returned";
