@@ -25,6 +25,16 @@ std::string GetFilesystem(std::string path) {
   free(fs);
   return fs_str;
 }
+
+std::string GetPath(std::string uuid) {
+  char real_path_buf[PATH_MAX];
+  char *ret = realpath(("/dev/disk/by-uuid/" + uuid).c_str(), real_path_buf);
+  if (ret == NULL) {
+    PLOG(ERROR) << "Couldn't find UUID '" << uuid << "'";
+    throw BlockDeviceException("Unable to find block device for UUID");
+  }
+  return std::string(real_path_buf);
+}
 }
 
 namespace datto_linux_client {
@@ -33,14 +43,7 @@ std::shared_ptr<MountableBlockDevice>
 BlockDeviceFactory::CreateMountableBlockDevice(std::string uuid) {
   std::shared_ptr<MountableBlockDevice> block_dev;
 
-  char real_path_buf[PATH_MAX];
-  char *ret = realpath(("/dev/disk/by-uuid/" + uuid).c_str(), real_path_buf);
-  if (ret == NULL) {
-    PLOG(ERROR) << "Couldn't find UUID '" << uuid << "'";
-    throw BlockDeviceException("Unable to find block device for UUID");
-  }
-
-  std::string path(real_path_buf);
+  std::string path = GetPath(uuid);
   std::string fs = GetFilesystem(path);
 
   if (fs == "ext4" || fs == "ext3") {
