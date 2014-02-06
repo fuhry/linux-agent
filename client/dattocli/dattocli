@@ -38,6 +38,12 @@ def stopbackup(args):
     request.stop_backup_request.job_uuid = args.job_uuid
     return request
 
+def backupstatus(args):
+    request = Request()
+    request.type = Request.BACKUP_STATUS
+    request.backup_status_request.job_uuid = args.job_uuid
+    return request
+
 # Returns a Request object that should be sent to dattod
 def parse_args():
 
@@ -68,7 +74,12 @@ def parse_args():
     stop_parser = subparsers.add_parser('stopbackup')
     stop_parser.set_defaults(func=stopbackup)
     stop_parser.add_argument('job_uuid',
-                             help="job uuid that should be stopped") 
+                             help="Job UUID that should be stopped")
+
+    stop_parser = subparsers.add_parser('backupstatus')
+    stop_parser.set_defaults(func=backupstatus)
+    stop_parser.add_argument('job_uuid',
+                             help="Job UUID to query")
 
     args = parser.parse_args()
 
