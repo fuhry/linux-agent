@@ -76,7 +76,7 @@ MountableBlockDevice::MountableBlockDevice(std::string a_path)
       mount_file_descriptor_(-1),
       is_frozen_(false) { }
 
-bool MountableBlockDevice::IsMounted() {
+bool MountableBlockDevice::IsMounted() const {
   // TODO These checks should be based on major/minor number, not on path.
   // mknod can be used to create "block special" type devices all over the
   // file system that all refer to the same block device but don't
@@ -85,7 +85,7 @@ bool MountableBlockDevice::IsMounted() {
   return mounted_devices.find(path_) != mounted_devices.end();
 }
 
-std::string MountableBlockDevice::GetMountPoint() {
+std::string MountableBlockDevice::GetMountPoint() const {
   auto mounted_devices = GetMountedDevices();
   auto mount_pair = mounted_devices.find(path_);
   if (mount_pair == mounted_devices.end()) {

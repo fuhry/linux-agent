@@ -15,9 +15,9 @@ class MountableBlockDevice : public BlockDevice {
  public:
   explicit MountableBlockDevice(std::string a_path);
 
-  virtual bool IsMounted();
+  virtual bool IsMounted() const;
   // Throw an exception if the partition isn't mounted
-  virtual std::string GetMountPoint();
+  virtual std::string GetMountPoint() const;
 
   // These should only be overwritten if the underlying filesystem
   // doesn't support the FIFREEZE ioctl
