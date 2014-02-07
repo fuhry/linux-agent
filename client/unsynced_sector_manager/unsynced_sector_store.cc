@@ -2,6 +2,11 @@
 
 #include <algorithm>
 
+namespace {
+  uint64_t SEEK_CUTOFF = 4096;
+}
+
+
 namespace datto_linux_client {
 
 UnsyncedSectorStore::UnsyncedSectorStore()
@@ -29,7 +34,7 @@ void UnsyncedSectorStore::MarkToSyncInterval(
 SectorInterval UnsyncedSectorStore::GetContinuousUnsyncedSectors() const {
   std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
 
-  // Return the largest interval greater than 1024 if it exists,
+  // Return the largest interval greater than SEEK_CUTOFF if it exists,
   // otherwise return the one directly after the last returned interval
   // to try to take advantage of read-ahead
   SectorInterval interval_to_return(0, 0);
@@ -40,8 +45,8 @@ SectorInterval UnsyncedSectorStore::GetContinuousUnsyncedSectors() const {
       // This way we always return something
       interval_to_return = interval;
     } else if (boost::icl::length(interval) > 
-               std::max((uint64_t)1024, boost::icl::length(interval_to_return))) {
-      // Return the largest interval larger than 1024 if it exists
+               std::max(SEEK_CUTOFF, boost::icl::length(interval_to_return))) {
+      // Return the largest interval larger than SEEK_CUTOFF if it exists
       interval_to_return = interval;
       found_big_or_after = true;
     } else if (!found_big_or_after
