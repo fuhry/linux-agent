@@ -126,7 +126,7 @@ void DeviceSynchronizer::DoSync(
     uint64_t unsynced_sector_count = source_store->UnsyncedSectorCount();
 
     // Let the event handler know how much is left
-    count_handler->UpdateUnsyncedCount(unsynced_sector_count);
+    count_handler->UpdateUnsyncedCount(unsynced_sector_count * SECTOR_SIZE);
 
     if (flush_time > 0 && unsynced_sector_count == 0) {
       LOG(INFO) << "Sync complete";
