@@ -10,14 +10,12 @@ std::shared_ptr<BackupStatusReply> BackupStatusTracker::GetReply(
     const std::string &job_uuid) {
   std::lock_guard<std::mutex> lock(*map_mutex_);
 
-  std::shared_ptr<BackupStatusReply> reply(nullptr);
-
-  if (reply_map_.count(job_uuid)) {
-    // Create a copy of the reply
-    reply.reset(new BackupStatusReply(*reply_map_[job_uuid]));
+  if (!reply_map_.count(job_uuid)) {
+    return nullptr;
   }
 
-  return std::move(reply);
+  auto reply = std::make_shared<BackupStatusReply>(*reply_map_[job_uuid]);
+  return reply;
 }
 
 std::shared_ptr<BackupEventHandler> BackupStatusTracker::CreateEventHandler(

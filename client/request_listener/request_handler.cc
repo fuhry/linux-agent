@@ -26,15 +26,25 @@ void RequestHandler::Handle(const Request &request,
       backup_manager_->StopBackup(request.stop_backup_request());
       reply.set_type(Reply::STOP_BACKUP);
     } else if (request.type() == Request::BACKUP_STATUS) {
+      std::string job_uuid = request.backup_status_request().job_uuid();
+
+      std::shared_ptr<BackupStatusReply> temp_status_reply;
+      temp_status_reply = status_tracker_->GetReply(job_uuid);
+
+      if (temp_status_reply) {
+        reply.set_type(Reply::BACKUP_STATUS);
+        BackupStatusReply *status_reply = reply.mutable_backup_status_reply();
+        *status_reply = *temp_status_reply;
+      } else {
+        reply.set_type(Reply::ERROR);
+        reply.mutable_error_reply()->set_short_error(
+            "'" + job_uuid + "' doesn't exist");
+      }
+
       // Set the type and allocate the status reply
-      reply.set_type(Reply::BACKUP_STATUS);
-      BackupStatusReply *status_reply =
-        reply.mutable_backup_status_reply();
 
       // Get a shared_ptr<BackupStatusReply> and copy its value into
       // the allocated status reply
-      std::string job_uuid = request.backup_status_request().job_uuid();
-      *status_reply = *status_tracker_->GetReply(job_uuid);
     } else {
       // TODO
       throw RequestListenerException("Not implemented");
