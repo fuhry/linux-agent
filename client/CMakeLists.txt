@@ -99,7 +99,7 @@ add_unit_test(backup_test
               block_device/mountable_block_device.cc
               ${PROTO_SRCS}
               backup/backup.cc)
-target_link_libraries(backup_test uuid ${PROTOBUF_LIBRARIES})
+target_link_libraries(backup_test blkid uuid ${PROTOBUF_LIBRARIES})
 
 add_unit_test(backup_coordinator_test
               backup/backup_coordinator.cc)
@@ -146,7 +146,7 @@ add_unit_test(device_synchronizer_test
               unsynced_sector_manager/unsynced_sector_store.cc
               ${PROTO_SRCS}
               device_synchronizer/device_synchronizer.cc)
-target_link_libraries(device_synchronizer_test uuid ${PROTOBUF_LIBRARIES})
+target_link_libraries(device_synchronizer_test blkid uuid ${PROTOBUF_LIBRARIES})
 
 add_unit_test(device_tracer_test
               test/loop_device.cc
@@ -161,21 +161,29 @@ add_unit_test(extfs_test
               block_device/mountable_block_device.cc
               block_device/block_device.cc
               block_device/ext_mountable_block_device.cc)
-target_link_libraries(extfs_test ext2fs com_err)
+target_link_libraries(extfs_test blkid ext2fs com_err)
 
 add_unit_test(flock_test
               dattod/flock.cc)
 
 add_unit_test(ipc_request_listener_test
+              backup/backup.cc
+              backup/backup_coordinator.cc
+              backup/backup_manager.cc
+              backup_status_tracker/backup_event_handler.cc
+              backup_status_tracker/backup_status_tracker.cc
+              backup_status_tracker/sync_count_handler.cc
+              request_listener/request_handler.cc
               request_listener/socket_reply_channel.cc
               ${PROTO_SRCS}
               request_listener/ipc_request_listener.cc)
-target_link_libraries(ipc_request_listener_test ${PROTOBUF_LIBRARIES})
+target_link_libraries(ipc_request_listener_test uuid ${PROTOBUF_LIBRARIES})
 
 add_unit_test(mountable_block_device_test
               test/loop_device.cc
               block_device/mountable_block_device.cc
               block_device/block_device.cc)
+target_link_libraries(mountable_block_device_test blkid)
 
 add_unit_test(nbd_block_device_test
               test/loop_device.cc

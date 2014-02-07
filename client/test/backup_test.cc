@@ -72,7 +72,7 @@ class MockSyncCountHandler : public SyncCountHandler {
 
 class MockMountableBlockDevice : public MountableBlockDevice {
  public:
-  MOCK_CONST_METHOD0(uuid, std::string());
+  MOCK_CONST_METHOD0(GetUuid, std::string());
   MOCK_CONST_METHOD0(path, std::string());
   MOCK_METHOD0(GetInUseSectors, std::shared_ptr<const SectorSet>());
 };
@@ -150,7 +150,7 @@ TEST_F(BackupTest, HandlesException) {
       .WillOnce(Return(errors));
   EXPECT_CALL(*coordinator, WaitUntilFinished(_))
       .WillOnce(Return(true));
-  EXPECT_CALL(*source_device, uuid())
+  EXPECT_CALL(*source_device, GetUuid())
       .WillRepeatedly(Return("dummy-uuid"));
   EXPECT_CALL(*device_sync, source_device())
       .WillRepeatedly(Return(source_device));

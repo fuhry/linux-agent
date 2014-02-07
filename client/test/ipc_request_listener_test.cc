@@ -17,6 +17,7 @@
 #include <thread>
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <glog/logging.h>
 
 namespace {
@@ -28,9 +29,20 @@ using ::datto_linux_client::Request;
 using ::datto_linux_client::RequestListenerException;
 using ::datto_linux_client::RequestHandler;
 
+// Define a dummy request handler that will pass off to
+// handle_func. Tests should redefine handle_func
+//
 // TODO This will fail sometimes for unknown reasons
-// Test cases redefine handle_func to set behavior for the RequestHandler
+// 2014-02-07 - is this still true? I haven't seen a failure in a while
 std::function<void(const Request&, std::shared_ptr<ReplyChannel>)> handle_func;
+
+class FakeRequestHandler : public RequestHandler {
+  void Handle(const Request &request,
+              std::shared_ptr<ReplyChannel> reply_channel) {
+    handle_func(request, reply_channel);
+  }
+};
+
 
 class RequestTestClient {
  public:
@@ -110,7 +122,7 @@ class RequestTestClient {
 class IpcRequestListenerTest : public ::testing::Test {
  protected:
   IpcRequestListenerTest() {
-    handler_ = std::unique_ptr<RequestHandler>(new RequestHandler(nullptr));
+    handler_ = std::unique_ptr<RequestHandler>(new FakeRequestHandler());
     handle_func = [&](const Request&, std::shared_ptr<ReplyChannel>) {
         return;
     };
@@ -118,18 +130,6 @@ class IpcRequestListenerTest : public ::testing::Test {
   std::unique_ptr<RequestHandler> handler_;
 
 };
-
-}
-
-// Define implementation for RequestHandler here
-namespace datto_linux_client {
-
-RequestHandler::RequestHandler(std::shared_ptr<BackupManager> bm) { }
-
-void RequestHandler::Handle(const Request &request,
-                            std::shared_ptr<ReplyChannel> reply_channel) {
-  handle_func(request, reply_channel);
-}
 
 }
 
