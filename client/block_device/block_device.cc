@@ -65,7 +65,7 @@ void BlockDevice::Throttle(double scalar) {
 }
 
 void BlockDevice::Unthrottle() {
-  throttle_scalar_ = 0.0;;
+  throttle_scalar_ = 0.0;
 }
 
 int BlockDevice::Open() {
