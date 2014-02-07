@@ -37,7 +37,7 @@ std::shared_ptr<SyncCountHandler> BackupEventHandler::CreateSyncCountHandler(
   BlockDeviceStatus *device_status = reply_->add_device_statuses();
   device_status->set_uuid(source_device.GetUuid());
 
-  return std::make_shared<SyncCountHandler>(device_status);
+  return std::make_shared<SyncCountHandler>(device_status, to_lock_mutex_);
 }
 
 } // datto_linux_client

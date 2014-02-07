@@ -2,6 +2,7 @@
 #define DATTO_CLIENT_BACKUP_STATUS_TRACKER_SYNC_COUNT_HANDLER_H_
 
 #include <memory>
+#include <mutex>
 #include <unistd.h>
 
 #include "block_device_status.pb.h"
@@ -10,7 +11,8 @@ namespace datto_linux_client {
 
 class SyncCountHandler {
  public:
-  explicit SyncCountHandler(BlockDeviceStatus *status);
+  explicit SyncCountHandler(BlockDeviceStatus *block_device_status,
+                            std::shared_ptr<std::mutex> to_lock_mutex);
   virtual ~SyncCountHandler() {}
 
   // num_synced should be the total synced
@@ -23,6 +25,9 @@ class SyncCountHandler {
  protected:
   // For unit testing
   SyncCountHandler() {}
+ private:
+  BlockDeviceStatus *block_device_status_;
+  std::shared_ptr<std::mutex> to_lock_mutex_;
 };
 
 } // datto_linux_client
