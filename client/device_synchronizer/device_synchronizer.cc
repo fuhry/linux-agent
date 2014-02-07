@@ -130,9 +130,14 @@ void DeviceSynchronizer::DoSync(
 
     if (flush_time > 0 && unsynced_sector_count == 0) {
       LOG(INFO) << "Sync complete";
-      source_device_->Thaw();
-      coordinator->SignalFinished();
-      was_done = true;
+      if (freeze_time > 0) {
+        source_device_->Thaw();
+        freeze_time = 0;
+      }
+      if (!was_done) {
+        coordinator->SignalFinished();
+        was_done = true;
+      }
       if (!coordinator->WaitUntilFinished(500)) {
         continue;
       }
