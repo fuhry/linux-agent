@@ -8,7 +8,9 @@
 #include <netdb.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include "block_device/nbd_exception.h"
 
@@ -17,6 +19,22 @@ using ::datto_linux_client::NbdException;
 
 const char NBD_ACK_MAGIC[] = "NBDMAGIC";
 const uint64_t NBD_NEGOTIATE_MAGIC = 0x00420281861253LL;
+
+void LoadNBDModule() {
+  struct stat buf;
+  if (stat("/sys/block/nbd0", &buf) == -1) {
+    if (errno == ENOENT) {
+      LOG(WARNING) << "NBD isn't compiled in or module isn't loaded";
+      LOG(INFO) << "Attempting to load NBD module";
+      if (system("modprobe nbd") != 0) {
+        LOG(ERROR) << "Unable to load NBD module";
+        throw NbdException("Unable to load NBD module.");
+      }
+    } else {
+      PLOG(ERROR) << "Unable to check existance of /sys/block/nbd0";
+    }
+  }
+}
 
 std::string FindOpenNbdDevice() {
   std::string open_device = "";
@@ -170,6 +188,8 @@ NbdClient::NbdClient(std::string a_host, uint16_t a_port)
     : host_(a_host),
       port_(a_port),
       disconnect_(false) {
+
+  LoadNBDModule();
 
   sock_ = OpenNbdSocket(host_, port_);
   NegotiateNbdCommunication(sock_, &block_device_size_);
