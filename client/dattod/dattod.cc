@@ -39,8 +39,6 @@ int main(int argc, char *argv[]) {
   FLAGS_log_dir = "/dev/shm/";
   google::InitGoogleLogging(argv[0]);
 
-  // TODO: Parse the config file
-
   // Make the DATTO_VAR_DIR directory
   // Save any error, we don't care about it unless chdir fails
   mkdir(DATTO_VAR_DIR, S_IRWXU | S_IRWXG);
