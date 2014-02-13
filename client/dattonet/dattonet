@@ -61,6 +61,9 @@ def set_block_devices(reply):
         #
         # TODO: This returns bad information for the mountpoint and fs
         #       when not run on the symlink
+        # 
+        #       This might be helpful with the TODO
+        #       http://stackoverflow.com/a/21614264/965648
         df_output = run_command(["df", "-T", device.real_path])
         df_info_split = df_output.split("\n")[1].split()
         filesystem = df_info_split[1]
