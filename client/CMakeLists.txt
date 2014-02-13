@@ -28,17 +28,19 @@ add_custom_command(TARGET protobuf_python
 add_custom_target(dattocli)
 add_dependencies(dattocli protobuf_python)
 add_custom_command(TARGET dattocli
-                   COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/dattocli/dattocli
-                              ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/argparse.py
-                              ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/dattolib.py
-                              ${CMAKE_CURRENT_BINARY_DIR})
+                   COMMAND cp -f
+                       ${CMAKE_CURRENT_SOURCE_DIR}/dattocli/dattocli
+                       ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/argparse.py
+                       ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/dattolib.py
+                       ${CMAKE_CURRENT_BINARY_DIR})
 # dattonet
 add_custom_target(dattonet)
 add_dependencies(dattonet protobuf_python)
 add_custom_command(TARGET dattonet
-                   COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/dattonet/dattonet
-                              ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/dattolib.py
-                              ${CMAKE_CURRENT_BINARY_DIR})
+                   COMMAND cp -f
+                       ${CMAKE_CURRENT_SOURCE_DIR}/dattonet/dattonet
+                       ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/dattolib.py
+                       ${CMAKE_CURRENT_BINARY_DIR})
 
 # Doesn't build currently
 ## dattod
