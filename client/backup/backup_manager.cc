@@ -30,6 +30,10 @@ std::string BackupManager::StartBackup(
 
   int num_device_pairs = start_request.device_pairs_size();
 
+  if (num_device_pairs == 0) {
+    throw BackupException("No devices given to backup");
+  }
+
   std::vector<DevicePair> device_pairs(start_request.device_pairs().begin(),
                                        start_request.device_pairs().end());
 

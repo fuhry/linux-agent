@@ -119,6 +119,20 @@ TEST_F(BackupManagerTest, Constructor) {
   BackupManager bm(backup_builder, sector_manager, status_tracker);
 }
 
+TEST_F(BackupManagerTest, ThrowsOnNoDevices) {
+  BackupManager bm(backup_builder, sector_manager, status_tracker);
+
+  StartBackupRequest sr;
+  sr.set_type(StartBackupRequest::FULL_BACKUP);
+
+  try {
+    auto job_guid = bm.StartBackup(sr);
+    FAIL() << "Should have failed with empty request";
+  } catch (...) {
+    // good
+  }
+}
+
 TEST_F(BackupManagerTest, StartBackupRequest) {
   auto backup = std::make_shared<MockBackup>();
 
