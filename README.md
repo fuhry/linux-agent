@@ -43,22 +43,19 @@ a GPL-compatible license.
 
 ## Directory Structure
 
-* `client/`: Code to run on the client computer
-    * `build/`: Directory created during the build process
-    * `cmake/`: Code for the build process
-    * `dattocli/`: Command line tool
-    * `dattod/`: Contains dattod.cc which has the main() function
-    * `dependency_files/`: Text files etc. needed during execution
-    * `docs/`: Developer client documentation
-    * `messages/`: .proto files used in interprocess communication
-    * `test/`: Unit tests
-    * `CMakeLists.txt`: Build file used by CMake
-    * `install_deps`: Script which installs the dependancies to begin working
-    * `one_step_build`: Script which builds a binary
-    * `run_tests`: Script which runs the unit tests
-    * `until_failure`: Script which runs the unit tests until one fails
+* `CMakeLists.txt`: Build file used by CMake
+* `build/`: Directory created during the build process
+* `cmake/`: Code for the build process
+* `dattocli/`: Command line tool
+* `dattod/`: Contains dattod.cc which has the main() function
+* `dependency_files/`: Text files etc. needed during execution
+* `docs/`: Developer client documentation
 * `helper_scripts/`: Scattered files used to automate some process
-* `proof_of_concept/`: Legacy files which contain some informational value
+* `install_deps`: Script which installs the dependancies to begin working
+* `messages/`: .proto files used in interprocess communication
+* `one_step_build`: Script which builds a binary
+* `run_tests`: Script which runs the unit tests
+* `test/`: Unit tests
 
 ## Implementation Details
 
