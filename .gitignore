@@ -1,9 +1,3 @@
-# Tool generated code
-client/request_listener/protobuf_classes
-
-# Testing directory
-client/gmock
-
 # Core dumps
 core
 
