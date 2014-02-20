@@ -215,21 +215,6 @@ add_unit_test(unsynced_sector_store_test
 #              block_device/block_device.cc
 #              block_device/xfs_mountable_block_device.cc)
 
-# Packaging
-set(CPACK_GENERATOR "DEB;RPM")
-set(CPACK_PACKAGE_CONTACT "Nick Garvey ngarvey@dattobackup.com")
-set(CPACK_PACKAGE_EXECUTABLES "Nick Garvey ngarvey@dattobackup.com")
-# XXX CMACK?
-set(CMACK_INSTALL_DIRECTORY "datto")
+add_custom_target(build)
+add_dependencies(build dattod dattocli dattonet)
 
-file(GLOB python_protobufs ${CMAKE_CURRENT_BINARY_DIR}/*_pb2.py)
-file(GLOB python_libs ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/*.py)
-
-# Doesn't build currently
-#install(TARGETS dattod DESTINATION /usr/sbin)
-#install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattocli DESTINATION /usr/lib/datto)
-#install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattonet DESTINATION /usr/lib/datto)
-#install(FILES ${python_protobufs} DESTINATION /usr/lib/datto)
-#install(FILES ${python_libs} DESTINATION /usr/lib/datto)
-
-include(CPack)
