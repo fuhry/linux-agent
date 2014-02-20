@@ -216,5 +216,8 @@ add_unit_test(unsynced_sector_store_test
 #              block_device/xfs_mountable_block_device.cc)
 
 add_custom_target(build)
-add_dependencies(build dattod dattocli dattonet)
+add_dependencies(build dattod dattocli dattonet check)
+
+add_custom_target(binary)
+add_dependencies(binary dattod dattocli dattonet)
 
