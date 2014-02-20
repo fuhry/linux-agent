@@ -85,3 +85,13 @@ endif()
 
 add_custom_target(build)
 add_dependencies(build dattod dattocli dattonet)
+
+file(GLOB python_protobufs ${CMAKE_CURRENT_BINARY_DIR}/*_pb2.py)
+file(GLOB python_libs ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/*.py)
+
+# Doesn't build currently
+install(TARGETS dattod DESTINATION /usr/sbin)
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattocli DESTINATION /usr/lib/datto)
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattonet DESTINATION /usr/lib/datto)
+install(FILES ${python_protobufs} DESTINATION /usr/lib/datto)
+install(FILES ${python_libs} DESTINATION /usr/lib/datto)
