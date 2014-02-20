@@ -3,4 +3,4 @@
 mkdir -p build
 cd build
 
-GLOG_minloglevel=0 cmake -DCMAKE_BUILD_TYPE=debug .. && make -j4 -k check
+BUILD_UNIT_TESTS=1 GLOG_minloglevel=0 cmake -DCMAKE_BUILD_TYPE=debug .. && make -j4 -k check
