@@ -15,9 +15,9 @@
 #include "request_listener/ipc_request_listener.h"
 #include "request_listener/request_handler.h"
 
-const char DATTO_VAR_DIR[] = "/var/datto";
-const char DATTO_SOCKET[] = "/var/datto/dattod_ipc";
-const char FLOCK_PATH[] = "/var/datto/dattod.pid";
+const char DATTO_VAR_DIR[] = "/var/local/datto";
+const char DATTO_SOCKET[] = "/var/local/datto/dattod_ipc";
+const char FLOCK_PATH[] = "/var/local/datto/dattod.pid";
 
 namespace {
 using datto_linux_client::BackupBuilder;

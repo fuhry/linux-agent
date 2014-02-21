@@ -15,8 +15,6 @@ from dattolib.string_reply_pb2 import StringReply
 from dattolib import make_request_to_dattod
 
 
-IPC_SOCKET_PATH = "/var/datto/dattod_ipc"
-
 def startbackup(args):
     request = Request()
     request.type = Request.START_BACKUP
