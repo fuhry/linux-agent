@@ -17,27 +17,33 @@ file (GLOB PROTO_FILES messages/*.proto)
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 
 # Python protobuf files
-add_custom_target(protobuf_python ALL)
+add_custom_target(protobuf_python ALL COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/dattolib)
 add_custom_command(TARGET protobuf_python
-                   COMMAND protoc --python_out=${CMAKE_CURRENT_BINARY_DIR}
+                   COMMAND protoc --python_out=${CMAKE_CURRENT_BINARY_DIR}/dattolib/
                            -I${CMAKE_CURRENT_SOURCE_DIR}/messages
                            ${PROTO_FILES})
 
+# dattolib
+add_custom_target(dattolib ALL COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/dattolib)
+add_dependencies(dattolib protobuf_python)
+add_custom_command(TARGET dattolib
+                   COMMAND cp -rf
+                       ${CMAKE_CURRENT_SOURCE_DIR}/dattolib/
+                       ${CMAKE_CURRENT_BINARY_DIR})
+
 # dattocli
 add_custom_target(dattocli ALL)
-add_dependencies(dattocli protobuf_python)
+add_dependencies(dattocli dattolib)
 add_custom_command(TARGET dattocli
                    COMMAND cp -f
                        ${CMAKE_CURRENT_SOURCE_DIR}/dattocli/dattocli
-                       ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/dattolib.py
                        ${CMAKE_CURRENT_BINARY_DIR})
 # dattonet
 add_custom_target(dattonet ALL)
-add_dependencies(dattonet protobuf_python)
+add_dependencies(dattonet dattolib)
 add_custom_command(TARGET dattonet
                    COMMAND cp -f
                        ${CMAKE_CURRENT_SOURCE_DIR}/dattonet/dattonet
-                       ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/dattolib.py
                        ${CMAKE_CURRENT_BINARY_DIR})
 
 # Doesn't build currently
@@ -82,11 +88,8 @@ if (DEFINED ENV{BUILD_UNIT_TESTS})
     include(cmake/test_setup.cmake)
 endif()
 
-file(GLOB python_protobufs ${CMAKE_CURRENT_BINARY_DIR}/*_pb2.py)
-file(GLOB python_libs ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/*.py)
+add_custom_target(build DEPENDS dattod dattonet dattocli)
 
 install(TARGETS dattod DESTINATION /usr/sbin)
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattocli DESTINATION /usr/lib/datto)
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattonet DESTINATION /usr/lib/datto)
-install(FILES ${python_protobufs} DESTINATION /usr/lib/datto)
-install(FILES ${python_libs} DESTINATION /usr/lib/datto)
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattocli DESTINATION /usr/sbin)
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattonet DESTINATION /usr/sbin)

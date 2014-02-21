@@ -8,8 +8,8 @@ import os
 from re import sub
 from multiprocessing import cpu_count
 from dattolib import make_request_to_dattod
-from request_pb2 import Request
-from reply_pb2 import Reply
+from dattolib.request_pb2 import Request
+from dattolib.reply_pb2 import Reply
 
 LISTEN_ADDRESS = ("0.0.0.0", 2856)
 
