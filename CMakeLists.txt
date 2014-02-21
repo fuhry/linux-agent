@@ -94,5 +94,4 @@ configure_file("setup.py.in" "setup.py")
 install(TARGETS dattod DESTINATION /usr/sbin)
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattocli DESTINATION /usr/sbin)
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dattonet DESTINATION /usr/sbin)
-install(CODE "execute_process(COMMAND python setup.py install)")
-
+install(CODE "execute_process(COMMAND python setup.py install --no-compile --prefix=\$ENV{DESTDIR}/usr --install-layout=deb)")
