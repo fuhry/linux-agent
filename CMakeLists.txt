@@ -29,7 +29,6 @@ add_dependencies(dattocli protobuf_python)
 add_custom_command(TARGET dattocli
                    COMMAND cp -f
                        ${CMAKE_CURRENT_SOURCE_DIR}/dattocli/dattocli
-                       ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/argparse.py
                        ${CMAKE_CURRENT_SOURCE_DIR}/python_libs/dattolib.py
                        ${CMAKE_CURRENT_BINARY_DIR})
 # dattonet
