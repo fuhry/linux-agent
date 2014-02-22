@@ -54,6 +54,8 @@ std::shared_ptr<const SectorSet> ExtMountableBlockDevice::GetInUseSectors() {
             (j + cur_group_block_offset < ext_fs.super()->s_blocks_count));
          ++j) {
 
+      this->Freeze();
+
       // If the bit is set then the block is allocated.
       if (ext2fs_test_bit(j, block_bitmap.get())) {
         off_t cur_block_offset = cur_group_block_offset + j;
@@ -68,6 +70,8 @@ std::shared_ptr<const SectorSet> ExtMountableBlockDevice::GetInUseSectors() {
         sectors->insert(SectorInterval(sector_location,
                                        sector_location + sectors_per_block));
       }
+
+      this->Thaw();
     }
   }
 
