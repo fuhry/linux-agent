@@ -12,7 +12,7 @@ from dattolib.request_pb2 import Request
 from dattolib.reply_pb2 import Reply
 
 LISTEN_ADDRESS = ("0.0.0.0", 2856)
-PID_FILE = "/var/local/datto/dattod.pid"
+PID_FILE = "/var/lib/datto/dattod.pid"
 
 PASSOFF_LIST = [Request.START_BACKUP, Request.STOP_BACKUP,
                 Request.PAUSE_BACKUP, Request.RESUME_BACKUP,

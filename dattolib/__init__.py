@@ -8,7 +8,7 @@ from request_pb2 import Request
 from reply_pb2 import Reply
 
 
-IPC_SOCKET_PATH = "/var/local/datto/dattod_ipc"
+IPC_SOCKET_PATH = "/var/lib/datto/dattod_ipc"
 
 class DattodConnectionError(Exception):
     pass
