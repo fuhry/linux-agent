@@ -79,6 +79,34 @@ add_executable(dattod
 target_link_libraries(dattod com_err ext2fs glog blkid boost_regex uuid
                       ${PROTOBUF_LIBRARIES})
 
+## fsawarebdcopy
+add_executable(fsawarebdcopy
+               backup/backup_coordinator.cc
+               backup_status_tracker/backup_event_handler.cc
+               backup_status_tracker/backup_status_tracker.cc
+               backup_status_tracker/backup_status_tracker.cc
+               backup_status_tracker/printing_sync_count_handler.cc
+               backup_status_tracker/sync_count_handler.cc
+               backup_status_tracker/sync_count_handler.cc
+               block_device/block_device.cc
+               block_device/block_device_factory.cc
+               block_device/ext_file_system.cc
+               block_device/ext_mountable_block_device.cc
+               block_device/mountable_block_device.cc
+               block_device/nbd_block_device.cc
+               block_device/nbd_client.cc
+               block_device/xfs_mountable_block_device.cc
+               block_trace/cpu_tracer.cc
+               block_trace/device_tracer.cc
+               block_trace/trace_handler.cc
+               device_synchronizer/device_synchronizer.cc
+               fsawarebdcopy/fsawarebdcopy.cc
+               unsynced_sector_manager/unsynced_sector_manager.cc
+               unsynced_sector_manager/unsynced_sector_store.cc
+               ${PROTO_SRCS})
+target_link_libraries(fsawarebdcopy com_err ext2fs glog blkid boost_regex uuid
+                      ${PROTOBUF_LIBRARIES})
+
 # Need to use an environment variable here so tests don't run during packaging
 # While it might seem like we would want to run tests during packaging, enough
 # of them require root access that it makes more sense to just not run any of

@@ -105,8 +105,6 @@ void DeviceSynchronizer::DoSync(
     std::shared_ptr<SyncCountHandler> count_handler) {
   LOG(INFO) << "Starting sync ";
 
-  CHECK(sector_manager_->IsTracing(*source_device_));
-
   uint64_t total_bytes_sent = 0;
   int source_fd = source_device_->Open();
   int destination_fd = destination_device_->Open();

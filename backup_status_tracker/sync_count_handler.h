@@ -23,7 +23,7 @@ class SyncCountHandler {
   SyncCountHandler(const SyncCountHandler &) = delete;
   SyncCountHandler& operator=(const SyncCountHandler &) = delete;
  protected:
-  // For unit testing
+  // For unit testing and subclasses
   SyncCountHandler() {}
  private:
   BlockDeviceStatus *block_device_status_;
