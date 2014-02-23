@@ -53,7 +53,7 @@ class BackupCoordinator {
   BackupCoordinator(const BackupCoordinator &) = delete;
   BackupCoordinator& operator=(const BackupCoordinator &) = delete;
  protected:
-  // For unit testing
+  // For unit testing and FakeBackupCoordinator
   BackupCoordinator() {}
 
  private:
