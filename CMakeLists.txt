@@ -46,7 +46,6 @@ add_custom_command(TARGET dattonet
                        ${CMAKE_CURRENT_SOURCE_DIR}/dattonet/dattonet
                        ${CMAKE_CURRENT_BINARY_DIR})
 
-# Doesn't build currently
 ## dattod
 add_executable(dattod
                backup/backup.cc
