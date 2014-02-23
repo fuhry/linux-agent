@@ -153,7 +153,7 @@ MountableBlockDevice::~MountableBlockDevice() {
     if (is_frozen_) {
       Thaw();
     }
-  } catch (const std::runtime_error &e) {
+  } catch (const std::exception &e) {
     LOG(ERROR) << e.what();
   } catch (...) {
     LOG(ERROR) << "Caught non-exception type in destructor";
