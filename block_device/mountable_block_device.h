@@ -5,6 +5,7 @@
 #include <string>
 
 #include <stdint.h>
+#include <time.h>
 
 #include "block_device/block_device.h"
 #include "unsynced_sector_manager/sector_set.h"
@@ -52,6 +53,9 @@ class MountableBlockDevice : public BlockDevice {
   int mount_file_descriptor_;
   std::string uuid_;
   bool is_frozen_;
+  // Used to cache the IsMounted check so it can be used in a loop
+  mutable time_t last_mount_check_time_;
+  mutable bool last_mounted_result_;
 };
 
 }

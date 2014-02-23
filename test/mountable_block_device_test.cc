@@ -64,12 +64,22 @@ TEST_F(MountableBlockDeviceTest, Constructor) {
 }
 
 TEST_F(MountableBlockDeviceTest, IsMounted) {
-  MockMountableBlockDevice bd(loop_device->path());
+  // IsMounted caches the check for performance purposes
+  // So we need to destruct it to cause the mount check
+  // to return true
+  {
+    MockMountableBlockDevice bd(loop_device->path());
 
-  EXPECT_FALSE(bd.IsMounted());
-  mount_device(loop_device->path(), temp_dir);
-  EXPECT_TRUE(bd.IsMounted());
-  unmount_device(loop_device->path());
+    EXPECT_FALSE(bd.IsMounted());
+    mount_device(loop_device->path(), temp_dir);
+    EXPECT_FALSE(bd.IsMounted());
+  }
+
+  {
+    MockMountableBlockDevice bd(loop_device->path());
+    EXPECT_TRUE(bd.IsMounted());
+    unmount_device(loop_device->path());
+  }
 }
 
 TEST_F(MountableBlockDeviceTest, GetMountPoint) {

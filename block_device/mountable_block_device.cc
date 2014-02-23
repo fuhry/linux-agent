@@ -74,15 +74,23 @@ namespace datto_linux_client {
 MountableBlockDevice::MountableBlockDevice(std::string a_path)
     : BlockDevice(a_path),
       mount_file_descriptor_(-1),
-      is_frozen_(false) { }
+      is_frozen_(false),
+      last_mount_check_time_(0),
+      last_mounted_result_(false) {}
 
 bool MountableBlockDevice::IsMounted() const {
-  // TODO These checks should be based on major/minor number, not on path.
-  // mknod can be used to create "block special" type devices all over the
-  // file system that all refer to the same block device but don't
-  // show up as symbolic links
-  auto mounted_devices = GetMountedDevices();
-  return mounted_devices.find(path_) != mounted_devices.end();
+  if (time(NULL) - last_mount_check_time_ > 10) {
+    last_mount_check_time_ = time(NULL);
+    // TODO These checks should be based on major/minor number, not on path.
+    // mknod can be used to create "block special" type devices all over the
+    // file system that all refer to the same block device but don't
+    // show up as symbolic links
+    auto mounted_devices = GetMountedDevices();
+    last_mounted_result_ =
+        mounted_devices.find(path_) != mounted_devices.end();
+  }
+
+  return last_mounted_result_;
 }
 
 std::string MountableBlockDevice::GetMountPoint() const {
@@ -96,26 +104,30 @@ std::string MountableBlockDevice::GetMountPoint() const {
 }
 
 void MountableBlockDevice::Freeze() {
-  int mount_fd = OpenMount();
-  int ioctl_ret = ioctl(mount_fd, FIFREEZE, /* ignored */ 0);
-  close(mount_fd);
+  if (this->IsMounted()) {
+    int mount_fd = OpenMount();
+    int ioctl_ret = ioctl(mount_fd, FIFREEZE, /* ignored */ 0);
+    close(mount_fd);
 
-  if (ioctl_ret) {
-    PLOG(ERROR) << "Error during freeze.";
-    throw BlockDeviceException("FIFREEZE");
+    if (ioctl_ret) {
+      PLOG(ERROR) << "Error during freeze.";
+      throw BlockDeviceException("FIFREEZE");
+    }
+
+    is_frozen_ = true;
   }
-
-  is_frozen_ = true;
 }
 
 void MountableBlockDevice::Thaw() {
-  int mount_fd = OpenMount();
-  int ioctl_ret = ioctl(mount_fd, FITHAW, /* ignored */ 0);
-  close(mount_fd);
+  if (this->IsMounted()) {
+    int mount_fd = OpenMount();
+    int ioctl_ret = ioctl(mount_fd, FITHAW, /* ignored */ 0);
+    close(mount_fd);
 
-  if (ioctl_ret) {
-    PLOG(ERROR) << "Error during thaw.";
-    throw BlockDeviceException("FITHAW");
+    if (ioctl_ret) {
+      PLOG(ERROR) << "Error during thaw.";
+      throw BlockDeviceException("FITHAW");
+    }
   }
 
   is_frozen_ = false;
