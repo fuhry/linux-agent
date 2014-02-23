@@ -11,8 +11,8 @@ namespace datto_linux_client {
 
 class SyncCountHandler {
  public:
-  explicit SyncCountHandler(BlockDeviceStatus *block_device_status,
-                            std::shared_ptr<std::mutex> to_lock_mutex);
+  SyncCountHandler(BlockDeviceStatus *block_device_status,
+                   std::shared_ptr<std::mutex> to_lock_mutex);
   virtual ~SyncCountHandler() {}
 
   // num_synced should be the total synced
