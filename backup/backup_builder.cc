@@ -24,7 +24,7 @@ std::shared_ptr<DeviceSynchronizerInterface>
 BackupBuilder::CreateDeviceSynchronizer(const DevicePair &device_pair,
                                         bool is_full) {
   auto source_device =
-      block_device_factory_->CreateMountableBlockDevice(
+      block_device_factory_->CreateMountableBlockDeviceFromUuid(
           device_pair.block_device_uuid());
 
   std::string host = device_pair.destination_host();

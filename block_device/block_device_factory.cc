@@ -40,10 +40,14 @@ std::string GetPathFromUuid(std::string uuid) {
 namespace datto_linux_client {
 
 std::shared_ptr<MountableBlockDevice>
-BlockDeviceFactory::CreateMountableBlockDevice(std::string uuid) {
-  std::shared_ptr<MountableBlockDevice> block_dev;
-
+BlockDeviceFactory::CreateMountableBlockDeviceFromUuid(std::string uuid) {
   std::string path = GetPathFromUuid(uuid);
+  return CreateMountableBlockDeviceFromPath(path);
+}
+
+std::shared_ptr<MountableBlockDevice>
+BlockDeviceFactory::CreateMountableBlockDeviceFromPath(std::string path) {
+  std::shared_ptr<MountableBlockDevice> block_dev;
   std::string fs = GetFilesystemFromPath(path);
 
   if (fs == "ext4" || fs == "ext3") {

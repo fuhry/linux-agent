@@ -14,8 +14,11 @@ class BlockDeviceFactory {
   BlockDeviceFactory() {}
   virtual ~BlockDeviceFactory() {}
 
-  virtual std::shared_ptr<MountableBlockDevice> CreateMountableBlockDevice(
-      std::string path);
+  virtual std::shared_ptr<MountableBlockDevice>
+  CreateMountableBlockDeviceFromPath(std::string path);
+
+  virtual std::shared_ptr<MountableBlockDevice>
+  CreateMountableBlockDeviceFromUuid(std::string uuid);
 
   virtual std::shared_ptr<RemoteBlockDevice> CreateRemoteBlockDevice(
       std::string hostname, uint16_t port_num);

@@ -80,7 +80,7 @@ TEST(BlockDeviceFactoryTest, ReturnsExt3) {
   sleep(1);
 
   std::string uuid = get_uuid(loop_dev.path());
-  auto loop_block_dev = fact.CreateMountableBlockDevice(uuid);
+  auto loop_block_dev = fact.CreateMountableBlockDeviceFromUuid(uuid);
 
   ASSERT_TRUE((bool)loop_block_dev);
   EXPECT_NE(nullptr,
@@ -96,7 +96,7 @@ TEST(BlockDeviceFactoryTest, ReturnsXfs) {
   sleep(1);
 
   std::string uuid = get_uuid(loop_dev.path());
-  auto loop_block_dev = fact.CreateMountableBlockDevice(uuid);
+  auto loop_block_dev = fact.CreateMountableBlockDeviceFromUuid(uuid);
 
   ASSERT_TRUE((bool)loop_block_dev);
   EXPECT_NE(nullptr,
@@ -109,7 +109,7 @@ TEST(BlockDeviceFactoryTest, ThrowsOnBadUUID) {
   std::string nonfs_uuid = "50ebcad6-421b-43af-b4ad-68481295b332";
 
   try {
-    auto loop_block_dev = fact.CreateMountableBlockDevice(nonfs_uuid);
+    auto loop_block_dev = fact.CreateMountableBlockDeviceFromUuid(nonfs_uuid);
     FAIL() << "Failed to throw exception";
   }
   catch (const BlockDeviceException &e) {
