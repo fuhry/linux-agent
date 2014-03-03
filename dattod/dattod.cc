@@ -17,7 +17,7 @@
 
 const char DATTO_VAR_DIR[] = "/var/lib/datto";
 const char DATTO_SOCKET[] = "/var/lib/datto/dattod_ipc";
-const char FLOCK_PATH[] = "/var/lib/datto/dattod.pid";
+const char FLOCK_PATH[] = "/var/run/dattod.pid";
 
 namespace {
 using datto_linux_client::BackupBuilder;
