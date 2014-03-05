@@ -21,7 +21,7 @@ PIDFILE=/var/run/dattod.pid
 
 set -e
 
-test -x $DAEMON || exit 1
+test -x $DAEMON || exit 0
 
 case "$1" in
   start)
