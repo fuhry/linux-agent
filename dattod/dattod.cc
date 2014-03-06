@@ -12,6 +12,7 @@
 #include "block_device/block_device_factory.h"
 #include "dattod/flock.h"
 #include "dattod/signal_handler.h"
+#include "logging/queuing_log_sink.h"
 #include "request_listener/ipc_request_listener.h"
 #include "request_listener/request_handler.h"
 
@@ -26,6 +27,7 @@ using datto_linux_client::BackupStatusTracker;
 using datto_linux_client::BlockDeviceFactory;
 using datto_linux_client::Flock;
 using datto_linux_client::IpcRequestListener;
+using datto_linux_client::QueuingLogSink;
 using datto_linux_client::RequestHandler;
 using datto_linux_client::SignalHandler;
 using datto_linux_client::UnsyncedSectorManager;
@@ -34,9 +36,16 @@ using datto_linux_client::UnsyncedSectorManager;
 int main(int argc, char *argv[]) {
   // Setup logging
 
-  // Only log to a memory location until a LogSink is written that doesn't
-  // write when the file system is frozen!
-  FLAGS_log_dir = "/dev/shm/";
+  // We never want to log to a file in the current thread.
+  // See QueuingLogSink for details.
+  FLAGS_logtostderr = 1;
+
+#ifdef NDEBUG
+  QueuingLogSink log_sink("/var/log/dattod.log");
+#else
+  QueuingLogSink log_sink("dattod.log");
+#endif
+  google::AddLogSink(&log_sink);
   google::InitGoogleLogging(argv[0]);
 
   // Make the DATTO_VAR_DIR directory

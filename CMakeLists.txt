@@ -70,6 +70,7 @@ add_executable(dattod
                dattod/flock.cc
                dattod/signal_handler.cc
                device_synchronizer/device_synchronizer.cc
+               logging/queuing_log_sink.cc
                request_listener/ipc_request_listener.cc
                request_listener/request_handler.cc
                request_listener/socket_reply_channel.cc
