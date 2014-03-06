@@ -84,9 +84,7 @@ add_executable(fsawarebdcopy
                backup/backup_coordinator.cc
                backup_status_tracker/backup_event_handler.cc
                backup_status_tracker/backup_status_tracker.cc
-               backup_status_tracker/backup_status_tracker.cc
                backup_status_tracker/printing_sync_count_handler.cc
-               backup_status_tracker/sync_count_handler.cc
                backup_status_tracker/sync_count_handler.cc
                block_device/block_device.cc
                block_device/block_device_factory.cc
