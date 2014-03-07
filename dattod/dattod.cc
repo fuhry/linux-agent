@@ -17,7 +17,7 @@
 #include "request_listener/request_handler.h"
 
 const char DATTO_VAR_DIR[] = "/var/lib/datto";
-const char DATTO_SOCKET[] = "/var/lib/datto/dattod_ipc";
+const char DATTO_SOCKET[] = "/var/run/dattod.sock";
 const char FLOCK_PATH[] = "/var/run/dattod.pid";
 
 namespace {
