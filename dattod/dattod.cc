@@ -16,7 +16,6 @@
 #include "request_listener/ipc_request_listener.h"
 #include "request_listener/request_handler.h"
 
-const char DATTO_VAR_DIR[] = "/var/lib/datto";
 const char DATTO_SOCKET[] = "/var/run/dattod.sock";
 const char FLOCK_PATH[] = "/var/run/dattod.pid";
 
@@ -48,15 +47,9 @@ int main(int argc, char *argv[]) {
   google::AddLogSink(&log_sink);
   google::InitGoogleLogging(argv[0]);
 
-  // Make the DATTO_VAR_DIR directory
-  // Save any error, we don't care about it unless chdir fails
-  mkdir(DATTO_VAR_DIR, S_IRWXU | S_IRWXG);
-  int mkdir_error = errno;
-
-  // cd to that dir
-  if (chdir(DATTO_VAR_DIR)) {
-    PLOG(ERROR) << "Error during chdir to " << DATTO_VAR_DIR;
-    LOG(ERROR) << "mkdir had error: " << strerror(mkdir_error);
+  // cd to the root directory
+  if (chdir("/")) {
+    PLOG(ERROR) << "Error during chdir to /";
     return 1;
   }
 
