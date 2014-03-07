@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 
+## NG NOTE: Is this still used? This should be cleaned up or removed as I don't
+#           think it is ever run.
+
 # This file should unit test dattocli
 # Keep track of failures, but don't exit on the first one
 # If no failures, then exit 0, otherwise exit 1
 
-# Create a server that listens on /var/lib/datto/dattod_ipc
+# Create a server that listens on IPC_SOCKET_PATH
 # Call each of dattocli start/stop/progress of dattocli and
 # make sure the server gets those messages. Reply from the server,
 # and make sure the reply is shown on stdout. (probably just send a unique
