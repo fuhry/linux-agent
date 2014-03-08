@@ -77,7 +77,7 @@ add_executable(dattod
                unsynced_sector_manager/unsynced_sector_manager.cc
                unsynced_sector_manager/unsynced_sector_store.cc
                ${PROTO_SRCS})
-target_link_libraries(dattod com_err ext2fs glog blkid boost_regex uuid
+target_link_libraries(dattod com_err ext2fs glog gflags blkid boost_regex uuid
                       ${PROTOBUF_LIBRARIES})
 
 ## fsawarebdcopy
