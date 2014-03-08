@@ -38,6 +38,7 @@ int main(int argc, char *argv[]) {
   // We never want to log to a file in the current thread.
   // See QueuingLogSink for details.
   FLAGS_logtostderr = 1;
+  google::InitGoogleLogging(argv[0]);
 
 #ifdef NDEBUG
   QueuingLogSink log_sink("/var/log/dattod.log");
@@ -45,7 +46,6 @@ int main(int argc, char *argv[]) {
   QueuingLogSink log_sink("dattod.log");
 #endif
   google::AddLogSink(&log_sink);
-  google::InitGoogleLogging(argv[0]);
 
   // cd to the root directory
   if (chdir("/")) {
@@ -79,25 +79,32 @@ int main(int argc, char *argv[]) {
   SignalHandler signal_handler(signals_to_block);
   signal_handler.BlockSignals();
 
-  auto block_device_factory = std::make_shared<BlockDeviceFactory>();
-  auto sector_manager = std::make_shared<UnsyncedSectorManager>();
-  auto backup_builder = std::make_shared<BackupBuilder>(block_device_factory,
-                                                        sector_manager);
-  auto status_tracker = std::make_shared<BackupStatusTracker>();
+  {
+    auto block_device_factory = std::make_shared<BlockDeviceFactory>();
+    auto sector_manager = std::make_shared<UnsyncedSectorManager>();
+    auto backup_builder = std::make_shared<BackupBuilder>(block_device_factory,
+        sector_manager);
+    auto status_tracker = std::make_shared<BackupStatusTracker>();
 
-  // Create the backup manager
-  auto backup_manager = std::make_shared<BackupManager>(backup_builder,
-                                                        sector_manager,
-                                                        status_tracker);
-  // Create the request handler
-  std::unique_ptr<RequestHandler> request_handler(
-      new RequestHandler(backup_manager, status_tracker));
-  // Create (and start) the request listener
-  IpcRequestListener request_listener(DATTO_SOCKET,
-                                      std::move(request_handler));
+    // Create the backup manager
+    auto backup_manager = std::make_shared<BackupManager>(backup_builder,
+        sector_manager,
+        status_tracker);
+    // Create the request handler
+    std::unique_ptr<RequestHandler> request_handler(
+        new RequestHandler(backup_manager, status_tracker));
+    // Create (and start) the request listener
+    IpcRequestListener request_listener(DATTO_SOCKET,
+        std::move(request_handler));
 
-  // Listen for signals
-  signal_handler.WaitForSignal([&](int) {} );
+    // Listen for signals
+    signal_handler.WaitForSignal([&](int) {} );
+  }
+
+  // Clean up
+  google::protobuf::ShutdownProtobufLibrary();
+  google::ShutDownCommandLineFlags();
+  google::ShutdownGoogleLogging();
 
   return 0;
 }
