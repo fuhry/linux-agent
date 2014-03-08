@@ -6,14 +6,19 @@
 #include <sys/types.h>
 
 namespace {
+  using google::LogSink;
   using google::LogSeverity;
   using google::GetLogSeverityName;
+
+  const int BUFFER_TIME_MILLIS = 2000;
+  const int LINES_TO_BUFFER = 20;
+
 } // namespace
 
 namespace datto_linux_client {
 
 QueuingLogSink::QueuingLogSink(std::string output_file_name)
-    : google::LogSink(),
+    : LogSink(),
       to_write_queue_(),
       mutex_(),
       cond_variable_(),
@@ -32,17 +37,16 @@ QueuingLogSink::QueuingLogSink(std::string output_file_name)
   writer_thread_ = std::thread([=]() {
     while (!this->should_die_) {
       std::unique_lock<std::mutex> lock(this->mutex_);
-      auto timeout = std::chrono::milliseconds(500);
+      auto timeout = std::chrono::milliseconds(BUFFER_TIME_MILLIS);
       this->cond_variable_.wait_for(lock, timeout);
 
       while (!this->to_write_queue_.empty()) {
-        std::string message = this->to_write_queue_.front();
+        std::string message = this->to_write_queue_.front() + "\n";
         this->to_write_queue_.pop();
         // Make sure we are _not_ holding the lock before hitting the
         // disk in case the write call blocks due to a frozen filesystem.
         lock.unlock();
         fputs(message.c_str(), output_file);
-        fputs("\n", output_file);
         lock.lock();
       }
     }
@@ -58,15 +62,22 @@ void QueuingLogSink::send(LogSeverity severity, const char *full_filename,
                           const char *message, size_t message_len) {
   std::string log_string = LogSink::ToString(severity, base_filename, line,
                                              tm_time, message, message_len);
+  bool should_notify = false;
   {
     std::lock_guard<std::mutex> lock(mutex_);
+    // Put the message into the log queue and notify the writer thread
+    // if there are at least LINES_TO_BUFFER items in the queue
     to_write_queue_.push(log_string);
+    should_notify = to_write_queue_.size() > LINES_TO_BUFFER;
   }
-  cond_variable_.notify_one();
+  if (should_notify){
+    cond_variable_.notify_one();
+  }
 }
 
 QueuingLogSink::~QueuingLogSink() {
   should_die_ = true;
+  cond_variable_.notify_one();
   writer_thread_.join();
 }
 
