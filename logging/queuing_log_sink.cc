@@ -52,10 +52,10 @@ QueuingLogSink::QueuingLogSink(std::string output_file_name)
   umask(old_mask);
 }
 
-void QueuingLogSink::send(LogSeverity severity, const char* full_filename,
-                          const char* base_filename, int line,
-                          const struct ::tm* tm_time,
-                          const char* message, size_t message_len) {
+void QueuingLogSink::send(LogSeverity severity, const char *full_filename,
+                          const char *base_filename, int line,
+                          const struct ::tm *tm_time,
+                          const char *message, size_t message_len) {
   std::string log_string = LogSink::ToString(severity, base_filename, line,
                                              tm_time, message, message_len);
   {

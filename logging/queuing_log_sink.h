@@ -22,10 +22,10 @@ class QueuingLogSink : public google::LogSink {
  public:
   explicit QueuingLogSink(std::string output_file_name);
   
-  virtual void send(google::LogSeverity severity, const char* full_filename,
-                    const char* base_filename, int line,
-                    const struct ::tm* tm_time,
-                    const char* message, size_t message_len);
+  virtual void send(google::LogSeverity severity, const char *full_filename,
+                    const char *base_filename, int line,
+                    const struct ::tm *tm_time,
+                    const char *message, size_t message_len);
 
   ~QueuingLogSink();
  private:
