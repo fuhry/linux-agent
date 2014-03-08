@@ -47,7 +47,8 @@ class MountableBlockDevice : public BlockDevice {
 
  protected:
   // For unit testing
-  MountableBlockDevice() {}
+  MountableBlockDevice() : mount_file_descriptor_(-1),
+                           uuid_(), is_frozen_(false) {}
 
  private:
   int mount_file_descriptor_;
