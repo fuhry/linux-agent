@@ -11,7 +11,7 @@ namespace {
   using google::GetLogSeverityName;
 
   const int BUFFER_TIME_MILLIS = 2000;
-  const int LINES_TO_BUFFER = 20;
+  const unsigned int LINES_TO_BUFFER = 20;
 
 } // namespace
 
