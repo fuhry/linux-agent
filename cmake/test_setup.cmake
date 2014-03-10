@@ -139,6 +139,14 @@ target_link_libraries(extfs_test blkid ext2fs com_err)
 add_unit_test(flock_test
               dattod/flock.cc)
 
+add_unit_test(freeze_helper_test
+              backup/backup.cc
+              block_device/block_device.cc
+              block_device/mountable_block_device.cc
+              ${PROTO_SRCS}
+              freeze_helper/freeze_helper.cc)
+target_link_libraries(freeze_helper_test blkid uuid ${PROTOBUF_LIBRARIES})
+
 add_unit_test(ipc_request_listener_test
               backup/backup.cc
               backup/backup_coordinator.cc
