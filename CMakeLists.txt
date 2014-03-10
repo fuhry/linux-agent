@@ -70,6 +70,7 @@ add_executable(dattod
                dattod/flock.cc
                dattod/signal_handler.cc
                device_synchronizer/device_synchronizer.cc
+               freeze_helper/freeze_helper.cc
                logging/queuing_log_sink.cc
                request_listener/ipc_request_listener.cc
                request_listener/request_handler.cc
@@ -99,6 +100,7 @@ add_executable(fsawarebdcopy
                block_trace/device_tracer.cc
                block_trace/trace_handler.cc
                device_synchronizer/device_synchronizer.cc
+               freeze_helper/freeze_helper.cc
                fsawarebdcopy/fsawarebdcopy.cc
                unsynced_sector_manager/unsynced_sector_manager.cc
                unsynced_sector_manager/unsynced_sector_store.cc
