@@ -16,6 +16,18 @@ FreezeHelper::~FreezeHelper() {
   }
 }
 
+void FreezeHelper::RunWhileFrozen(std::function<void()> to_run) {
+  int freeze_attempts = 0;
+  do {
+    freeze_attempts++;
+    if (freeze_attempts > 10) {
+      throw BlockDeviceException("Unable to read off of disk quickly enough");
+    }
+    BeginRequiredFreezeBlock();
+    to_run();
+  } while (!EndRequiredFreezeBlock());
+}
+
 void FreezeHelper::BeginRequiredFreezeBlock() {
   if (is_frozen_) {
     return;

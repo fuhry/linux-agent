@@ -4,6 +4,7 @@
 #include <atomic>
 #include <thread>
 #include <condition_variable>
+#include <functional>
 #include <mutex>
 
 #include "block_device/mountable_block_device.h"
@@ -33,6 +34,8 @@ class FreezeHelper {
   // if it has been frozen for too long and the caller can refreeze and
   // reread the data.
   bool EndRequiredFreezeBlock();
+
+  void RunWhileFrozen(std::function<void()> to_run);
 
   FreezeHelper(const FreezeHelper &) = delete;
   FreezeHelper& operator=(const FreezeHelper &) = delete;
