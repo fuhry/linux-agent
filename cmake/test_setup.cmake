@@ -59,6 +59,7 @@ add_unit_test(block_device_factory_test
               block_device/nbd_client.cc
               block_device/nbd_server.cc
               block_device/xfs_mountable_block_device.cc
+              freeze_helper/freeze_helper.cc
               test/loop_device.cc
               block_device/block_device_factory.cc)
 target_link_libraries(block_device_factory_test ext2fs com_err boost_regex
@@ -129,10 +130,11 @@ add_unit_test(device_tracer_test
               unsynced_sector_manager/unsynced_sector_store.cc)
 
 add_unit_test(extfs_test
-              test/loop_device.cc
+              block_device/block_device.cc
               block_device/ext_file_system.cc
               block_device/mountable_block_device.cc
-              block_device/block_device.cc
+              freeze_helper/freeze_helper.cc
+              test/loop_device.cc
               block_device/ext_mountable_block_device.cc)
 target_link_libraries(extfs_test blkid ext2fs com_err)
 
