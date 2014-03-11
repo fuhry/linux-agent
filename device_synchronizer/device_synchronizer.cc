@@ -8,6 +8,7 @@
 #include <glog/logging.h>
 
 #include "device_synchronizer/device_synchronizer_exception.h"
+#include "freeze_helper/freeze_helper.h"
 #include "unsynced_sector_manager/sector_interval.h"
 
 namespace {
@@ -116,7 +117,6 @@ void DeviceSynchronizer::DoSync(
   auto source_store = sector_manager_->GetStore(*source_device_);
 
   time_t flush_time = 0;
-  time_t freeze_time = 0;
 
   bool was_done = false;
 
@@ -128,10 +128,6 @@ void DeviceSynchronizer::DoSync(
 
     if (flush_time > 0 && unsynced_sector_count == 0) {
       LOG(INFO) << "Sync complete";
-      if (freeze_time > 0) {
-        source_device_->Thaw();
-        freeze_time = 0;
-      }
       if (!was_done) {
         coordinator->SignalFinished();
         was_done = true;
@@ -143,13 +139,6 @@ void DeviceSynchronizer::DoSync(
     } else if (was_done) {
       was_done = false;
       coordinator->SignalMoreWorkToDo();
-    }
-
-    // Thaw if it's been more than a couple seconds since we froze
-    if (freeze_time > 0 && time(NULL) - freeze_time > SECONDS_TO_FREEZE) {
-      LOG(WARNING) << "Unfreezing due to time";
-      source_device_->Thaw();
-      freeze_time = 0;
     }
 
     // to_sync_interval is sectors, not blocks
@@ -165,11 +154,14 @@ void DeviceSynchronizer::DoSync(
 
     // Loop until we copy all of the blocks of the sector interval
     DLOG(INFO) << "Syncing interval: " << to_sync_interval;
-    for (uint64_t i = 0;
-        i < boost::icl::cardinality(to_sync_interval);
-        i += sectors_per_block) {
-      copy_block(source_fd, destination_fd, block_size_bytes);
-    }
+    FreezeHelper freeze_helper(*source_device_, SECONDS_TO_FREEZE * 1000);
+      for (uint64_t i = 0;
+          i < boost::icl::cardinality(to_sync_interval);
+          i += sectors_per_block) {
+	    freeze_helper.RunWhileFrozen([&]() {
+	      copy_block(source_fd, destination_fd, block_size_bytes);
+	    });
+      }
     DLOG(INFO) << "Finished copying interval " << to_sync_interval;
 
     total_bytes_sent +=
@@ -182,15 +174,6 @@ void DeviceSynchronizer::DoSync(
     // If there is under 1MB left, freeze and flush the filesystem so things
     // are consistent while it wraps up
     if (unsynced_sector_count < ONE_MEGABYTE / SECTOR_SIZE) {
-      if (!freeze_time) {
-        try {
-          source_device_->Freeze();
-          freeze_time = time(NULL);
-        } catch (const BlockDeviceException &e) {
-          LOG(WARNING) << "Unable to freeze "
-                       << source_device_->path() << ": " << e.what();
-        }
-      }
       if (time(NULL) - flush_time > SECONDS_BETWEEN_FLUSHES) {
         source_device_->Flush();
         sector_manager_->FlushTracer(*source_device_);
