@@ -30,12 +30,19 @@ SectorInterval UnsyncedSectorStore::GetContinuousUnsyncedSectors() const {
 
   SectorInterval interval_to_return(0, 0);
 
+  bool found_interval = false;
+
   for (auto interval : unsynced_sector_set_) {
     if (interval.lower() > end_of_last_continuous_) {
       // Return the interval directory after the last interval
       interval_to_return = interval;
+      found_interval = true;
       break;
     }
+  }
+
+  if (!found_interval && unsynced_sector_set_.size() > 0) {
+    interval_to_return = *unsynced_sector_set_.begin();
   }
 
   end_of_last_continuous_ = interval_to_return.upper();
