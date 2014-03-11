@@ -13,11 +13,11 @@ namespace datto_linux_client {
 class SocketReplyChannel : public ReplyChannel {
  public:
   explicit SocketReplyChannel(int connection_fd);
+  virtual ~SocketReplyChannel();
 
   virtual void SendReply(const Reply &reply);
   // TODO: Can we do better than this?
   virtual bool IsAvailable() { return true; }
-  virtual ~SocketReplyChannel() { }
 
   SocketReplyChannel(const SocketReplyChannel&) = delete;
   SocketReplyChannel& operator=(const SocketReplyChannel&) = delete;

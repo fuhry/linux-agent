@@ -8,6 +8,10 @@ namespace datto_linux_client {
 SocketReplyChannel::SocketReplyChannel(int connection_fd)
     : connection_fd_(connection_fd) { }
 
+SocketReplyChannel::~SocketReplyChannel() {
+  close(connection_fd_);
+}
+
 void SocketReplyChannel::SendReply(const Reply &reply) {
   uint32_t reply_size = reply.ByteSize();
   DLOG(INFO) << "Sending reply of size " << reply_size;

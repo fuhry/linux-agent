@@ -148,14 +148,18 @@ IpcRequestListener::IpcRequestListener(
             break;
           }
           int connection_fd = GetNewConnection(socket_fd_);
-          auto request = ReadProtobufRequest(connection_fd);
 
+          // The reply_channel is responsible for cleaning up the
+          // connection_fd, so we construct it as soon as possible
+          // in case there is an exception.
           std::shared_ptr<ReplyChannel> reply_channel(
               new SocketReplyChannel(connection_fd));
 
+          auto request = ReadProtobufRequest(connection_fd);
+
           request_handler_->Handle(request, reply_channel);
         }
-      } catch (const std::runtime_error &e) {
+      } catch (const std::exception &e) {
         LOG(ERROR) << "Exception during connection loop: " << e.what();
       }
       started = true;
