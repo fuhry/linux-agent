@@ -2,17 +2,12 @@
 
 #include <algorithm>
 
-namespace {
-  uint64_t SEEK_CUTOFF = 4096;
-}
-
-
 namespace datto_linux_client {
 
 UnsyncedSectorStore::UnsyncedSectorStore()
     : unsynced_sector_set_(),
       synced_sector_set_(),
-      start_of_last_continuous_(0),
+      end_of_last_continuous_(0),
       sector_set_mutex_() { }
 
 void UnsyncedSectorStore::AddUnsyncedInterval(
@@ -28,38 +23,22 @@ void UnsyncedSectorStore::MarkToSyncInterval(
   synced_sector_set_.add(sector_interval);
 }
 
-// For now, we just return the largest unsynced interval. If performance
-// becomes an issue, revisit this. Sequential might be quicker
+// Return the intervals sequentially
 // TODO: Should this logic be here?
 SectorInterval UnsyncedSectorStore::GetContinuousUnsyncedSectors() const {
   std::lock_guard<std::mutex> set_lock(sector_set_mutex_);
 
-  // Return the largest interval greater than SEEK_CUTOFF if it exists,
-  // otherwise return the one directly after the last returned interval
-  // to try to take advantage of read-ahead
   SectorInterval interval_to_return(0, 0);
-  bool found_big_or_after = false;
 
   for (auto interval : unsynced_sector_set_) {
-    if (interval_to_return.upper() == 0) {
-      // This way we always return something
+    if (interval.lower() > end_of_last_continuous_) {
+      // Return the interval directory after the last interval
       interval_to_return = interval;
-    } else if (boost::icl::length(interval) > 
-               std::max(SEEK_CUTOFF, boost::icl::length(interval_to_return))) {
-      // Return the largest interval larger than SEEK_CUTOFF if it exists
-      interval_to_return = interval;
-      found_big_or_after = true;
-    } else if (!found_big_or_after
-               && interval.lower() > start_of_last_continuous_) {
-      // Return the one directly after the last one, making sure
-      // that we already haven't found a large interval (or found the one
-      // directly after already)
-      interval_to_return = interval;
-      found_big_or_after = true;
+      break;
     }
   }
 
-  start_of_last_continuous_ = interval_to_return.lower();
+  end_of_last_continuous_ = interval_to_return.upper();
   return interval_to_return;
 }
 

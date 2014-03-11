@@ -41,7 +41,7 @@ class UnsyncedSectorStore {
  private:
   SectorSet unsynced_sector_set_;
   SectorSet synced_sector_set_;
-  mutable uint64_t start_of_last_continuous_;
+  mutable uint64_t end_of_last_continuous_;
   mutable std::mutex sector_set_mutex_;
 };
 
