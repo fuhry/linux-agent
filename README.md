@@ -5,7 +5,7 @@ backups of the block devices on a Linux machine.
 ## Table of Contents
 * [Project Overview](#project-overview)
 * [System Requirements](#system-requirements)
-* [Build & Installation Instructions](#abc123)
+* [Build & Installation Instructions](#build--installation-instructions)
 * [Usage](#usage)
 * [How to Submit a Bug Report](#how-to-submit-a-bug-report)
 * [How Does It Work?](#how-does-it-work)  
