@@ -17,7 +17,7 @@ Backup::Backup(
 
 void Backup::DoBackup(std::shared_ptr<BackupEventHandler> event_handler) {
   event_handler->BackupInProgress();
-  std::vector<std::thread> in_progess_threads;
+  std::vector<std::thread> in_progress_threads;
   for (auto sync : syncs_to_do_) {
     std::shared_ptr<SyncCountHandler> sync_count_handler =
         event_handler->CreateSyncCountHandler(*sync->source_device());
@@ -39,15 +39,15 @@ void Backup::DoBackup(std::shared_ptr<BackupEventHandler> event_handler) {
       LOG(INFO) << "DeviceSynchronizer::DoSync returned";
     });
 
-    in_progess_threads.push_back(std::move(sync_thread));
+    in_progress_threads.push_back(std::move(sync_thread));
   }
 
   while (!coordinator_->WaitUntilFinished(2000)) {
     LOG(INFO) << "Waiting for backup to finish";
   }
 
-  for (auto itr = in_progess_threads.begin();
-       itr != in_progess_threads.end();
+  for (auto itr = in_progress_threads.begin();
+       itr != in_progress_threads.end();
        ++itr) {
     itr->join();
   }
