@@ -8,61 +8,66 @@ namespace {
 using ::datto_linux_client::UnsyncedSectorStore;
 using ::datto_linux_client::SectorInterval;
 
+// Basic tests
+
 TEST(UnsyncedSectorStoreTest, DefaultConstructor) {
-  const UnsyncedSectorStore store;
+  UnsyncedSectorStore store;
 
   EXPECT_EQ(0UL, store.UnsyncedSectorCount());
 
-  const SectorInterval interval = store.GetContinuousUnsyncedSectors();
-  EXPECT_EQ(0UL, boost::icl::length(interval));
+  SectorInterval output_interval;
+
+  store.GetInterval(&output_interval, 11);
+  EXPECT_EQ(0UL, boost::icl::length(output_interval));
 }
 
-TEST(UnsyncedSectorStoreTest, AddUnsyncedIntervalTest) {
+TEST(UnsyncedSectorStoreTest, AddIntervalTest) {
   UnsyncedSectorStore store;
   SectorInterval interval1(1, 10);
   SectorInterval interval2(5, 20);
 
-  store.AddUnsyncedInterval(interval1);
+  SectorInterval output_interval;
+
+  store.AddInterval(interval1, 10);
   EXPECT_EQ(9UL, store.UnsyncedSectorCount());
 
-  EXPECT_TRUE(interval1 == store.GetContinuousUnsyncedSectors());
+  store.GetInterval(&output_interval, 11);
+  EXPECT_TRUE(interval1 == output_interval) << output_interval;
 
-  store.AddUnsyncedInterval(interval2);
-  EXPECT_TRUE(SectorInterval(1, 20) == store.GetContinuousUnsyncedSectors());
+  store.AddInterval(interval2, 10);
+  store.GetInterval(&output_interval, 11);
+  EXPECT_TRUE(SectorInterval(1, 20) == output_interval) << output_interval;
 }
 
 TEST(UnsyncedSectorStoreTest, MarkToSyncIntervalTest) {
   UnsyncedSectorStore store;
   SectorInterval interval1(1, 20);
   SectorInterval interval2(5, 20);
+  SectorInterval output_interval;
 
-  store.AddUnsyncedInterval(interval1);
+  store.AddInterval(interval1, 11);
+  store.RemoveInterval(interval2);
+  store.GetInterval(&output_interval, 11);
 
-  store.MarkToSyncInterval(interval2);
-  EXPECT_TRUE(SectorInterval(1, 5) == store.GetContinuousUnsyncedSectors());
+  EXPECT_TRUE(SectorInterval(1, 5) == output_interval);
   EXPECT_EQ(4UL, store.UnsyncedSectorCount());
 
-  store.MarkToSyncInterval(interval1);
-  EXPECT_TRUE(SectorInterval(0, 0) == store.GetContinuousUnsyncedSectors());
-  store.ResetUnsynced();
-  EXPECT_TRUE(interval1 == store.GetContinuousUnsyncedSectors());
-
-  store.MarkToSyncInterval(interval1);
-  EXPECT_TRUE(SectorInterval(0, 0) == store.GetContinuousUnsyncedSectors());
-  store.ClearSynced();
-  store.ResetUnsynced();
-  EXPECT_TRUE(SectorInterval(0, 0) == store.GetContinuousUnsyncedSectors());
+  store.RemoveInterval(interval1);
+  store.GetInterval(&output_interval, 11);
+  EXPECT_TRUE(SectorInterval(0, 0) == output_interval) << output_interval;
 }
 
 TEST(UnsyncedSectorStoreTest, ClearAllTest) {
   UnsyncedSectorStore store;
   SectorInterval interval(1, 20);
 
-  store.AddUnsyncedInterval(interval);
+  store.AddInterval(interval, 11);
   EXPECT_NE(0UL, store.UnsyncedSectorCount());
 
-  store.ClearAll();
+  store.ClearIntervals();
   EXPECT_EQ(0UL, store.UnsyncedSectorCount());
 }
+
+// Timing tests
 
 } // namespace

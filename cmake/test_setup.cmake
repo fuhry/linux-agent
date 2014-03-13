@@ -50,6 +50,10 @@ macro(add_unit_test test_name)
     add_dependencies(check ctest_${test_name})
 endmacro()
 
+add_unit_test(unsynced_sector_store_test
+              unsynced_sector_manager/unsynced_sector_store.cc)
+
+if (0)
 add_unit_test(block_device_factory_test
               block_device/block_device.cc
               block_device/ext_file_system.cc
@@ -187,13 +191,10 @@ add_unit_test(unsynced_sector_manager_test
               unsynced_sector_manager/unsynced_sector_store.cc
               unsynced_sector_manager/unsynced_sector_manager.cc)
 
-add_unit_test(unsynced_sector_store_test
-              test/loop_device.cc
-              unsynced_sector_manager/unsynced_sector_store.cc)
-
 #add_unit_test(xfs_test
 #              test/loop_device.cc
 #              block_device/mountable_block_device.cc
 #              block_device/block_device.cc
 #              block_device/xfs_mountable_block_device.cc)
 
+endif()
