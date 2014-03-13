@@ -141,13 +141,14 @@ void DeviceSynchronizer::DoSync(
       coordinator->SignalMoreWorkToDo();
     }
 
+    SectorInterval to_sync_interval;
     // to_sync_interval is sectors, not blocks
-    SectorInterval to_sync_interval =
-      source_store->GetContinuousUnsyncedSectors();
+    bool is_volatile = source_store->GetInterval(&to_sync_interval,
+                                                 time(NULL));
 
     DLOG(INFO) << "Cardinality is: "
                << boost::icl::cardinality(to_sync_interval);
-    source_store->MarkToSyncInterval(to_sync_interval);
+    source_store->RemoveInterval(to_sync_interval);
 
     off_t seek_pos = to_sync_interval.lower() * SECTOR_SIZE;
     seek_devices_to(seek_pos, source_fd, destination_fd);
@@ -158,9 +159,14 @@ void DeviceSynchronizer::DoSync(
       for (uint64_t i = 0;
           i < boost::icl::cardinality(to_sync_interval);
           i += sectors_per_block) {
-	    freeze_helper.RunWhileFrozen([&]() {
+        auto copy_func = [&]() {
 	      copy_block(source_fd, destination_fd, block_size_bytes);
-	    });
+	    };
+        if (is_volatile) {
+          freeze_helper.RunWhileFrozen(copy_func);
+        } else {
+          copy_func();
+        }
       }
     DLOG(INFO) << "Finished copying interval " << to_sync_interval;
 

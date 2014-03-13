@@ -39,6 +39,7 @@ using ::testing::NiceMock;
 using ::testing::StrictMock;
 using ::testing::Return;
 using ::testing::ReturnPointee;
+using ::testing::SetArgPointee;
 using ::testing::Truly;
 using ::testing::_;
 
@@ -80,13 +81,13 @@ class MockUnsyncedSectorManager : public UnsyncedSectorManager {
 
 class MockUnsyncedSectorStore : public UnsyncedSectorStore {
  public:
-  MockUnsyncedSectorStore() {}
-  MOCK_METHOD1(AddUnsyncedInterval, void(const SectorInterval &));
-  MOCK_METHOD1(MarkToSyncInterval, void(const SectorInterval &));
-  MOCK_METHOD0(ClearAll, void());
-  MOCK_METHOD0(ClearSynced, void());
-  MOCK_METHOD0(ResetUnsynced, void());
-  MOCK_CONST_METHOD0(GetContinuousUnsyncedSectors, SectorInterval());
+  MockUnsyncedSectorStore() : UnsyncedSectorStore(10) {}
+  MOCK_METHOD2(AddInterval, void(const SectorInterval &, const time_t epoch));
+  MOCK_METHOD1(AddNonVolatileInterval, void(const SectorInterval &));
+  MOCK_METHOD1(RemoveInterval, void(const SectorInterval &));
+  MOCK_METHOD0(ClearIntervals, void());
+  MOCK_CONST_METHOD2(GetInterval, bool(SectorInterval *const output,
+                                  const time_t epoch));
   MOCK_CONST_METHOD0(UnsyncedSectorCount, uint64_t());
 };
 
@@ -167,6 +168,7 @@ TEST_F(DeviceSynchronizerTest, SimpleSyncTest) {
   auto mock_store = std::make_shared<MockUnsyncedSectorStore>();
 
   uint64_t unsynced_count = 10;
+  SectorInterval interval_to_sync(0, 10);
 
   EXPECT_CALL(*source_device, Thaw())
       .Times(AtLeast(1));
@@ -178,14 +180,15 @@ TEST_F(DeviceSynchronizerTest, SimpleSyncTest) {
       .Times(AtLeast(1))
       .WillRepeatedly(ReturnPointee(&unsynced_count));
 
-  EXPECT_CALL(*mock_store, MarkToSyncInterval(SectorInterval(0, unsynced_count)))
+  EXPECT_CALL(*mock_store, RemoveInterval(interval_to_sync))
       .Times(1)
-      .WillOnce(Assign(&unsynced_count, 0));
+      .WillOnce(DoAll(Assign(&unsynced_count, 0),
+                      Assign(&interval_to_sync, SectorInterval(0, 0))));
 
-  EXPECT_CALL(*mock_store, GetContinuousUnsyncedSectors())
+  EXPECT_CALL(*mock_store, GetInterval(_, _))
       .Times(AtLeast(1))
-      .WillOnce(Return(SectorInterval(0, unsynced_count)))
-      .WillRepeatedly(Return(SectorInterval(0, 0)));
+      .WillRepeatedly(DoAll(SetArgPointee<0>(interval_to_sync),
+                            Return(true)));
 
   EXPECT_CALL(*source_manager, GetStore(Truly(is_source)))
       .Times(AtLeast(1))
@@ -238,7 +241,7 @@ TEST_F(DeviceSynchronizerTest, SyncTest) {
     }
     // Only mark every other block to sync
     if (i % 2 == 0) {
-      source_store->AddUnsyncedInterval(SectorInterval(i * 8, (i + 1) * 8));
+      source_store->AddNonVolatileInterval(SectorInterval(i * 8, (i + 1) * 8));
     }
   }
 

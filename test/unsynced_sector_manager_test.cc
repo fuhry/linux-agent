@@ -75,7 +75,7 @@ TEST(UnsyncedSectorManagerTest, store) {
   {
     std::shared_ptr<UnsyncedSectorStore> store(manager.GetStore(loop_block));
     EXPECT_FALSE(store == nullptr);
-    store->AddUnsyncedInterval(SectorInterval(0, 10));
+    store->AddNonVolatileInterval(SectorInterval(0, 10));
   }
 
   std::shared_ptr<UnsyncedSectorStore> store(manager.GetStore(loop_block));

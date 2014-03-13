@@ -53,7 +53,6 @@ endmacro()
 add_unit_test(unsynced_sector_store_test
               unsynced_sector_manager/unsynced_sector_store.cc)
 
-if (0)
 add_unit_test(block_device_factory_test
               block_device/block_device.cc
               block_device/ext_file_system.cc
@@ -83,7 +82,6 @@ add_unit_test(backup_coordinator_test
               backup/backup_coordinator.cc)
 
 add_unit_test(backup_manager_test
-              ${PROTO_SRCS}
               backup/backup.cc
               backup/backup_builder.cc
               backup/backup_coordinator.cc
@@ -94,8 +92,10 @@ add_unit_test(backup_manager_test
               block_trace/device_tracer.cc
               block_trace/trace_handler.cc
               device_synchronizer/device_synchronizer.cc
+              freeze_helper/freeze_helper.cc
               unsynced_sector_manager/unsynced_sector_manager.cc
               unsynced_sector_manager/unsynced_sector_store.cc
+              ${PROTO_SRCS}
               backup/backup_manager.cc)
 target_link_libraries(backup_manager_test uuid ${PROTOBUF_LIBRARIES})
 
@@ -119,6 +119,7 @@ add_unit_test(device_synchronizer_test
               block_trace/cpu_tracer.cc
               block_trace/device_tracer.cc
               block_trace/trace_handler.cc
+              freeze_helper/freeze_helper.cc
               test/loop_device.cc
               unsynced_sector_manager/unsynced_sector_manager.cc
               unsynced_sector_manager/unsynced_sector_store.cc
@@ -196,5 +197,3 @@ add_unit_test(unsynced_sector_manager_test
 #              block_device/mountable_block_device.cc
 #              block_device/block_device.cc
 #              block_device/xfs_mountable_block_device.cc)
-
-endif()

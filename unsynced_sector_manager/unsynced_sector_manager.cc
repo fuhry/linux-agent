@@ -7,6 +7,12 @@
 #include "block_trace/trace_handler.h"
 #include "block_trace/device_tracer.h"
 
+namespace {
+  // number of a seconds ago a write should have happened to be
+  // considered non-volatile
+  const int VOLATILE_SECONDS = 10;
+}
+
 namespace datto_linux_client {
 
 UnsyncedSectorManager::UnsyncedSectorManager() : store_map_(), tracer_map_() {}
@@ -53,7 +59,8 @@ bool UnsyncedSectorManager::IsTracing(const BlockDevice &device) const {
 std::shared_ptr<UnsyncedSectorStore> UnsyncedSectorManager::GetStore(
     const BlockDevice &device) {
   if (!store_map_[device.dev_t()]) {
-    store_map_[device.dev_t()] = std::make_shared<UnsyncedSectorStore>();
+    store_map_[device.dev_t()] =
+        std::make_shared<UnsyncedSectorStore>(VOLATILE_SECONDS);
   }
   return store_map_.at(device.dev_t());
 }

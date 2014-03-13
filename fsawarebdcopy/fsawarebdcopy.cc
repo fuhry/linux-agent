@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
   auto in_use_set = source_device->GetInUseSectors();
 
   for (const SectorInterval &interval : *in_use_set) {
-    source_store->AddUnsyncedInterval(interval);
+    source_store->AddNonVolatileInterval(interval);
   }
 
   uint64_t bytes_total = source_store->UnsyncedSectorCount() * 512;

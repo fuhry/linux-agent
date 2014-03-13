@@ -1,5 +1,6 @@
 #include "block_trace/trace_handler.h"
 #include <glog/logging.h>
+#include <time.h>
 
 namespace datto_linux_client {
 
@@ -16,7 +17,7 @@ void TraceHandler::AddTrace(const struct blk_io_trace &trace_data) {
     uint64_t sector = trace_data.sector;
     SectorInterval interval(sector, sector + sectors_written);
     DLOG(INFO) << "Got write trace: " << interval;
-    (store_)->AddUnsyncedInterval(interval);
+    store_->AddInterval(interval, time(NULL));
   } else {
     VLOG(2) << "Discarding trace with action 0x"
             << std::hex << trace_data.action << std::dec;

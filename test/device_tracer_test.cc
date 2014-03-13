@@ -36,7 +36,7 @@ class DeviceTracerTest : public ::testing::Test {
     LOG(INFO) << "Path is: " << loop_dev->path();
 
     sector_store =
-      std::shared_ptr<UnsyncedSectorStore>(new UnsyncedSectorStore());
+      std::shared_ptr<UnsyncedSectorStore>(new UnsyncedSectorStore(10));
     dummy_handler =
       std::shared_ptr<TraceHandler>(new DummyHandler());
     real_handler =
@@ -118,13 +118,13 @@ TEST_F(DeviceTracerTest, WriteSpecificLocation) {
   auto expected_interval = SectorInterval(sectors_per_block * 10,
       sectors_per_block * 12);
 
-  SectorInterval continuous_interval =
-    sector_store->GetContinuousUnsyncedSectors();
+  SectorInterval actual_interval;
+  sector_store->GetInterval(&actual_interval, 100);
 
   EXPECT_EQ(sectors_per_block * 2, unsynced_count);
 
-  EXPECT_EQ(expected_interval.lower(), continuous_interval.lower());
-  EXPECT_EQ(expected_interval.upper(), continuous_interval.upper());
+  EXPECT_EQ(expected_interval.lower(), actual_interval.lower());
+  EXPECT_EQ(expected_interval.upper(), actual_interval.upper());
 }
 
 
