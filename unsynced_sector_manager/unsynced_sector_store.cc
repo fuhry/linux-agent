@@ -3,14 +3,11 @@
 
 #include <algorithm>
 
-namespace {
-  const int VOLATILE_SECS = 30;
-}
-
 namespace datto_linux_client {
 
-UnsyncedSectorStore::UnsyncedSectorStore()
-    : unsynced_sector_map_(),
+UnsyncedSectorStore::UnsyncedSectorStore(int volatile_seconds)
+    : volatile_seconds_(volatile_seconds),
+      unsynced_sector_map_(),
       synced_sector_set_(),
       end_of_last_continuous_(0),
       mutex_() { }
@@ -18,13 +15,17 @@ UnsyncedSectorStore::UnsyncedSectorStore()
 void UnsyncedSectorStore::AddInterval(const SectorInterval &sector_interval,
                                       const time_t epoch) {
   std::lock_guard<std::mutex> set_lock(mutex_);
+  // For some reason, when epoch = 0 the sector_interval doesn't get
+  // inserted. As epoch should never be less volatile_seconds anyway,
+  // assert it.
+  CHECK_GT(epoch, volatile_seconds_);
   unsynced_sector_map_ += std::make_pair(sector_interval, epoch);
 }
 
-void UnsyncedSectorStore::AddNonViolatileInterval(
+void UnsyncedSectorStore::AddNonVolatileInterval(
     const SectorInterval &sector_interval) {
   std::lock_guard<std::mutex> set_lock(mutex_);
-  unsynced_sector_map_ += std::make_pair(sector_interval, (time_t)0);
+  unsynced_sector_map_ += std::make_pair(sector_interval, (time_t)1);
 }
 
 void UnsyncedSectorStore::RemoveInterval(
@@ -36,9 +37,10 @@ void UnsyncedSectorStore::RemoveInterval(
 
 // Return the intervals sequentially
 // TODO: Should this logic be here?
-bool UnsyncedSectorStore::GetInterval(SectorInterval *output,
+bool UnsyncedSectorStore::GetInterval(SectorInterval *const output,
                                       const time_t epoch) const {
   std::lock_guard<std::mutex> set_lock(mutex_);
+  CHECK_GT(epoch, volatile_seconds_);
 
   bool found_interval = false;
   bool is_volatile = false;
@@ -49,7 +51,7 @@ bool UnsyncedSectorStore::GetInterval(SectorInterval *output,
       *output = interval_pair.first;
       VLOG(2) << *output;
       found_interval = true;
-      is_volatile = interval_pair.second > (epoch - VOLATILE_SECS);
+      is_volatile = interval_pair.second > (epoch - volatile_seconds_);
       break;
     }
   }
@@ -57,7 +59,9 @@ bool UnsyncedSectorStore::GetInterval(SectorInterval *output,
   if (!found_interval) {
     if (unsynced_sector_map_.size() > 0) {
       VLOG(2) << "no output: " << *output;
-      *output = unsynced_sector_map_.begin()->first;
+      auto first_interval_pair = *unsynced_sector_map_.begin();
+      *output = first_interval_pair.first;
+      is_volatile = first_interval_pair.second > (epoch - volatile_seconds_);
     } else {
       *output = SectorInterval(0, 0);
     }
@@ -88,7 +92,6 @@ void UnsyncedSectorStore::ReInsertSyncHistory() {
 
 uint64_t UnsyncedSectorStore::UnsyncedSectorCount() const {
   std::lock_guard<std::mutex> set_lock(mutex_);
-
   return boost::icl::cardinality(unsynced_sector_map_);
 }
 
