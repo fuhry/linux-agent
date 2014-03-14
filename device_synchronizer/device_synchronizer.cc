@@ -101,8 +101,8 @@ void DeviceSynchronizer::DoSync(
   int destination_fd = destination_device_->Open();
   FreezeHelper freeze_helper(*source_device_, SECONDS_TO_FREEZE * 1000);
 
-  int block_size_bytes = source_device_->BlockSizeBytes();
-  int sectors_per_block = block_size_bytes / SECTOR_SIZE;
+  const int block_size_bytes = source_device_->BlockSizeBytes();
+  const int sectors_per_block = block_size_bytes / SECTOR_SIZE;
   DLOG(INFO) << "Sectors per block: " << sectors_per_block;
 
   auto source_store = sector_manager_->GetStore(*source_device_);
@@ -128,7 +128,6 @@ void DeviceSynchronizer::DoSync(
         unsynced_sector_count = source_store->UnsyncedSectorCount();
       });
     }
-
 
     // Let the event handler know how much is left
     count_handler->UpdateUnsyncedCount(unsynced_sector_count * SECTOR_SIZE);
@@ -181,10 +180,6 @@ void DeviceSynchronizer::DoSync(
     total_bytes_sent +=
         boost::icl::cardinality(to_sync_interval) * SECTOR_SIZE;
     count_handler->UpdateSyncedCount(total_bytes_sent);
-
-    // Update unsynced sector count after interval was synced
-    unsynced_sector_count = source_store->UnsyncedSectorCount();
-
   }
   source_device_->Close();
   destination_device_->Close();
