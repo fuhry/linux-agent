@@ -18,7 +18,7 @@ using ::datto_linux_client::DeviceSynchronizerException;
 uint32_t SECTOR_SIZE = 512;
 uint32_t ONE_MEGABYTE = 1024 * 1024;
 
-time_t SECONDS_BETWEEN_FLUSHES = 2;
+time_t SECONDS_BETWEEN_FLUSHES = 5;
 time_t SECONDS_TO_FREEZE = 2;
 
 void seek_devices_to(off_t seek_pos, int source_fd, int dest_fd) {
