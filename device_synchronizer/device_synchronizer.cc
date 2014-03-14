@@ -36,40 +36,30 @@ void seek_devices_to(off_t seek_pos, int source_fd, int dest_fd) {
 
 
 inline void copy_block(int source_fd, int destination_fd,
-                       int block_size_bytes) {
+                       ssize_t block_size_bytes, off_t offset) {
   char buf[block_size_bytes];
 
   DLOG_EVERY_N(INFO, 500) << "Copying block " << google::COUNTER;
-  ssize_t total_copied = 0;
-  // Loop until we copy a full block
-  do {
-    ssize_t bytes_read = read(source_fd, buf, block_size_bytes);
-    if (bytes_read == -1) {
-      PLOG(ERROR) << "Error while reading from source";
-      throw DeviceSynchronizerException("Error reading from source");
-    } else if (bytes_read == 0) {
-      // No reads means we are done
-      PLOG(INFO) << "No bytes read";
-      break;
-    }
 
-    // Loop until we clear the write buffer
-    ssize_t count_written = 0;
-    do {
-      ssize_t bytes_written = write(destination_fd, buf, bytes_read);
-      if (bytes_written == -1) {
-        PLOG(ERROR) << "Error while writing to destination";
-        throw DeviceSynchronizerException("Error writing to destination");
-      } else if (bytes_written == 0) {
-        break;
-      }
-      count_written += bytes_written;
-    } while (count_written != bytes_read); // clear write buffer
+  ssize_t bytes_read = pread(source_fd, buf, block_size_bytes, offset);
+  if (bytes_read == -1) {
+    PLOG(ERROR) << "Error while reading from source";
+    throw DeviceSynchronizerException("Error reading from source");
+  } else if (bytes_read != block_size_bytes) {
+    PLOG(INFO) << "Expected to read " << block_size_bytes
+      << ". Got " << bytes_read;
+    throw DeviceSynchronizerException("Unexpected read result");
+  }
 
-    // bytes_read == count_written here
-    total_copied += count_written;
-
-  } while (total_copied != block_size_bytes); // copy full block
+  ssize_t bytes_written = pwrite(destination_fd, buf, bytes_read, offset);
+  if (bytes_written == -1) {
+    PLOG(ERROR) << "Error while writing to destination";
+    throw DeviceSynchronizerException("Error writing to destination");
+  } else if (bytes_written != block_size_bytes) {
+    PLOG(INFO) << "Expected to write " << block_size_bytes
+      << ". Got " << bytes_written;
+    throw DeviceSynchronizerException("Unexpected read result");
+  }
 }
 } // unnamed namespace
 
@@ -109,6 +99,7 @@ void DeviceSynchronizer::DoSync(
   uint64_t total_bytes_sent = 0;
   int source_fd = source_device_->Open();
   int destination_fd = destination_device_->Open();
+  FreezeHelper freeze_helper(*source_device_, SECONDS_TO_FREEZE * 1000);
 
   int block_size_bytes = source_device_->BlockSizeBytes();
   int sectors_per_block = block_size_bytes / SECTOR_SIZE;
@@ -117,11 +108,27 @@ void DeviceSynchronizer::DoSync(
   auto source_store = sector_manager_->GetStore(*source_device_);
 
   time_t flush_time = 0;
-
   bool was_done = false;
 
   while (!coordinator->IsCancelled()) {
     uint64_t unsynced_sector_count = source_store->UnsyncedSectorCount();
+
+    // If there is under 1MB left, freeze and flush the filesystem so things
+    // are consistent while it wraps up
+    if (unsynced_sector_count < ONE_MEGABYTE / SECTOR_SIZE) {
+      if (time(NULL) - flush_time > SECONDS_BETWEEN_FLUSHES) {
+        source_device_->Flush();
+        flush_time = time(NULL);
+      }
+
+      // Update sync count after flush and during freeze
+      freeze_helper.RunWhileFrozen([&]() {
+        // Let the trace data hit
+        sector_manager_->FlushTracer(*source_device_);
+        unsynced_sector_count = source_store->UnsyncedSectorCount();
+      });
+    }
+
 
     // Let the event handler know how much is left
     count_handler->UpdateUnsyncedCount(unsynced_sector_count * SECTOR_SIZE);
@@ -150,24 +157,25 @@ void DeviceSynchronizer::DoSync(
                << boost::icl::cardinality(to_sync_interval);
     source_store->RemoveInterval(to_sync_interval);
 
-    off_t seek_pos = to_sync_interval.lower() * SECTOR_SIZE;
-    seek_devices_to(seek_pos, source_fd, destination_fd);
-
     // Loop until we copy all of the blocks of the sector interval
     DLOG(INFO) << "Syncing interval: " << to_sync_interval;
-    FreezeHelper freeze_helper(*source_device_, SECONDS_TO_FREEZE * 1000);
-      for (uint64_t i = 0;
-          i < boost::icl::cardinality(to_sync_interval);
-          i += sectors_per_block) {
-        auto copy_func = [&]() {
-	      copy_block(source_fd, destination_fd, block_size_bytes);
-	    };
-        if (is_volatile) {
-          freeze_helper.RunWhileFrozen(copy_func);
-        } else {
-          copy_func();
-        }
+
+    off_t offset = to_sync_interval.lower() * SECTOR_SIZE;
+    for (uint64_t i = 0;
+        i < boost::icl::cardinality(to_sync_interval);
+        i += sectors_per_block) {
+
+      auto copy_func = [&]() {
+        copy_block(source_fd, destination_fd, block_size_bytes, offset);
+      };
+
+      if (is_volatile) {
+        freeze_helper.RunWhileFrozen(copy_func);
+      } else {
+        copy_func();
       }
+      offset += block_size_bytes;
+    }
     DLOG(INFO) << "Finished copying interval " << to_sync_interval;
 
     total_bytes_sent +=
@@ -177,15 +185,6 @@ void DeviceSynchronizer::DoSync(
     // Update unsynced sector count after interval was synced
     unsynced_sector_count = source_store->UnsyncedSectorCount();
 
-    // If there is under 1MB left, freeze and flush the filesystem so things
-    // are consistent while it wraps up
-    if (unsynced_sector_count < ONE_MEGABYTE / SECTOR_SIZE) {
-      if (time(NULL) - flush_time > SECONDS_BETWEEN_FLUSHES) {
-        source_device_->Flush();
-        sector_manager_->FlushTracer(*source_device_);
-        flush_time = time(NULL);
-      }
-    }
   }
   source_device_->Close();
   destination_device_->Close();
