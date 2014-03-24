@@ -11,7 +11,11 @@ namespace {
   using google::GetLogSeverityName;
 
   const int BUFFER_TIME_MILLIS = 2000;
+#ifdef NDEBUG
   const unsigned int LINES_TO_BUFFER = 20;
+#else
+  const unsigned int LINES_TO_BUFFER = 50;
+#endif
 
 } // namespace
 
