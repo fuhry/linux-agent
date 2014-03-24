@@ -35,7 +35,7 @@ image based backups of Linux machines.
         1. Make a sparse file to back the image. On the system to backup, run `blockdev --getsize64 /dev/YOUR_BD` to get the size in bytes of the block device to backup. Then, copy that number and do `truncate --size=SIZE_OF_BD block_dev.datto` on the destination system.
         2. Start nbd-server on the destination system. `nbd-server 12345 $(readlink -f block_dev.datto)` to start it on port 12345
     2. Get the UUID of the block device to backup by running `blkid` and copying it out.
-    3. Request a backup with `./build/dattocli startbackup --full UUID_FROM_BLKID DESTINATION_HOST 12345`
+    3. Request a backup with `./build/dattocli startbackup --full --device-pair UUID_FROM_BLKID DESTINATION_HOST 12345`
      
 ## How to Submit a Bug Report
 * Submit it using JIRA http://jira.hq.datto.lan/browse/LP
