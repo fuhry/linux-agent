@@ -12,12 +12,14 @@ void TraceHandler::AddTrace(const struct blk_io_trace &trace_data) {
     VLOG(1) << "Adding trace with action 0x"
             << std::hex << trace_data.action << std::dec;
 
-    uint64_t sectors_written = trace_data.bytes / SECTOR_SIZE;
+    if (trace_data.bytes > 0) {
+      uint64_t sectors_written = trace_data.bytes / SECTOR_SIZE;
 
-    uint64_t sector = trace_data.sector;
-    SectorInterval interval(sector, sector + sectors_written);
-    DLOG(INFO) << "Got write trace: " << interval;
-    store_->AddInterval(interval, time(NULL));
+      uint64_t sector = trace_data.sector;
+      SectorInterval interval(sector, sector + sectors_written);
+      DLOG(INFO) << "Got write trace: " << interval;
+      store_->AddInterval(interval, time(NULL));
+    }
   } else {
     VLOG(2) << "Discarding trace with action 0x"
             << std::hex << trace_data.action << std::dec;
