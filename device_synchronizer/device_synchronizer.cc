@@ -117,14 +117,14 @@ void DeviceSynchronizer::DoSync(
     // are consistent while it wraps up
     if (unsynced_sector_count < ONE_MEGABYTE / SECTOR_SIZE) {
       if (time(NULL) - flush_time > SECONDS_BETWEEN_FLUSHES) {
-        source_device_->Flush();
+        // source_device_->Flush();
         flush_time = time(NULL);
       }
 
       // Update sync count after flush and during freeze
       freeze_helper.RunWhileFrozen([&]() {
         // Let the trace data hit
-        sector_manager_->FlushTracer(*source_device_);
+        // sector_manager_->FlushTracer(*source_device_);
         unsynced_sector_count = source_store->UnsyncedSectorCount();
       });
     }
