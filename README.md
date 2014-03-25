@@ -19,6 +19,9 @@ image based backups of Linux machines.
 * Filesystem is ext4, ext3, ext2, or xfs
 
 ## Build & Installation Instructions
+* All
+    * Remember to `git submodule init && git submodule update` to get the
+      submodule projects
 * Debian-based (e.g. Ubuntu, Mint)
     * You can build the package from
       [linux-agent-deb](http://github-server.hq.datto.lan/ngarvey/linux-agent-deb),
