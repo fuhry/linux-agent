@@ -74,7 +74,7 @@ void QueuingLogSink::send(LogSeverity severity, const char *full_filename,
     to_write_queue_.push(log_string);
     should_notify = to_write_queue_.size() > LINES_TO_BUFFER;
   }
-  if (should_notify){
+  if (should_notify) {
     cond_variable_.notify_one();
   }
 }
