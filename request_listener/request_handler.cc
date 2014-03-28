@@ -14,7 +14,7 @@ RequestHandler::RequestHandler(
 
 void RequestHandler::Handle(const Request &request,
                             std::shared_ptr<ReplyChannel> reply_channel) {
-  LOG(INFO) << "Handling request of type " << request.type();
+  DLOG(INFO) << "Handling request of type " << request.type();
   Reply reply;
   try {
     if (request.type() == Request::START_BACKUP) {
