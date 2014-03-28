@@ -31,6 +31,7 @@ QueuingLogSink::QueuingLogSink(std::string output_file_name)
   mode_t old_mask = umask(077);
 
   FILE *output_file = fopen(output_file_name.c_str(), "a");
+  setbuf(output_file, NULL);
 
   if (output_file == NULL) {
     // TODO real exception
