@@ -18,6 +18,11 @@
 
 const char DATTO_SOCKET[] = "/var/run/dattod.sock";
 const char FLOCK_PATH[] = "/var/run/dattod.pid";
+#ifdef NDEBUG
+const char LOG_PATH[] = "/var/log/dattod.log";
+#else
+const char LOG_PATH[] = "/tmp/dattod.log";
+#endif
 
 namespace {
 using datto_linux_client::BackupBuilder;
@@ -33,36 +38,25 @@ using datto_linux_client::UnsyncedSectorManager;
 }
 
 int main(int argc, char *argv[]) {
-  // Setup logging
-
-  // We never want to log to a file in the current thread.
-  // See QueuingLogSink for details.
-  FLAGS_logtostderr = 1;
-  google::InitGoogleLogging(argv[0]);
 
 #ifdef NDEBUG
-  QueuingLogSink log_sink("/var/log/dattod.log");
-#else
-  QueuingLogSink log_sink("dattod.log");
-#endif
-  google::AddLogSink(&log_sink);
-
-  // cd to the root directory
-  if (chdir("/")) {
-    PLOG(ERROR) << "Error during chdir to /";
-    return 1;
-  }
-
-#ifdef NDEBUG
-  // daemonize
-  // (1, 0) means don't chdir but do release stdin/stdout/stderr
-  if (daemon(1, 0)) {
+  if (daemon(0, 0)) {
     PLOG(ERROR) << "Unable to daemonize";
     return 1;
   }
-#else
-  FLAGS_stderrthreshold = 0;
 #endif
+
+  // Setup logging, must happen after daemon becaus QueuingLogSink
+  // starts a thread in its constructor
+  // We never want to log to a file in the current thread.
+  // See QueuingLogSink for details.
+
+  // This disables all logging to files by GLog
+  FLAGS_logtostderr = 1;
+
+  google::InitGoogleLogging(argv[0]);
+  QueuingLogSink log_sink(LOG_PATH);
+  google::AddLogSink(&log_sink);
 
   // Acquire lock (must happen after daemon() as daemon() changes the pid)
   std::unique_ptr<Flock> lock;
