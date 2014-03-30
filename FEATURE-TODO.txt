@@ -1,4 +1,0 @@
-* XFS
-
-To figure out:
-    * Diff backup (perform the merge SIRIS side?)
