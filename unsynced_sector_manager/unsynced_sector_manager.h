@@ -7,7 +7,7 @@
 #include <string>
 
 #include "block_device/block_device.h"
-#include "block_trace/device_tracer.h"
+#include "tracing/device_tracer.h"
 #include "unsynced_sector_manager/unsynced_sector_store.h"
 
 namespace datto_linux_client {

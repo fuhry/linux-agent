@@ -1,6 +1,6 @@
-#include "block_trace/device_tracer.h"
+#include "tracing/device_tracer.h"
 
-#include "block_trace/block_trace_exception.h"
+#include "tracing/block_trace_exception.h"
 
 #include <thread>
 

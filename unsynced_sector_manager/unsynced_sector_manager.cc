@@ -4,8 +4,8 @@
 #include <sys/sysmacros.h>
 
 #include "unsynced_sector_manager/unsynced_tracking_exception.h"
-#include "block_trace/trace_handler.h"
-#include "block_trace/device_tracer.h"
+#include "tracing/trace_handler.h"
+#include "tracing/device_tracer.h"
 
 namespace {
   // number of a seconds ago a write should have happened to be

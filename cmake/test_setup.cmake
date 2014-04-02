@@ -88,9 +88,9 @@ add_unit_test(backup_manager_test
               backup_status_tracker/backup_event_handler.cc
               backup_status_tracker/backup_status_tracker.cc
               backup_status_tracker/sync_count_handler.cc
-              block_trace/cpu_tracer.cc
-              block_trace/device_tracer.cc
-              block_trace/trace_handler.cc
+              tracing/cpu_tracer.cc
+              tracing/device_tracer.cc
+              tracing/trace_handler.cc
               device_synchronizer/device_synchronizer.cc
               freeze_helper/freeze_helper.cc
               unsynced_sector_manager/unsynced_sector_manager.cc
@@ -116,9 +116,9 @@ add_unit_test(device_synchronizer_test
               backup/backup_coordinator.cc
               block_device/block_device.cc
               block_device/mountable_block_device.cc
-              block_trace/cpu_tracer.cc
-              block_trace/device_tracer.cc
-              block_trace/trace_handler.cc
+              tracing/cpu_tracer.cc
+              tracing/device_tracer.cc
+              tracing/trace_handler.cc
               freeze_helper/freeze_helper.cc
               test/loop_device.cc
               unsynced_sector_manager/unsynced_sector_manager.cc
@@ -129,9 +129,9 @@ target_link_libraries(device_synchronizer_test blkid uuid ${PROTOBUF_LIBRARIES})
 
 add_unit_test(device_tracer_test
               test/loop_device.cc
-              block_trace/device_tracer.cc
-              block_trace/cpu_tracer.cc
-              block_trace/trace_handler.cc
+              tracing/device_tracer.cc
+              tracing/cpu_tracer.cc
+              tracing/trace_handler.cc
               unsynced_sector_manager/unsynced_sector_store.cc)
 
 add_unit_test(extfs_test
@@ -185,9 +185,9 @@ add_unit_test(signal_handler_test
 
 add_unit_test(unsynced_sector_manager_test
               block_device/block_device.cc
-              block_trace/cpu_tracer.cc
-              block_trace/device_tracer.cc
-              block_trace/trace_handler.cc
+              tracing/cpu_tracer.cc
+              tracing/device_tracer.cc
+              tracing/trace_handler.cc
               test/loop_device.cc
               unsynced_sector_manager/unsynced_sector_store.cc
               unsynced_sector_manager/unsynced_sector_manager.cc)

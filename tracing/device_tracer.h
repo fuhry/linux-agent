@@ -1,8 +1,8 @@
 #ifndef DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACER_H_
 #define DATTO_CLIENT_BLOCK_TRACE_DEVICE_TRACER_H_
 
-#include "block_trace/cpu_tracer.h"
-#include "block_trace/trace_handler.h"
+#include "tracing/cpu_tracer.h"
+#include "tracing/trace_handler.h"
 
 #include <linux/fs.h>
 #include <linux/blktrace_api.h>
