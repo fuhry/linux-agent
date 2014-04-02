@@ -17,7 +17,7 @@ void TraceHandler::AddTrace(const struct blk_io_trace &trace_data) {
 
       uint64_t sector = trace_data.sector;
       SectorInterval interval(sector, sector + sectors_written);
-      DLOG(INFO) << "Got write trace: " << interval;
+      VLOG(2) << "Got write trace: " << interval;
       store_->AddInterval(interval, time(NULL));
     }
   } else {

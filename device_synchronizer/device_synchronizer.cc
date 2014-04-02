@@ -39,7 +39,7 @@ inline void copy_block(int source_fd, int destination_fd,
                        ssize_t block_size_bytes, off_t offset) {
   char buf[block_size_bytes];
 
-  DLOG_EVERY_N(INFO, 500) << "Copying block " << google::COUNTER;
+  DLOG_EVERY_N(INFO, 1000) << "Copying block " << google::COUNTER;
 
   ssize_t bytes_read = pread(source_fd, buf, block_size_bytes, offset);
   if (bytes_read == -1) {
@@ -152,12 +152,12 @@ void DeviceSynchronizer::DoSync(
     bool is_volatile = source_store->GetInterval(&to_sync_interval,
                                                  time(NULL));
 
-    DLOG(INFO) << "Cardinality is: "
-               << boost::icl::cardinality(to_sync_interval);
+    VLOG(1) << "Cardinality is: "
+            << boost::icl::cardinality(to_sync_interval);
     source_store->RemoveInterval(to_sync_interval);
 
     // Loop until we copy all of the blocks of the sector interval
-    DLOG(INFO) << "Syncing interval: " << to_sync_interval;
+    VLOG(1) << "Syncing interval: " << to_sync_interval;
 
     off_t offset = to_sync_interval.lower() * SECTOR_SIZE;
     for (uint64_t i = 0;
@@ -175,7 +175,7 @@ void DeviceSynchronizer::DoSync(
       }
       offset += block_size_bytes;
     }
-    DLOG(INFO) << "Finished copying interval " << to_sync_interval;
+    VLOG(1) << "Finished copying interval " << to_sync_interval;
 
     total_bytes_sent +=
         boost::icl::cardinality(to_sync_interval) * SECTOR_SIZE;
