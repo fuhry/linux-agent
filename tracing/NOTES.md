@@ -1,6 +1,8 @@
 # block trace notes
 This is a collection of scattered block trace data.
 
+*THIS HAS NOT BEEN UPDATED SINCE MID 2013*
+
 ## Relay Channels
 Block trace dumps information into userspace using relay channels.
 https://www.kernel.org/doc/Documentation/filesystems/relay.txt
