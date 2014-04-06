@@ -32,19 +32,9 @@ add_custom_command(TARGET dattolib
                        ${CMAKE_CURRENT_BINARY_DIR})
 
 # dattocli
-add_custom_target(dattocli ALL)
-add_dependencies(dattocli dattolib)
-add_custom_command(TARGET dattocli
-                   COMMAND cp -f
-                       ${CMAKE_CURRENT_SOURCE_DIR}/dattocli/dattocli
-                       ${CMAKE_CURRENT_BINARY_DIR})
+configure_file("dattocli.in" "dattocli")
 # dattonet
-add_custom_target(dattonet ALL)
-add_dependencies(dattonet dattolib)
-add_custom_command(TARGET dattonet
-                   COMMAND cp -f
-                       ${CMAKE_CURRENT_SOURCE_DIR}/dattonet/dattonet
-                       ${CMAKE_CURRENT_BINARY_DIR})
+configure_file("dattonet.in" "dattonet")
 
 ## dattod
 add_executable(dattod
@@ -117,7 +107,7 @@ if (DEFINED ENV{BUILD_UNIT_TESTS})
     include(cmake/test_setup.cmake)
 endif()
 
-add_custom_target(build DEPENDS dattod dattonet dattocli)
+add_custom_target(build DEPENDS dattod)
 
 configure_file("setup.py.in" "setup.py")
 install(TARGETS dattod DESTINATION /usr/sbin)
