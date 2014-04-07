@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 
-import subprocess
+import csv
+import os
+import re
 import socket
 import struct
+import subprocess
 import threading
-import os
-from re import sub
 from multiprocessing import cpu_count
 from dattolib import make_request_to_dattod
+from dattolib.block_device import get_size, get_block_size, get_fs, \
+                                  get_mount_point, get_used_bytes
 from dattolib.request_pb2 import Request
 from dattolib.reply_pb2 import Reply
 
@@ -17,6 +20,14 @@ PID_FILE = "/var/run/dattod.pid"
 PASSOFF_LIST = [Request.START_BACKUP, Request.STOP_BACKUP,
                 Request.PAUSE_BACKUP, Request.RESUME_BACKUP,
                 Request.BACKUP_STATUS]
+
+def get_lsb_release():
+    ret_dict = {}
+    with open("/etc/lsb-release") as lsb_file:
+        lsb_reader = csv.reader(lsb_file, delimiter='=', quotechar='"')
+        for row in lsb_reader:
+            ret_dict[row[0]] = row[1]
+    return ret_dict
 
 def run_command(command):
     p = subprocess.Popen(command, stdout=subprocess.PIPE)
@@ -30,8 +41,7 @@ def get_basic_info():
     reply.basic_info_reply.agent_version = "v2.0"
     reply.basic_info_reply.hostname = run_command(["hostname"])
     reply.basic_info_reply.uname_a = run_command(["uname", "-a"])
-    reply.basic_info_reply.lsb_release_a = \
-            run_command(["lsb_release", "-a"])
+    reply.basic_info_reply.lsb_release_a = str(get_lsb_release())
 
     return reply
 
@@ -39,44 +49,19 @@ def set_block_devices(reply):
     UUID_DIR = "/dev/disk/by-uuid/"
     for filename in os.listdir(UUID_DIR):
         device = reply.complete_info_reply.block_devices.add()
-        # uuid
         device.uuid = filename
+
         real_relative_path = os.readlink(UUID_DIR + filename)
-        # real_path
         device.real_path = \
                 os.path.abspath(os.path.join(UUID_DIR, real_relative_path))
 
-        block_dev_output = \
-            run_command(["blockdev", "--getbsz", "--getsz", device.real_path])
-
-        # block_size
-        device.block_size = int(block_dev_output.splitlines()[0])
-        # device_size
-        device.device_size = int(block_dev_output.splitlines()[1]) * 512
-
-
-        # Example of df -T:
-        # # df -T /dev/sda1
-        # Filesystem    Type   1K-blocks      Used Available Use% Mounted on
-        # /dev/sda1     ext4   951636136  21644300 881651452   3% /
-        #
-        # TODO: This returns bad information for the mountpoint and fs
-        #       when not run on the symlink
-        # 
-        #       This might be helpful with the TODO
-        #       http://stackoverflow.com/a/21614264/965648
-        df_output = run_command(["df", "-T", device.real_path])
-        df_info_split = df_output.split("\n")[1].split()
-        filesystem = df_info_split[1]
-        used_size = int(df_info_split[3]) * 1024
-        mount_location = df_info_split[6]
-
-        # used_space
-        device.used_space = used_size
-        # file_system
-        device.file_system = filesystem
-        # mount_location
-        device.mount_location = mount_location
+        device.device_size = get_size(device.real_path)
+        device.block_size = get_block_size(device.real_path)
+        device.file_system = get_fs(device.real_path)
+        mount_point = get_mount_point(device.real_path) 
+        if mount_point:
+            device.mount_location = mount_point
+            device.used_space = get_used_bytes(device.mount_location)
 
 def get_complete_info():
     reply = Reply()
@@ -88,12 +73,10 @@ def get_complete_info():
     reply.complete_info_reply.kernel = run_command(["uname", "-r"])
     reply.complete_info_reply.arch = run_command(["uname", "-p"])
     reply.complete_info_reply.cpus = cpu_count()
-    
-    reply.complete_info_reply.lsb_release_a = \
-            run_command(["lsb_release", "-a"])
+    reply.complete_info_reply.lsb_release_a = str(get_lsb_release())
 
     with open("/proc/meminfo") as meminfo:
-        totalRam = int(sub('[^0-9]', '' , meminfo.readline())) * 1024
+        totalRam = int(re.sub('[^0-9]', '' , meminfo.readline())) * 1024
         reply.complete_info_reply.memory = str(totalRam)
 
     try:

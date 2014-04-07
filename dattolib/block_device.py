@@ -77,7 +77,15 @@ _libc = ctypes.CDLL(_libc_path, use_errno=True)
 _libc.getmntent.restype = ctypes.POINTER(MntEnt)
 
 
+def abs_path(path):
+    if os.path.islink(path):
+        path_dir = os.path.dirname(path)
+        path = os.path.join(path_dir, os.readlink(path))
+    path = os.path.abspath(path)
+    return path
+
 def get_mount_point(path):
+    print path, len(path)
     with open("/proc/mounts") as mounts:
         # See "man 2 mntent" to understand this section
         # and the variable names
@@ -96,12 +104,18 @@ def get_mount_point(path):
                 continue
             fsname = mntent.contents.mnt_fsname
 
-            if os.path.islink(fsname):
-                fsname_dir = os.path.dirname(fsname)
-                fsname = os.path.join(fsname_dir, os.readlink(fsname))
-            if os.path.abspath(path) == os.path.abspath(fsname):
+            print abs_path(path), abs_path(fsname)
+            if abs_path(path) == abs_path(fsname):
                 return mntent.contents.mnt_dir
     return None
+
+
+def get_used_bytes(mount_path):
+    stat_ret = os.statvfs(mount_path)
+    bsize = stat_ret.f_bsize
+    bfree = stat_ret.f_bfree
+    blocks = stat_ret.f_blocks
+    return (blocks - bfree) * bsize
 
 
 if __name__ == "__main__":
@@ -111,4 +125,7 @@ if __name__ == "__main__":
     print "uuid:", get_uuid(path)
     print "size:", get_size(path)
     print "block size:", get_block_size(path)
-    print "mount point:", get_mount_point(path)
+    mount = get_mount_point(path)
+    print "mount point:", mount
+    if mount:
+        print "used bytes:", get_used_bytes(mount)
