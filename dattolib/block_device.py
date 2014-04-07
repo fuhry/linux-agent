@@ -6,13 +6,23 @@ import os
 import os.path
 
 
+def _handle_err(result, func, args):
+    errno = ctypes.get_errno()
+    if errno:
+        strerr = os.strerror(errno)
+        raise OSError("{:s} ({:s}) - ERR{:d} {:s}".format(
+            func.__name__, str(result), errno, strerr))
+    return args
+
+
 # blkid setup and related functions
 _blkid_path = ctypes.util.find_library('blkid')
 if not _blkid_path:
     raise EnvironmentError("blkid library not found")
 
-_blkid = ctypes.CDLL(_blkid_path, use_errno=True)
+_blkid = ctypes.CDLL(_blkid_path, use_errno=False)
 _blkid.blkid_get_tag_value.restype = ctypes.c_char_p
+_blkid.blkid_get_tag_value.errcheck = _handle_err
 
 
 def get_fs(path):
@@ -69,12 +79,14 @@ class MntEnt(ctypes.Structure):
         ("mnt_passno", ctypes.c_int)
     ]
 
-
 _libc_path = ctypes.util.find_library('c')
 if not _libc_path:
     raise EnvironmentError("libc library not found (!!)")
 _libc = ctypes.CDLL(_libc_path, use_errno=True)
 _libc.getmntent.restype = ctypes.POINTER(MntEnt)
+_libc.getmntent.errcheck = _handle_err
+_libc.fdopen.errcheck = _handle_err
+_libc.fdopen.restype = ctypes.POINTER(ctypes.c_void_p)
 
 
 def abs_path(path):
@@ -85,28 +97,27 @@ def abs_path(path):
     return path
 
 def get_mount_point(path):
-    print path, len(path)
     with open("/proc/mounts") as mounts:
         # See "man 2 mntent" to understand this section
         # and the variable names
         file_p = _libc.fdopen(mounts.fileno(), "r")
+        mntent = MntEnt()
+        mntent_p = ctypes.pointer(mntent)
         while True:
+            buf = ctypes.create_string_buffer(4096)
             # This is a struct containing pointers to static memory.
             # As such, we shouldn't copy the mntent structure as the values
             # it points to will be overwitten in the getmntent call
-            mntent = _libc.getmntent(file_p)
-            if not mntent:
+            if not _libc.getmntent_r(file_p, mntent_p, buf, 4096):
                 break
-
             # Make sure the device starts with / or we know it's some
             # virtual thing we don't want to look at
-            if mntent.contents.mnt_fsname[0] != '/':
+            if not mntent.mnt_fsname or mntent.mnt_fsname[0] != '/':
                 continue
-            fsname = mntent.contents.mnt_fsname
+            fsname = mntent.mnt_fsname
 
-            print abs_path(path), abs_path(fsname)
             if abs_path(path) == abs_path(fsname):
-                return mntent.contents.mnt_dir
+                return mntent.mnt_dir
     return None
 
 
