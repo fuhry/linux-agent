@@ -39,8 +39,9 @@ def get_basic_info():
     reply.type = Reply.BASIC_INFO
     # TODO version
     reply.basic_info_reply.agent_version = "v2.0"
-    reply.basic_info_reply.hostname = run_command(["hostname"])
-    reply.basic_info_reply.uname_a = run_command(["uname", "-a"])
+    uname = os.uname()
+    reply.basic_info_reply.hostname = uname[1]
+    reply.basic_info_reply.uname_a = uname[2]
     reply.basic_info_reply.lsb_release_a = str(get_lsb_release())
 
     return reply
@@ -68,10 +69,11 @@ def get_complete_info():
     reply.type = Reply.COMPLETE_INFO
     # TODO version
     reply.complete_info_reply.agent_version = "2.0"
-    reply.complete_info_reply.hostname = run_command(["hostname"])
-    reply.complete_info_reply.os_name = run_command(["uname", "-v"])
-    reply.complete_info_reply.kernel = run_command(["uname", "-r"])
-    reply.complete_info_reply.arch = run_command(["uname", "-p"])
+    uname = os.uname()
+    reply.complete_info_reply.hostname = uname[1]
+    reply.complete_info_reply.kernel = uname[2]
+    reply.complete_info_reply.os_name = uname[3]
+    reply.complete_info_reply.arch = uname[4]
     reply.complete_info_reply.cpus = cpu_count()
     reply.complete_info_reply.lsb_release_a = str(get_lsb_release())
 
