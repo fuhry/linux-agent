@@ -21,18 +21,33 @@ PASSOFF_LIST = [Request.START_BACKUP, Request.STOP_BACKUP,
                 Request.PAUSE_BACKUP, Request.RESUME_BACKUP,
                 Request.BACKUP_STATUS]
 
-def get_lsb_release():
-    ret_dict = {}
-    with open("/etc/lsb-release") as lsb_file:
-        lsb_reader = csv.reader(lsb_file, delimiter='=', quotechar='"')
-        for row in lsb_reader:
-            ret_dict[row[0]] = row[1]
-    return ret_dict
-
 def run_command(command):
     p = subprocess.Popen(command, stdout=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
     return stdout.strip()
+
+
+def get_lsb_release():
+    ret_dict = {}
+    try:
+        with open("/etc/lsb-release") as lsb_file:
+            lsb_reader = csv.reader(lsb_file, delimiter='=', quotechar='"')
+            for row in lsb_reader:
+                ret_dict[row[0]] = row[1]
+    except IOError:
+        str_map = {'Distributor ID': 'DISTRIB_ID',
+                   'Description'   : 'DISTRIB_DESCRIPTION',
+                   'Release'       : 'DISTRIB_RELEASE',
+                   'Codename'      : 'DISTRIB_CODENAME'}
+        # can't read /etc/lsb-release so try lsb_release -a
+        output = run_command(['lsb_release', '-a'])
+        for line in output.split('\n'):
+            match = re.match('^([^:]*):\t*(.*)$', line)
+            if match and match.group(1) in str_map:
+                key = str_map[match.group(1)]
+                ret_dict[key] = match.group(2)
+    return ret_dict
+
 
 def get_basic_info():
     reply = Reply()
