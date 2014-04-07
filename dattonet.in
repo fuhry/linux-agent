@@ -89,7 +89,7 @@ def get_complete_info():
             dattod_jiffs = int(dattod_stat.read().split()[21])
 
         jiffs_per_sec = int(run_command(["getconf", "CLK_TCK"]))
-        
+
         # This is uptime from when the system booted
         dattod_uptime = dattod_jiffs / jiffs_per_sec
 
@@ -142,7 +142,7 @@ def handle_connection(connection):
         connection.close()
 
 class DattoWebListener(object):
-    
+
     def __init__(self, address):
         self.address = address
         self.sock = None
