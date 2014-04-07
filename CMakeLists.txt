@@ -107,7 +107,7 @@ if (DEFINED ENV{BUILD_UNIT_TESTS})
     include(cmake/test_setup.cmake)
 endif()
 
-add_custom_target(build DEPENDS dattod)
+add_custom_target(build DEPENDS dattod dattolib)
 
 configure_file("setup.py.in" "setup.py")
 install(TARGETS dattod DESTINATION /usr/sbin)
