@@ -30,22 +30,30 @@ def run_command(command):
 def get_lsb_release():
     ret_dict = {}
     try:
-        with open("/etc/lsb-release") as lsb_file:
-            lsb_reader = csv.reader(lsb_file, delimiter='=', quotechar='"')
-            for row in lsb_reader:
-                ret_dict[row[0]] = row[1]
-    except IOError:
-        str_map = {'Distributor ID': 'DISTRIB_ID',
-                   'Description'   : 'DISTRIB_DESCRIPTION',
-                   'Release'       : 'DISTRIB_RELEASE',
-                   'Codename'      : 'DISTRIB_CODENAME'}
-        # can't read /etc/lsb-release so try lsb_release -a
-        output = run_command(['lsb_release', '-a'])
-        for line in output.split('\n'):
-            match = re.match('^([^:]*):\t*(.*)$', line)
-            if match and match.group(1) in str_map:
-                key = str_map[match.group(1)]
-                ret_dict[key] = match.group(2)
+        import lsb_release
+        ret_dict = lsb_release.get_lsb_information()
+    except ImportError:
+        # Couldn't import lsb_release so try the lsb-release file
+        try:
+            with open("/etc/lsb-release") as lsb_file:
+                lsb_reader = csv.reader(lsb_file, delimiter='=', quotechar='"')
+                for row in lsb_reader:
+                    key = row[0].lstrip('DISTRIB_')
+                    ret_dict[key] = row[1]
+        except IOError:
+            # Couldn't read /etc/lsb-release so try lsb_release -a
+            str_map = {'Distributor ID': 'ID',
+                       'Description'   : 'DESCRIPTION',
+                       'Release'       : 'RELEASE',
+                       'Codename'      : 'CODENAME'}
+            output = run_command(['lsb_release', '-a'])
+            for line in output.split('\n'):
+                match = re.match('^([^:]*):\t*(.*)$', line)
+                if match and match.group(1) in str_map:
+                    key = str_map[match.group(1)]
+                    ret_dict[key] = match.group(2)
+    if not ret_dict:
+        ret_dict = {'error': "Couldn't get LSB information"}
     return ret_dict
 
 
