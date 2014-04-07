@@ -103,19 +103,13 @@ def get_mount_point(path):
         file_p = _libc.fdopen(mounts.fileno(), "r")
         mntent = MntEnt()
         mntent_p = ctypes.pointer(mntent)
-        while True:
-            buf = ctypes.create_string_buffer(4096)
-            # This is a struct containing pointers to static memory.
-            # As such, we shouldn't copy the mntent structure as the values
-            # it points to will be overwitten in the getmntent call
-            if not _libc.getmntent_r(file_p, mntent_p, buf, 4096):
-                break
+        buf = ctypes.create_string_buffer(4096)
+        while _libc.getmntent_r(file_p, mntent_p, buf, 4096):
             # Make sure the device starts with / or we know it's some
             # virtual thing we don't want to look at
             if not mntent.mnt_fsname or mntent.mnt_fsname[0] != '/':
                 continue
             fsname = mntent.mnt_fsname
-
             if abs_path(path) == abs_path(fsname):
                 return mntent.mnt_dir
     return None
