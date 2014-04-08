@@ -21,6 +21,7 @@ PASSOFF_LIST = [Request.START_BACKUP, Request.STOP_BACKUP,
                 Request.PAUSE_BACKUP, Request.RESUME_BACKUP,
                 Request.BACKUP_STATUS]
 
+
 def run_command(command):
     p = subprocess.Popen(command, stdout=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
@@ -69,6 +70,7 @@ def get_basic_info():
 
     return reply
 
+
 def set_block_devices(reply):
     UUID_DIR = "/dev/disk/by-uuid/"
     for filename in os.listdir(UUID_DIR):
@@ -86,6 +88,7 @@ def set_block_devices(reply):
         if mount_point:
             device.mount_location = mount_point
             device.used_space = get_used_bytes(device.mount_location)
+
 
 def get_complete_info():
     reply = Reply()
@@ -131,6 +134,7 @@ def get_complete_info():
 
     return reply
 
+
 def handle_connection(connection):
     try:
         # receive 4 bytes containing the size of the Request
@@ -163,6 +167,7 @@ def handle_connection(connection):
     finally:
         # Close connection
         connection.close()
+
 
 class DattoWebListener(object):
 
