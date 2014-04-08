@@ -96,7 +96,8 @@ int main(int argc, char *argv[]) {
   }
 
   // Clean up
-  google::protobuf::ShutdownProtobufLibrary();
+  // TODO Use detection macro for this
+  // google::protobuf::ShutdownProtobufLibrary();
   google::ShutDownCommandLineFlags();
   google::ShutdownGoogleLogging();
 
