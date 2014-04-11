@@ -4,8 +4,6 @@
 # through a unix socket, and replies are shown on stdout.
 import argparse
 from dattolib.start_backup_request_pb2 import StartBackupRequest
-from dattolib.backup_status_request_pb2 import BackupStatusRequest
-from dattolib.stop_backup_request_pb2 import StopBackupRequest
 from dattolib.request_pb2 import Request
 from dattolib import make_request_to_dattod
 
@@ -20,7 +18,7 @@ def startbackup(args):
         vector.destination_host = nbd_host
         try:
             vector.destination_port = int(nbd_port)
-        except ValueError as e:
+        except ValueError:
             raise ValueError(nbd_port + " is not a valid port number")
 
     return request
@@ -33,7 +31,7 @@ def stopbackup(args):
     return request
 
 
-def completestatusinfo():
+def completestatusinfo(args):
     request = Request()
     request.type = Request.COMPLETE_INFO
     return request
@@ -77,10 +75,13 @@ def parse_args():
     stop_parser.add_argument('job_uuid',
                              help="Job UUID that should be stopped")
 
-    stop_parser = subparsers.add_parser('backupstatus')
-    stop_parser.set_defaults(func=backupstatus)
-    stop_parser.add_argument('job_uuid',
-                             help="Job UUID to query")
+    status_parser = subparsers.add_parser('backupstatus')
+    status_parser.set_defaults(func=backupstatus)
+    status_parser.add_argument('job_uuid',
+                               help="Job UUID to query")
+
+    info_parser = subparsers.add_parser('completeinfo')
+    info_parser.set_defaults(func=completestatusinfo)
 
     args = parser.parse_args()
 
