@@ -6,7 +6,7 @@ import threading
 from dattolib import make_request_to_dattod
 from dattolib.request_pb2 import Request
 from dattolib.reply_pb2 import Reply
-from dattolib.request_builder import get_basic_info, get_complete_info
+from dattolib.reply_builder import get_basic_info, get_complete_info
 
 LISTEN_ADDRESS = ("0.0.0.0", 2856)
 
