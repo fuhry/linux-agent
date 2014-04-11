@@ -116,7 +116,7 @@ def get_complete_info():
         reply.complete_info_reply.dattod_uptime_seconds = \
             system_uptime - dattod_uptime
 
-    except IOError as e:
+    except IOError:
         # Just don't set it if we can't get it
         pass
 
