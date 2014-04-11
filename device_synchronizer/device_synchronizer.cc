@@ -33,7 +33,7 @@ inline void copy_block(int source_fd, int destination_fd,
     throw DeviceSynchronizerException("Error reading from source");
   } else if (bytes_read != block_size_bytes) {
     PLOG(INFO) << "Expected to read " << block_size_bytes
-      << ". Got " << bytes_read;
+               << ". Got " << bytes_read;
     throw DeviceSynchronizerException("Unexpected read result");
   }
 
@@ -43,7 +43,7 @@ inline void copy_block(int source_fd, int destination_fd,
     throw DeviceSynchronizerException("Error writing to destination");
   } else if (bytes_written != block_size_bytes) {
     PLOG(INFO) << "Expected to write " << block_size_bytes
-      << ". Got " << bytes_written;
+               << ". Got " << bytes_written;
     throw DeviceSynchronizerException("Unexpected read result");
   }
 }
