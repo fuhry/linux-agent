@@ -118,7 +118,7 @@ def get_complete_info():
 
     except IOError as e:
         # Just don't set it if we can't get it
-        print e
+        pass
 
     set_block_devices(reply)
     return reply

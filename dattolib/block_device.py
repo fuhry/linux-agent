@@ -2,6 +2,7 @@ import ctypes
 import ctypes.util
 from fcntl import ioctl
 import struct
+import platform
 import os
 import os.path
 
@@ -46,24 +47,25 @@ def get_uuid(path):
 #         printf("0x%lx\n", BLKGETSIZE64);
 #         printf("0x%lx\n", BLKBSZGET);
 # }
-BLKGETSIZE64 = 0x80081272
-BLKBSZGET = 0x80081270
+BLKGETSIZE64 = {'32bit': 0x80041272, '64bit': 0x80081272}
+BLKBSZGET = {'32bit': 0x80041270, '64bit': 0x80081270}
+ARCH = platform.architecture()[0]
 
 
 def get_size(path):
     """ Return size in bytes of path"""
     with open(path) as device:
         buf = '\0' * 8
-        buf = ioctl(device.fileno(), BLKGETSIZE64, buf)
-        return struct.unpack('L', buf)[0]
+        buf = ioctl(device.fileno(), BLKGETSIZE64[ARCH], buf)
+        return struct.unpack('Q', buf)[0]
 
 
 def get_block_size(path):
     """ Return block size in bytes of path"""
     with open(path) as device:
         buf = '\0' * 8
-        buf = ioctl(device.fileno(), BLKBSZGET, buf)
-        return struct.unpack('L', buf)[0]
+        buf = ioctl(device.fileno(), BLKBSZGET[ARCH], buf)
+        return struct.unpack('Q', buf)[0]
 
 
 # libc setup and related functions
