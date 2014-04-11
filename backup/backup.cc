@@ -68,6 +68,8 @@ void Backup::DoBackup(std::shared_ptr<BackupEventHandler> event_handler) {
 
   if (error_text.size()) {
     event_handler->BackupFailed(error_text);
+  } else if (coordinator_->IsCancelled()) {
+    event_handler->BackupCancelled();
   } else {
     event_handler->BackupSucceeded();
   }
