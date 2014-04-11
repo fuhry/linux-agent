@@ -21,20 +21,6 @@ uint32_t ONE_MEGABYTE = 1024 * 1024;
 time_t SECONDS_BETWEEN_FLUSHES = 5;
 time_t SECONDS_TO_FREEZE = 2;
 
-void seek_devices_to(off_t seek_pos, int source_fd, int dest_fd) {
-  off_t seek_ret = lseek(source_fd, seek_pos, SEEK_SET);
-  if (seek_ret == -1) {
-    PLOG(ERROR) << "Error while seeking source to " << seek_pos;
-    throw DeviceSynchronizerException("Unable to seek source");
-  }
-  seek_ret = lseek(dest_fd, seek_pos, SEEK_SET);
-  if (seek_ret == -1) {
-    PLOG(ERROR) << "Error while seeking destination to " << seek_pos;
-    throw DeviceSynchronizerException("Unable to seek destination");
-  }
-}
-
-
 inline void copy_block(int source_fd, int destination_fd,
                        ssize_t block_size_bytes, off_t offset) {
   char buf[block_size_bytes];
