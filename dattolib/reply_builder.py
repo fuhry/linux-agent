@@ -22,7 +22,6 @@ def get_lsb_release():
     ret_dict = {}
     try:
         import lsb_release
-
         ret_dict = lsb_release.get_distro_information()
     except ImportError:
         # Couldn't import lsb_release so try the lsb-release file
