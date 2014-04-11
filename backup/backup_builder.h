@@ -9,7 +9,7 @@
 #include "device_synchronizer/device_synchronizer_interface.h"
 #include "unsynced_sector_manager/unsynced_sector_manager.h"
 
-#include "device_pair.pb.h"
+#include "vector.pb.h"
 
 namespace datto_linux_client {
 
@@ -24,7 +24,7 @@ class BackupBuilder {
 
   // This blocks until the backup is done. This won't throw an exception.
   virtual std::shared_ptr<Backup> CreateBackup(
-      const std::vector<DevicePair> &device_pairs,
+      const std::vector<Vector> &vectors,
       const std::shared_ptr<BackupCoordinator> &coordinator,
       bool is_full);
 
@@ -34,7 +34,7 @@ class BackupBuilder {
  protected:
   // For unit testing
   virtual std::shared_ptr<DeviceSynchronizerInterface>
-  CreateDeviceSynchronizer(const DevicePair &device_pair, bool is_full);
+  CreateDeviceSynchronizer(const Vector &vector, bool is_full);
 
   BackupBuilder() {}
 

@@ -3,15 +3,10 @@
 # dattocli supports three commands. Each is delegated to the dattod binary
 # through a unix socket, and replies are shown on stdout.
 import argparse
-import sys
-import os
-import socket
-import struct
 from dattolib.start_backup_request_pb2 import StartBackupRequest
 from dattolib.backup_status_request_pb2 import BackupStatusRequest
 from dattolib.stop_backup_request_pb2 import StopBackupRequest
 from dattolib.request_pb2 import Request
-from dattolib.string_reply_pb2 import StringReply
 from dattolib import make_request_to_dattod
 
 
@@ -19,16 +14,17 @@ def startbackup(args):
     request = Request()
     request.type = Request.START_BACKUP
     request.start_backup_request.type = args.backup_type
-    for block_uuid, nbd_host, nbd_port in args.device_pair:
-        device_pair = request.start_backup_request.device_pairs.add()
-        device_pair.block_device_uuid = block_uuid
-        device_pair.destination_host = nbd_host
+    for block_uuid, nbd_host, nbd_port in args.vector:
+        vector = request.start_backup_request.vector.add()
+        vector.block_device_uuid = block_uuid
+        vector.destination_host = nbd_host
         try:
-            device_pair.destination_port = int(nbd_port)
+            vector.destination_port = int(nbd_port)
         except ValueError as e:
             raise ValueError(nbd_port + " is not a valid port number")
 
     return request
+
 
 def stopbackup(args):
     request = Request()
@@ -36,11 +32,19 @@ def stopbackup(args):
     request.stop_backup_request.job_uuid = args.job_uuid
     return request
 
+
+def completestatusinfo():
+    request = Request()
+    request.type = Request.COMPLETE_INFO
+    return request
+
+
 def backupstatus(args):
     request = Request()
     request.type = Request.BACKUP_STATUS
     request.backup_status_request.job_uuid = args.job_uuid
     return request
+
 
 # Returns a Request object that should be sent to dattod
 def parse_args():
@@ -62,12 +66,11 @@ def parse_args():
                              const=StartBackupRequest.INCREMENTAL_BACKUP,
                              help="Do an incremental backup")
 
-    # Add device-pair to parser
-    start_parser.add_argument('--device-pair', nargs=3, required=True,
+    # Add vector to parser
+    start_parser.add_argument('--vector', nargs=3, required=True,
                               action="append",
                               metavar=('block_uuid', 'nbd_host', 'nbd_port'),
                               help="Source and destination information")
-
 
     stop_parser = subparsers.add_parser('stopbackup')
     stop_parser.set_defaults(func=stopbackup)
@@ -82,6 +85,7 @@ def parse_args():
     args = parser.parse_args()
 
     return args.func(args)
+
 
 if __name__ == "__main__":
     # parse_args should only return if it has a message

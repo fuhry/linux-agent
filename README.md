@@ -49,7 +49,7 @@ image based backups of Linux machines.
            $(readlink -f block_dev.datto)` to start it on port 12345
     2. Get the UUID of the block device to backup by running `blkid` and
        copying it out.
-    3. Request a backup with `./build/dattocli startbackup --full --device-pair
+    3. Request a backup with `./build/dattocli startbackup --full --vector
        UUID_FROM_BLKID DESTINATION_HOST 12345`
      
 ## How to Submit a Bug Report

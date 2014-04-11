@@ -28,16 +28,16 @@ std::string BackupManager::StartBackup(
 
   std::lock_guard<std::mutex> lock(start_backup_mutex_);
 
-  int num_device_pairs = start_request.device_pairs_size();
+  int num_vectors = start_request.vectors_size();
 
-  if (num_device_pairs == 0) {
+  if (num_vectors == 0) {
     throw BackupException("No devices given to backup");
   }
 
-  std::vector<DevicePair> device_pairs(start_request.device_pairs().begin(),
-                                       start_request.device_pairs().end());
+  std::vector<Vector> vectors(start_request.vectors().begin(),
+                              start_request.vectors().end());
 
-  auto coordinator = std::make_shared<BackupCoordinator>(num_device_pairs);
+  auto coordinator = std::make_shared<BackupCoordinator>(num_vectors);
   bool is_full = start_request.type() == StartBackupRequest::FULL_BACKUP;
   std::string backup_uuid = make_uuid();
 
@@ -50,7 +50,7 @@ std::string BackupManager::StartBackup(
   std::shared_ptr<Backup> backup;
   try {
     LOG(INFO) << "Creating backup object";
-     backup = backup_builder_->CreateBackup(device_pairs, coordinator,
+     backup = backup_builder_->CreateBackup(vectors, coordinator,
                                             is_full);
     LOG(INFO) << "Created backup object";
   } catch (...) {
@@ -110,8 +110,8 @@ void BackupManager::AddToInProgressSet(
   std::lock_guard<std::mutex> map_lock(in_progress_map_mutex_);
 
   std::set<std::string> to_backup_uuids;
-  for (DevicePair device_pair : start_backup_request.device_pairs()) {
-    to_backup_uuids.insert(device_pair.block_device_uuid());
+  for (Vector vector : start_backup_request.vectors()) {
+    to_backup_uuids.insert(vector.block_device_uuid());
   }
 
   // Make sure we aren't backing up any UUID already in progress

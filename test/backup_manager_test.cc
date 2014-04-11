@@ -21,7 +21,7 @@ using ::datto_linux_client::UnsyncedSectorStore;
 
 using ::datto_linux_client::BackupStatusReply;
 using ::datto_linux_client::BackupStatusRequest;
-using ::datto_linux_client::DevicePair;
+using ::datto_linux_client::Vector;
 using ::datto_linux_client::Reply;
 using ::datto_linux_client::StartBackupReply;
 using ::datto_linux_client::StartBackupRequest;
@@ -58,7 +58,7 @@ class MockBackupCoordinator : public BackupCoordinator {
 class MockBackupBuilder : public BackupBuilder {
  public:
   MOCK_METHOD3(CreateBackup, std::shared_ptr<Backup>(
-        const std::vector<DevicePair> &,
+        const std::vector<Vector> &,
         const std::shared_ptr<BackupCoordinator> &,
         bool));
 };
@@ -99,8 +99,8 @@ StartBackupRequest make_start_backup_request() {
   StartBackupRequest sr;
   sr.set_type(StartBackupRequest::FULL_BACKUP);
 
-  DevicePair *dp1 = sr.add_device_pairs();
-  DevicePair *dp2 = sr.add_device_pairs();
+  Vector *dp1 = sr.add_vectors();
+  Vector *dp2 = sr.add_vectors();
 
   dp1->set_block_device_uuid(DUMMY_FS_UUID0);
   dp1->set_destination_host("localhost");

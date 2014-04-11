@@ -14,7 +14,7 @@
 #include "backup_status_tracker/backup_status_tracker.h"
 #include "unsynced_sector_manager/unsynced_sector_manager.h"
 
-#include "device_pair.pb.h"
+#include "vector.pb.h"
 #include "request.pb.h"
 #include "reply.pb.h"
 #include "backup_status_request.pb.h"

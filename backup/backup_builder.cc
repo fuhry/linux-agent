@@ -8,27 +8,27 @@
 namespace datto_linux_client {
 
 std::shared_ptr<Backup> BackupBuilder::CreateBackup(
-    const std::vector<DevicePair> &device_pairs,
+    const std::vector<Vector> &vectors,
     const std::shared_ptr<BackupCoordinator> &coordinator,
     bool is_full) {
   std::vector<std::shared_ptr<DeviceSynchronizerInterface>> syncs_to_do;
 
-  for (auto device_pair : device_pairs) {
-    syncs_to_do.push_back(CreateDeviceSynchronizer(device_pair, is_full));
+  for (auto vector : vectors) {
+    syncs_to_do.push_back(CreateDeviceSynchronizer(vector, is_full));
   }
 
   return std::make_shared<Backup>(syncs_to_do, coordinator);
 }
 
 std::shared_ptr<DeviceSynchronizerInterface>
-BackupBuilder::CreateDeviceSynchronizer(const DevicePair &device_pair,
+BackupBuilder::CreateDeviceSynchronizer(const Vector &vector,
                                         bool is_full) {
   auto source_device =
       block_device_factory_->CreateMountableBlockDeviceFromUuid(
-          device_pair.block_device_uuid());
+          vector.block_device_uuid());
 
-  std::string host = device_pair.destination_host();
-  uint16_t port = (uint16_t)device_pair.destination_port();
+  std::string host = vector.destination_host();
+  uint16_t port = (uint16_t)vector.destination_port();
 
   auto remote_device =
       block_device_factory_->CreateRemoteBlockDevice(host, port);
