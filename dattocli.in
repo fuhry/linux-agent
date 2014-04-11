@@ -14,7 +14,7 @@ def startbackup(args):
     request.type = Request.START_BACKUP
     request.start_backup_request.type = args.backup_type
     for block_uuid, nbd_host, nbd_port in args.vector:
-        vector = request.start_backup_request.vector.add()
+        vector = request.start_backup_request.vectors.add()
         vector.block_device_uuid = block_uuid
         vector.destination_host = nbd_host
         try:
