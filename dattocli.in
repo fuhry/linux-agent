@@ -6,6 +6,7 @@ import argparse
 from dattolib.start_backup_request_pb2 import StartBackupRequest
 from dattolib.request_pb2 import Request
 from dattolib import make_request_to_dattod
+from dattolib.reply_builder import get_complete_info
 
 
 def startbackup(args):
@@ -32,9 +33,7 @@ def stopbackup(args):
 
 
 def completestatusinfo(args):
-    request = Request()
-    request.type = Request.COMPLETE_INFO
-    return request
+    print get_complete_info()
 
 
 def backupstatus(args):
@@ -90,8 +89,9 @@ def parse_args():
 
 if __name__ == "__main__":
     # parse_args should only return if it has a message
-    message = parse_args()
-    print message
-    reply = make_request_to_dattod(message)
-    print reply
+    request = parse_args()
+    if request:
+        print request
+        reply = make_request_to_dattod(request)
+        print reply
 
