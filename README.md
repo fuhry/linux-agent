@@ -53,9 +53,9 @@ image based backups of Linux machines.
        UUID_FROM_BLKID DESTINATION_HOST 12345`
      
 ## How to Submit a Bug Report
-* Submit it using JIRA http://jira.hq.datto.lan/browse/LP
+* Submit it as an issue on GitHub: https://github.com/datto/linux-agent/issues/new
     * If you aren't sure if something is a bug, report it anyway! Rather have
       too many than too few.
 
 ## How Does It Work?
-* http://ngarveysiris.hq.datto.lan/linux_agent.pdf
+* http://datto.github.io/linux_agent.pdf
