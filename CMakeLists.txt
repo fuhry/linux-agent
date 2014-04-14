@@ -52,7 +52,6 @@ add_executable(dattod
                block_device/mountable_block_device.cc
                block_device/nbd_block_device.cc
                block_device/nbd_client.cc
-               block_device/xfs_mountable_block_device.cc
                tracing/cpu_tracer.cc
                tracing/device_tracer.cc
                tracing/trace_handler.cc
@@ -86,7 +85,6 @@ target_link_libraries(dattod com_err ext2fs glog gflags blkid boost_regex uuid
 #               block_device/mountable_block_device.cc
 #               block_device/nbd_block_device.cc
 #               block_device/nbd_client.cc
-#               block_device/xfs_mountable_block_device.cc
 #               tracing/cpu_tracer.cc
 #               tracing/device_tracer.cc
 #               tracing/trace_handler.cc

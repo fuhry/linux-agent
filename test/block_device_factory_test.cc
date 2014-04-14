@@ -2,7 +2,6 @@
 #include "block_device/ext_mountable_block_device.h"
 #include "block_device/nbd_block_device.h"
 #include "block_device/nbd_server.h"
-#include "block_device/xfs_mountable_block_device.h"
 #include "test/loop_device.h"
 
 #include <gtest/gtest.h>
@@ -19,7 +18,6 @@ using ::datto_linux_client::BlockDeviceException;
 using ::datto_linux_client::BlockDeviceFactory;
 using ::datto_linux_client::NbdServer;
 using ::datto_linux_client::ExtMountableBlockDevice;
-using ::datto_linux_client::XfsMountableBlockDevice;
 using ::datto_linux_client::NbdBlockDevice;
 
 // Might want to move this to loop_device.cc
@@ -87,6 +85,7 @@ TEST(BlockDeviceFactoryTest, ReturnsExt3) {
             dynamic_cast<ExtMountableBlockDevice*>(loop_block_dev.get()));
 }
 
+#if 0
 TEST(BlockDeviceFactoryTest, ReturnsXfs) {
   BlockDeviceFactory fact;
   LoopDevice loop_dev;
@@ -102,6 +101,7 @@ TEST(BlockDeviceFactoryTest, ReturnsXfs) {
   EXPECT_NE(nullptr,
             dynamic_cast<XfsMountableBlockDevice*>(loop_block_dev.get()));
 }
+#endif
 
 TEST(BlockDeviceFactoryTest, ThrowsOnBadUUID) {
   BlockDeviceFactory fact;

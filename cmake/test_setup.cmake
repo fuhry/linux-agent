@@ -61,7 +61,6 @@ add_unit_test(block_device_factory_test
               block_device/nbd_block_device.cc
               block_device/nbd_client.cc
               block_device/nbd_server.cc
-              block_device/xfs_mountable_block_device.cc
               freeze_helper/freeze_helper.cc
               test/loop_device.cc
               block_device/block_device_factory.cc)

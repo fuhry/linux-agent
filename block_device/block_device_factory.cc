@@ -10,7 +10,6 @@
 
 #include "block_device/nbd_block_device.h"
 #include "block_device/ext_mountable_block_device.h"
-#include "block_device/xfs_mountable_block_device.h"
 
 namespace {
 using datto_linux_client::BlockDeviceException;
@@ -54,8 +53,6 @@ BlockDeviceFactory::CreateMountableBlockDeviceFromPath(std::string path) {
     block_dev = std::make_shared<ExtMountableBlockDevice>(path, false);
   } else if (fs == "ext2") {
     block_dev = std::make_shared<ExtMountableBlockDevice>(path, true);
-  } else if (fs == "xfs") {
-    block_dev = std::make_shared<XfsMountableBlockDevice>(path);
   } else {
     LOG(ERROR) << "Unknown filesystem '" << fs << "' for " << path;
     throw BlockDeviceException("Unknown filesystem");
