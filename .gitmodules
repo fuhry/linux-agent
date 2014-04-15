@@ -1,3 +1,3 @@
 [submodule "communication_protocol"]
 	path = communication_protocol
-	url = git@github.com:datto/linux-project-protocol.git
+	url = https://github.com/datto/linux-agent.git
