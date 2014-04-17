@@ -35,18 +35,6 @@ class BlockDevice {
     return block_size_bytes_;
   }
 
-  // https://www.kernel.org/doc/Documentation/cgroups/blkio-controller.txt
-  // scalar is from 0 to 1, but hopefully not 0
-
-  // TODO: Throttle unimplemented at this point
-  void Throttle(double scalar);
-
-  double throttle_scalar() const {
-    return throttle_scalar_;
-  }
-
-  void Unthrottle();
-
   // Return a file descriptor for the block device
   // Throw an exception if one is already open
   virtual int Open();
@@ -58,7 +46,7 @@ class BlockDevice {
   // Don't throw if one isn't open
   virtual void Close();
 
-  // Should close the file descriptor and Unthrottle
+  // Should close the file descriptor
   virtual ~BlockDevice();
 
   BlockDevice(const BlockDevice &) = delete;

@@ -56,14 +56,6 @@ void BlockDevice::Flush() {
   close(fd);
 }
 
-void BlockDevice::Throttle(double scalar) {
-  throttle_scalar_ = scalar;
-}
-
-void BlockDevice::Unthrottle() {
-  throttle_scalar_ = 0.0;
-}
-
 int BlockDevice::Open() {
   if (fd_ != -1) {
     throw BlockDeviceException("Error: block device already open");
@@ -86,7 +78,6 @@ void BlockDevice::Close() {
 
 BlockDevice::~BlockDevice() {
   Close();
-  Unthrottle();
 }
 
 }  //namespace
