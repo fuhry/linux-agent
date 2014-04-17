@@ -11,22 +11,18 @@
 
 namespace datto_linux_client {
 
-BlockDevice::BlockDevice(std::string a_path)
-    : path_(a_path) {
+BlockDevice::BlockDevice(std::string a_path) : path_(a_path), fd_(-1) {
   // Init() is also called by subclasses
   Init();
 }
 
 void BlockDevice::Init() {
-  throttle_scalar_ = 0.0;
-  fd_ = -1;
-
   struct stat statbuf;
 
   // Note: using lstat() instead of stat() to cause symlinks to
   // block devices to fail
   if (lstat(path_.c_str(), &statbuf) < 0) {
-    PLOG(ERROR) << "stat() failed";
+    PLOG(ERROR) << "lstat() failed";
     throw BlockDeviceException("Unable to stat path");
   }
   // bail with exception if not a block device
@@ -84,9 +80,7 @@ int BlockDevice::Open() {
 }
 
 void BlockDevice::Close() {
-  if (fd_ > -1) {
-    close(fd_);
-  }
+  close(fd_);
   fd_ = -1;
 }
 
