@@ -197,9 +197,6 @@ TEST_F(DeviceSynchronizerTest, SimpleSyncTest) {
   EXPECT_CALL(*source_manager, IsTracing(_))
       .WillRepeatedly(Return(true));
 
-  EXPECT_CALL(*source_manager, FlushTracer(Truly(is_source)))
-      .Times(AtLeast(1));
-  
   EXPECT_CALL(*coordinator, IsCancelled())
       .WillRepeatedly(Return(false));
   EXPECT_CALL(*coordinator, SignalFinished());
