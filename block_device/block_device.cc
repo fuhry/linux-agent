@@ -11,12 +11,13 @@
 
 namespace datto_linux_client {
 
-BlockDevice::BlockDevice(std::string a_path) : path_(a_path), fd_(-1) {
+BlockDevice::BlockDevice(std::string a_path) : path_(a_path) {
   // Init() is also called by subclasses
   Init();
 }
 
 void BlockDevice::Init() {
+  fd_ = -1;
   struct stat statbuf;
 
   // Note: using lstat() instead of stat() to cause symlinks to
@@ -58,7 +59,7 @@ void BlockDevice::Flush() {
 
 int BlockDevice::Open() {
   if (fd_ != -1) {
-    throw BlockDeviceException("Error: block device already open");
+    throw BlockDeviceException("Block device already open");
   }
 
   fd_ = open(path_.c_str(), O_RDWR | O_LARGEFILE);
