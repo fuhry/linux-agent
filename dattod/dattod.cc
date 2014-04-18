@@ -44,6 +44,8 @@ int main(int argc, char *argv[]) {
     PLOG(ERROR) << "Unable to daemonize";
     return 1;
   }
+#else
+  LOG(INFO) << "Debug build";
 #endif
 
   // Setup logging, must happen after daemon becaus QueuingLogSink
