@@ -5,6 +5,12 @@ set(CMAKE_CXX_FLAGS "-D_GNU_SOURCE ${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS "-D_LARGEFILE_SOURCE ${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS "-D_FILE_OFFSET_BITS=64 ${CMAKE_CXX_FLAGS}")
 
+string(TOLOWER "${CMAKE_BUILD_TYPE}" build_type)
+
+if (NOT "${build_type}" STREQUAL "debug") 
+    set(CMAKE_CXX_FLAGS "-DNDEBUG ${CMAKE_CXX_FLAGS}")
+endif()
+
 include_directories(.)
 
 # Take care of building the protobuf files first
