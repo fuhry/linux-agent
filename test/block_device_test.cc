@@ -44,12 +44,6 @@ TEST_F(BlockDeviceTest, BlockSizeBytes) {
   EXPECT_EQ(loop_device->block_size(), bd.BlockSizeBytes());
 }
 
-TEST_F(BlockDeviceTest, Open) {
-  BlockDevice bd(loop_device->path());
-  int bd_fd = bd.Open();
-  EXPECT_GT(bd_fd, 2);
-}
-
 TEST_F(BlockDeviceTest, Major) {
   BlockDevice bd(loop_device->path());
   int major = ::major(bd.dev_t());
@@ -57,19 +51,57 @@ TEST_F(BlockDeviceTest, Major) {
   EXPECT_EQ(7, major);
 }
 
-TEST_F(BlockDeviceTest, DestructorCloses) {
-  int bd_fd = -1;
+TEST_F(BlockDeviceTest, BlockRead) {
+  BlockDevice bd(loop_device->path());
+  system(("echo -n 'abc123' >> " + loop_device->path()).c_str());
 
-  {
-    BlockDevice bd(loop_device->path());
-    bd_fd = bd.Open();
-  } // destructor called here
+  char buf[4096];
 
-  int fcntl_ret = fcntl(bd_fd, F_GETFD);
-  int error = errno;
+  bd.Read(0, buf, 4096);
 
-  EXPECT_EQ(EBADF, error);
-  EXPECT_EQ(-1, fcntl_ret);
+  ASSERT_STREQ(buf, "abc123");
+
+  // I'm sure there is a better way to do this
+  for (int i = 7; i < 4096; i++) {
+    ASSERT_EQ('\0', buf[i]);
+  }
+}
+
+TEST_F(BlockDeviceTest, BlockWrite) {
+  BlockDevice bd(loop_device->path());
+
+  char buf[4096] = "abc123\0";
+
+  bd.Write(0, buf, 4096);
+  bd.Read(0, buf, 4096);
+  ASSERT_STREQ(buf, "abc123");
+}
+
+TEST_F(BlockDeviceTest, BlockRawRead) {
+  BlockDevice bd(loop_device->path());
+
+  void *rawbuf;
+  if (posix_memalign(&rawbuf, 512, 512)) {
+    FAIL() << "posix_memalign";
+  }
+  char pagedbuf[512];
+
+  bd.BindRaw();
+
+  // Write the block, but it should stick in the page cache
+  // and not actually hit disk for at least 15 seconds
+  system(("echo -n 'abc123' >> " + loop_device->path()).c_str());
+
+  bd.RawRead(0, rawbuf, 512);
+  bd.Read(0, pagedbuf, 512);
+  // I'm sure there is a better way to do this
+  for (int i = 0; i < 512; i++) {
+    ASSERT_EQ('\0', ((char *)rawbuf)[i]);
+  }
+
+  ASSERT_STREQ(pagedbuf, "abc123");
+
+  free(rawbuf);
 }
 
 } // namespace

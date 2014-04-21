@@ -35,16 +35,23 @@ class BlockDevice {
     return block_size_bytes_;
   }
 
-  // Return a file descriptor for the block device
-  // Throw an exception if one is already open
-  virtual int Open();
+  // Read a block using the normal mechanisms
+  virtual void Read(off_t byte_offset, void *buf, int count);
+
+  // Write a block using the normal mechanisms
+  virtual void Write(off_t byte_offset, const void *buf, int count);
+
+  // This will skip the page cache when reading
+  //
+  // Note that buf must be sector aligned and count must
+  // be a multiple of the sector size.
+  virtual void RawRead(off_t byte_offset, void *buf, int count);
+
+  // This will be called automatically by RawRead if needed
+  void BindRaw();
 
   // Flushes using the BLKFLSBUF ioctl
   virtual void Flush();
-
-  // Close the file descriptor returned
-  // Don't throw if one isn't open
-  virtual void Close();
 
   // Should close the file descriptor
   virtual ~BlockDevice();
@@ -57,20 +64,23 @@ class BlockDevice {
   // Note that block_path_ must be set and Init() called before the
   // subclass constructor returns
   BlockDevice() { }
+
   std::string path_;
+  std::string raw_path_;
+  int fd_;
+  int raw_fd_;
 
   // Do the actual initialization of the object
   void Init();
 
  private:
+  void UnbindRaw();
   ::dev_t dev_t_;
 
   uint64_t device_size_bytes_;
   uint32_t block_size_bytes_;
 
   double throttle_scalar_;
-
-  int fd_;
 };
 
 }
