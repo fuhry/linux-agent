@@ -12,6 +12,7 @@
 namespace datto_linux_client {
 
 // Existance of this class allows for easier mocking in unit tests
+// The real work is done in DeviceSynchronizer
 class DeviceSynchronizerInterface {
  public:
   // Precondition: source_device must be both traced and mounted
