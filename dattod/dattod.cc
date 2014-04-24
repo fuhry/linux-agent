@@ -6,6 +6,8 @@
 
 #include <glog/logging.h>
 
+#include <gflags/gflags.h>
+
 #include "backup/backup_builder.h"
 #include "backup/backup_manager.h"
 #include "backup_status_tracker/backup_status_tracker.h"
@@ -100,7 +102,7 @@ int main(int argc, char *argv[]) {
   // Clean up
   // TODO Use detection macro for this
   // google::protobuf::ShutdownProtobufLibrary();
-  google::ShutDownCommandLineFlags();
+  gflags::ShutDownCommandLineFlags();
   google::ShutdownGoogleLogging();
 
   return 0;
